@@ -1,0 +1,163 @@
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { MOCK_DEALS, DealSummary } from '../../../core/mock-data';
+import { format } from 'date-fns';
+
+@Component({
+  selector: 'app-supplier-deals',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="container" style="max-width:1200px;padding:2rem 1rem 3rem" role="main">
+      <div style="margin-bottom:2rem">
+        <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.25rem">Completed Deals</h1>
+        <p style="color:var(--text-secondary)">Review your successfully closed group batches.</p>
+      </div>
+
+      <!-- Stat cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem">
+
+        <div class="card stat-card">
+          <div style="flex:1">
+            <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.25rem">Total Revenue</p>
+            <p style="font-size:1.375rem;font-weight:800">EGP {{ totalRevenue().toLocaleString() }}</p>
+            <p style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px">across all batches</p>
+          </div>
+          <div class="stat-icon" style="background:rgba(13,148,136,0.1);color:var(--brand)" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+            </svg>
+          </div>
+        </div>
+        <div class="card stat-card">
+          <div style="flex:1">
+            <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.25rem">Units Sold</p>
+            <p style="font-size:1.375rem;font-weight:800">{{ totalUnits() }}</p>
+            <p style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px">~{{ avgUnits() }} per batch avg</p>
+          </div>
+          <div class="stat-icon" style="background:#EFF6FF;color:#2563EB" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="card stat-card">
+          <div style="flex:1">
+            <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.25rem">Batches Closed</p>
+            <p style="font-size:1.375rem;font-weight:800">{{ deals.length }}</p>
+            <p style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px">successfully completed</p>
+          </div>
+          <div class="stat-icon" style="background:#FFFBEB;color:#D97706" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+        </div>
+        <div class="card stat-card">
+          <div style="flex:1">
+            <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.25rem">Buyer Commitments</p>
+            <p style="font-size:1.375rem;font-weight:800">{{ totalBuyers() }}</p>
+            <p style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px">across all deals</p>
+          </div>
+          <div class="stat-icon" style="background:#F0FDF4;color:#16a34a" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card" style="overflow:hidden">
+        @if (deals.length === 0) {
+          <div style="padding:3rem;text-align:center;color:var(--text-secondary)">No completed deals yet. Your closed batches will appear here.</div>
+        } @else {
+          <div style="overflow-x:auto">
+            <table class="data-table" style="width:100%">
+              <thead>
+                <tr>
+                  <th style="width:40px"></th>
+                  <th>Product / Batch</th>
+                  <th style="text-align:right">Buyers</th>
+                  <th style="text-align:right">Total Units</th>
+                  <th style="text-align:right">Total Value</th>
+                  <th style="text-align:right">Completed Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (deal of deals; track deal.id) {
+                  <tr class="clickable-row" (click)="toggleRow(deal.id)" [attr.aria-expanded]="expandedRow() === deal.id">
+                    <td>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)" aria-hidden="true">
+                        @if (expandedRow() === deal.id) {
+                          <polyline points="6 9 12 15 18 9"/>
+                        } @else {
+                          <polyline points="9 18 15 12 9 6"/>
+                        }
+                      </svg>
+                    </td>
+                    <td>
+                      <div style="font-weight:600">{{ deal.offer_title }}</div>
+                      <div style="font-size:0.75rem;color:var(--text-secondary)">Batch #{{ deal.batch_number }}</div>
+                    </td>
+                    <td style="text-align:right;font-weight:500">{{ deal.buyer_count }}</td>
+                    <td style="text-align:right;font-weight:500">{{ deal.total_units }}</td>
+                    <td style="text-align:right;font-weight:700;color:var(--brand)">EGP {{ deal.total_value.toLocaleString() }}</td>
+                    <td style="text-align:right;color:var(--text-secondary);font-size:0.875rem">{{ fmtDate(deal.completed_at) }}</td>
+                  </tr>
+                  @if (expandedRow() === deal.id && deal.buyers) {
+                    <tr>
+                      <td colspan="6" style="padding:0">
+                        <div style="padding:1.5rem;border-bottom:1px solid var(--border);background:#FAFAFA">
+                          <h4 style="font-weight:600;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            Buyer Manifest
+                          </h4>
+                          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem">
+                            @for (buyer of deal.buyers; track buyer.name) {
+                              <div style="display:flex;justify-content:space-between;background:#fff;padding:0.75rem;border-radius:8px;border:1px solid var(--border);font-size:0.875rem">
+                                <span style="font-weight:500">{{ buyer.name }}</span>
+                                <span style="color:var(--text-secondary);display:flex;align-items:center;gap:0.375rem">
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                                  {{ buyer.quantity }}
+                                </span>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  `,
+  styles: [`
+    .stat-card { display:flex; align-items:flex-start; gap:1rem; padding:1.25rem; }
+    .stat-icon { width:2.5rem; height:2.5rem; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .clickable-row { cursor:pointer; }
+    .clickable-row:hover td { background:#fafafa; }
+    @media (min-width: 768px) {
+      .container > div:nth-child(2) { grid-template-columns: repeat(4, 1fr); }
+    }
+  `],
+})
+export class SupplierDealsComponent {
+  protected deals = MOCK_DEALS;
+  protected expandedRow = signal<number | null>(null);
+
+  protected totalRevenue() { return this.deals.reduce((s, d) => s + d.total_value, 0); }
+  protected totalUnits()   { return this.deals.reduce((s, d) => s + d.total_units, 0); }
+  protected totalBuyers()  { return this.deals.reduce((s, d) => s + d.buyer_count, 0); }
+  protected avgUnits()     { return this.deals.length > 0 ? Math.round(this.totalUnits() / this.deals.length) : 0; }
+
+  protected fmtDate(d: string) { return format(new Date(d), 'MMM d, yyyy'); }
+
+  protected toggleRow(id: number) {
+    this.expandedRow.update(r => r === id ? null : id);
+  }
+}

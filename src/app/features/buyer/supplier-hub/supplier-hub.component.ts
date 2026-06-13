@@ -1,0 +1,217 @@
+import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MOCK_BATCH, Batch } from '../../../core/mock-data';
+import { ToastService } from '../../../core/toast.service';
+import { differenceInHours, format } from 'date-fns';
+
+@Component({
+  selector: 'app-supplier-hub',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="container" style="max-width:900px;padding:2rem 1rem 4rem" role="main">
+      <!-- Back button -->
+      <button class="btn btn-ghost btn-sm" style="margin-bottom:1.5rem;margin-left:-0.5rem" (click)="router.navigate(['/my-hubs'])" aria-label="Back to my hubs">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+
+      <!-- Completed banner -->
+      @if (batch().status === 'completed') {
+        <div class="completed-banner" role="alert">
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#16a34a;flex-shrink:0" aria-hidden="true">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <div>
+              <div style="font-weight:700;font-size:0.9375rem;color:#14532d">Batch #{{ batch().batch_number }} is complete!</div>
+              <div style="font-size:0.875rem;color:#166534">
+                {{ batch().next_batch_id ? 'A new batch has been opened for more buyers to join.' : 'All available inventory has been committed.' }}
+              </div>
+            </div>
+          </div>
+          @if (batch().next_batch_id) {
+            <button class="btn btn-sm" style="background:#16a34a;color:#fff;border-radius:9999px;flex-shrink:0" (click)="router.navigate(['/hubs/supplier', batch().next_batch_id])">
+              New batch <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-left:4px"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Main card -->
+      <div class="card" style="overflow:hidden;margin-bottom:2rem">
+        <!-- Header -->
+        <div style="padding:1.75rem 2rem;border-bottom:1px solid var(--border)">
+          <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem">
+            <span class="badge badge-muted">{{ batch().category_name }}</span>
+            <span class="badge badge-brand">-{{ batch().discount_percent }}%</span>
+          </div>
+          <h1 style="font-size:1.75rem;font-weight:800;margin-bottom:0.375rem">{{ batch().offer_title }}</h1>
+          <p style="color:var(--text-secondary)">Supplier: <span style="font-weight:600;color:var(--text-primary)">{{ batch().supplier_name }}</span></p>
+
+          <!-- Pricing + expiry row -->
+          <div style="display:flex;flex-col sm:flex-row;gap:1.5rem;align-items:flex-end;justify-content:space-between;margin-top:1.5rem;background:#F9FAFB;border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem">
+            <div>
+              <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:0.25rem">Wholesale Price</div>
+              <div style="display:flex;align-items:baseline;gap:0.75rem">
+                <span style="font-size:2rem;font-weight:800">EGP {{ batch().discounted_price }}</span>
+                <span style="color:var(--text-secondary);text-decoration:line-through;font-size:1.0625rem">EGP {{ batch().unit_price }}</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.875rem;font-weight:500" [style.color]="isExpiringSoon() ? 'var(--danger)' : 'var(--text-primary)'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Expires {{ expiresFormatted() }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress + participants -->
+        <div style="padding:1.75rem 2rem;background:#fff">
+          <h3 style="font-size:1.125rem;font-weight:700;margin-bottom:1rem">Hub Progress</h3>
+          <div style="display:flex;justify-content:space-between;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem">
+            <span style="color:var(--brand)">{{ batch().filled_quantity }} of {{ batch().target_quantity }} units committed</span>
+            <span style="color:var(--text-secondary)">{{ progress() }}%</span>
+          </div>
+          <div class="progress-track" style="height:12px;margin-bottom:2rem">
+            <div class="progress-fill" [style.width.%]="progress()"></div>
+          </div>
+
+          <!-- Participants header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <h3 style="font-size:1.125rem;font-weight:700;display:flex;align-items:center;gap:0.5rem">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary)" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              Participants ({{ batch().participants.length }})
+            </h3>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:2rem">
+            @for (p of batch().participants; track p.id) {
+              <div class="participant-row" [class.is-me]="p.is_current_user" [attr.aria-label]="p.first_name + (p.is_current_user ? ' (You)' : '')">
+                <span style="font-weight:500;display:flex;align-items:center;gap:0.5rem">
+                  {{ p.first_name }}
+                  @if (p.is_current_user) {
+                    <span style="font-size:0.7rem;background:var(--brand);color:#fff;padding:0.125rem 0.5rem;border-radius:4px">You</span>
+                  }
+                </span>
+                <span style="color:var(--text-secondary);display:flex;align-items:center;gap:0.375rem;font-size:0.875rem">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                  {{ p.quantity }}
+                </span>
+              </div>
+            }
+          </div>
+
+          <!-- Action buttons -->
+          <div style="padding-top:1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.75rem">
+            @if (batch().current_user_participant) {
+              <button class="btn btn-outline" style="color:var(--danger);border-color:rgba(239,68,68,0.3)"
+                (click)="leave()" [disabled]="leaving()" aria-label="Leave this hub">
+                {{ leaving() ? 'Leaving…' : 'Leave Hub' }}
+              </button>
+            } @else {
+              <button class="btn btn-primary"
+                (click)="joinModalOpen.set(true)"
+                [disabled]="batch().target_quantity - batch().filled_quantity <= 0">
+                {{ batch().target_quantity - batch().filled_quantity <= 0 ? 'Hub full' : 'Join hub' }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Join dialog -->
+      @if (joinModalOpen()) {
+        <div class="dialog-backdrop" (click)="joinModalOpen.set(false)" role="dialog" aria-modal="true" aria-labelledby="join-title">
+          <div class="dialog" (click)="$event.stopPropagation()" style="max-width:420px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+              <h2 id="join-title" style="font-size:1.125rem;font-weight:700">Join hub — {{ batch().offer_title }}</h2>
+              <button (click)="joinModalOpen.set(false)" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.125rem" aria-label="Close dialog">✕</button>
+            </div>
+
+            <div style="background:var(--bg-page);border-radius:10px;padding:1rem;margin-bottom:1.5rem;font-size:0.875rem">
+              <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem">
+                <span style="color:var(--text-secondary)">Price per unit</span>
+                <span style="font-weight:700;color:var(--brand)">EGP {{ batch().discounted_price }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between">
+                <span style="color:var(--text-secondary)">Spots remaining</span>
+                <span style="font-weight:600">{{ batch().target_quantity - batch().filled_quantity }}</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:1.5rem">
+              <label class="form-label" for="join-qty">How many units do you want?</label>
+              <input id="join-qty" type="number" min="1" [max]="batch().target_quantity - batch().filled_quantity"
+                class="form-input" [value]="joinQty()" (input)="onJoinQtyChange($event)">
+            </div>
+
+            <button class="btn btn-primary" style="width:100%;height:3rem;font-size:1rem" [disabled]="joining()" (click)="joinHub()">
+              {{ joining() ? 'Joining…' : 'Confirm & join hub' }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  `,
+  styles: [`
+    .completed-banner { display:flex; align-items:center; justify-content:space-between; gap:1rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:1rem 1.25rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+    .progress-labels { display:flex; justify-content:space-between; }
+  `],
+})
+export class SupplierHubComponent {
+  protected router = inject(Router);
+  private toast = inject(ToastService);
+
+  protected batch = signal<Batch>({ ...MOCK_BATCH });
+  protected leaving = signal(false);
+  protected joinModalOpen = signal(false);
+  protected joinQty = signal(1);
+  protected joining = signal(false);
+
+  protected progress() {
+    const b = this.batch();
+    return b.target_quantity > 0 ? Math.round((b.filled_quantity / b.target_quantity) * 100) : 0;
+  }
+
+  protected isExpiringSoon() {
+    const h = differenceInHours(new Date(this.batch().expires_at), new Date());
+    return h < 1 && h >= 0;
+  }
+
+  protected expiresFormatted() {
+    return format(new Date(this.batch().expires_at), 'MMM d, h:mm a');
+  }
+
+  protected leave() {
+    this.leaving.set(true);
+    setTimeout(() => {
+      this.toast.success('Left hub', 'You have left this group deal.');
+      this.leaving.set(false);
+      this.router.navigate(['/my-hubs']);
+    }, 600);
+  }
+
+  protected joinHub() {
+    this.joining.set(true);
+    setTimeout(() => {
+      this.joining.set(false);
+      this.joinModalOpen.set(false);
+      this.batch.update(b => ({
+        ...b,
+        filled_quantity: b.filled_quantity + this.joinQty(),
+        current_user_participant: true,
+        participants: [...b.participants, { id: 99, first_name: 'You', quantity: this.joinQty(), is_current_user: true }],
+      }));
+      this.toast.success('Joined hub!', `You've committed ${this.joinQty()} units.`);
+    }, 700);
+  }
+
+  protected onJoinQtyChange(e: Event) {
+    this.joinQty.set(+((e.target as HTMLInputElement).value));
+  }
+}
