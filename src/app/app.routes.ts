@@ -21,6 +21,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register-supplier/register-supplier.component').then(m => m.RegisterSupplierComponent),
     canActivate: [guestGuard],
   },
+  {
+    path: 'profile',
+    loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'settings',
+    loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent),
+    canActivate: [authGuard],
+  },
 
   /* Buyer Routes */
   {

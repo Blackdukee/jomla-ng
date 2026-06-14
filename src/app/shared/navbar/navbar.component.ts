@@ -87,8 +87,8 @@ import { AuthService } from '../../core/auth.service';
                     <div style="font-weight:600;font-size:0.875rem">{{ auth.user()?.full_name }}</div>
                     <div style="font-size:0.75rem;color:var(--text-secondary)">{{ auth.user()?.email }}</div>
                   </div>
-                  <button class="dropdown-item" role="menuitem">Profile</button>
-                  <button class="dropdown-item" role="menuitem">Settings</button>
+                  <a routerLink="/profile" class="dropdown-item" role="menuitem" (click)="avatarOpen.set(false)">Profile</a>
+                  <a routerLink="/settings" class="dropdown-item" role="menuitem" (click)="avatarOpen.set(false)">Settings</a>
                   <div style="height:1px;background:var(--border);margin:0.25rem 0"></div>
                   <button class="dropdown-item danger" role="menuitem" (click)="logout()">Log out</button>
                 </div>
