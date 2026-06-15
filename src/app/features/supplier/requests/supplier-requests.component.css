@@ -1,0 +1,5 @@
+.filter-select { border:1px solid var(--border); border-radius:9999px; padding:0.5rem 1rem; font-size:0.875rem; background:var(--bg-surface); color:var(--text-primary); cursor:pointer; font-family:inherit; }
+.req-row { display:flex; align-items:center; gap:1rem; padding:1.25rem; text-decoration:none; color:inherit; cursor:pointer; }
+@media (min-width: 768px) {
+  .container > div:first-child { flex-direction: row; align-items: center; justify-content: space-between; }
+}

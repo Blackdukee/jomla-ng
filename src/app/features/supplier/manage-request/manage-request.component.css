@@ -1,0 +1,5 @@
+@media (min-width: 1024px) {
+  div[style*="grid-template-columns:1fr"] {
+    grid-template-columns: 5fr 7fr !important;
+  }
+}

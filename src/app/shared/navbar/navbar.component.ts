@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, HostListener } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 
@@ -8,7 +8,7 @@ import { AuthService } from '../../core/auth.service';
   imports: [RouterLink, RouterLinkActive],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="navbar">
+    <header class="navbar" [class.scrolled]="isScrolled()">
       <div class="container navbar-inner">
         <!-- Logo -->
         <a [routerLink]="logoLink()" class="navbar-logo" aria-label="Jomla home">
@@ -122,13 +122,23 @@ import { AuthService } from '../../core/auth.service';
     </header>
   `,
   styles: [`
-    .navbar {
+    :host {
+      display: block;
       position: sticky;
       top: 0;
       z-index: 100;
+    }
+    .navbar {
       background: var(--bg-page);
       border-bottom: 1px solid var(--border);
       height: 64px;
+      transition: background 0.3s var(--transition), backdrop-filter 0.3s var(--transition), border-color 0.3s var(--transition);
+    }
+    .navbar.scrolled {
+      background: color-mix(in srgb, var(--bg-page) 80%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom-color: color-mix(in srgb, var(--border) 50%, transparent);
     }
     .navbar-inner {
       height: 64px;
@@ -280,6 +290,12 @@ export class NavbarComponent {
   protected mobileOpen = signal(false);
   protected notifOpen = signal(false);
   protected avatarOpen = signal(false);
+  protected isScrolled = signal(false);
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    this.isScrolled.set(window.scrollY > 10);
+  }
 
   protected logoLink() {
     if (!this.auth.isAuthenticated()) return '/';

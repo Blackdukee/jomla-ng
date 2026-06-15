@@ -1,0 +1,151 @@
+<div class="container" style="padding-top:2rem;padding-bottom:3rem" role="main">
+  <!-- Page Header -->
+  <div style="margin-bottom:2rem">
+    <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.25rem">My Profile</h1>
+    <p style="color:var(--text-secondary)">Manage your personal details and view your account dashboard.</p>
+  </div>
+
+  <div class="profile-grid">
+    <!-- Left Column: Edit Details -->
+    <div class="card" style="padding:2rem;height:fit-content">
+      <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.5rem;text-align:center">
+        <div class="profile-avatar">
+          {{ initials() }}
+        </div>
+        <h2 style="font-size:1.25rem;font-weight:700;margin-top:0.75rem">{{ auth.user()?.full_name }}</h2>
+        <span class="badge" [class.badge-brand]="auth.isSupplier()" [class.badge-brand-light]="auth.isBuyer()" style="margin-top:0.5rem;text-transform:capitalize">
+          {{ auth.user()?.role }}
+        </span>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="save()" novalidate class="form-container">
+        <div class="form-group">
+          <label class="form-label" for="full_name">Full Name</label>
+          <input
+            id="full_name"
+            type="text"
+            class="form-input"
+            [class.error]="submitted() && form.controls['full_name'].invalid"
+            formControlName="full_name"
+            placeholder="Ahmed Mohamed"
+          >
+          @if (submitted() && form.controls['full_name'].invalid) {
+            <span class="form-error">Full name is required.</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input
+            id="email"
+            type="email"
+            class="form-input"
+            [class.error]="submitted() && form.controls['email'].invalid"
+            formControlName="email"
+            placeholder="email@example.com"
+          >
+          @if (submitted() && form.controls['email'].invalid) {
+            <span class="form-error">Please enter a valid email address.</span>
+          }
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.5rem" [disabled]="loading()">
+          {{ loading() ? 'Saving changes…' : 'Save Profile' }}
+        </button>
+      </form>
+    </div>
+
+    <!-- Right Column: Role-Specific Summary & Activity -->
+    <div style="display:flex;flex-direction:column;gap:1.5rem">
+      <!-- Stats Cards -->
+      <div class="stats-row">
+        @if (auth.isBuyer()) {
+          <div class="card stat-card">
+            <span class="stat-num">{{ activeHubsCount() }}</span>
+            <span class="stat-lbl">Active Hubs</span>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-num">{{ completedOrdersCount() }}</span>
+            <span class="stat-lbl">Completed Deals</span>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-num">{{ wishlistCount() }}</span>
+            <span class="stat-lbl">Wishlist Items</span>
+          </div>
+        } @else if (auth.isSupplier()) {
+          <div class="card stat-card">
+            <span class="stat-num">{{ supplierOffersCount() }}</span>
+            <span class="stat-lbl">My Offers</span>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-num">{{ completedDealsCount() }}</span>
+            <span class="stat-lbl">Deals Sealed</span>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-num">{{ alertsCount() }}</span>
+            <span class="stat-lbl">Demand Alerts</span>
+          </div>
+        }
+      </div>
+
+      <!-- Activity List Card -->
+      <div class="card" style="padding:1.5rem">
+        <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:1rem">
+          {{ auth.isBuyer() ? 'My Joined Hubs' : 'My Recent Offers' }}
+        </h2>
+
+        @if (auth.isBuyer()) {
+          @if (buyerHubs().length === 0) {
+            <p style="color:var(--text-secondary);text-align:center;padding:2rem 0">You haven't joined any hubs yet.</p>
+          } @else {
+            <div style="display:flex;flex-direction:column;gap:1rem">
+              @for (hub of buyerHubs(); track hub.id) {
+                <div class="activity-row">
+                  <div style="flex:1">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem">
+                      <span style="font-weight:600;font-size:0.9375rem">{{ hub.title }}</span>
+                      <span class="badge badge-brand-light" style="font-size:0.7rem;text-transform:uppercase">{{ hub.status }}</span>
+                    </div>
+                    <p style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:0.5rem">
+                      Committed: <strong style="color:var(--text-primary)">{{ hub.committed_units }} units</strong>
+                    </p>
+                    @if (hub.fill_target && hub.fill_progress !== undefined) {
+                      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.25rem">
+                        <span>Hub Progress: {{ hub.fill_progress }} / {{ hub.fill_target }}</span>
+                        <span>{{ getProgressPercent(hub.fill_progress, hub.fill_target) }}%</span>
+                      </div>
+                      <div class="progress-track" style="height:6px">
+                        <div class="progress-fill" [style.width.%]="getProgressPercent(hub.fill_progress, hub.fill_target)"></div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        } @else if (auth.isSupplier()) {
+          @if (supplierOffers().length === 0) {
+            <p style="color:var(--text-secondary);text-align:center;padding:2rem 0">You haven't created any offers yet.</p>
+          } @else {
+            <div style="display:flex;flex-direction:column;gap:1rem">
+              @for (offer of supplierOffers(); track offer.id) {
+                <div class="activity-row">
+                  <div style="flex:1">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem">
+                      <span style="font-weight:600;font-size:0.9375rem">{{ offer.title }}</span>
+                      <span class="badge badge-success" style="font-size:0.7rem;text-transform:uppercase">Active</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:0.8125rem;color:var(--text-secondary);margin-top:0.25rem">
+                      <span>Price: <strong>EGP {{ offer.discounted_price }}</strong> (Orig: EGP {{ offer.unit_price }})</span>
+                      <span>Committed: <strong>{{ offer.committed_units }} / {{ offer.hub_target_quantity }} units</strong></span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+</div>

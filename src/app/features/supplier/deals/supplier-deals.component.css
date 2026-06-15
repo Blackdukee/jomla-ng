@@ -1,0 +1,7 @@
+.stat-card { display:flex; align-items:flex-start; gap:1rem; padding:1.25rem; }
+.stat-icon { width:2.5rem; height:2.5rem; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.clickable-row { cursor:pointer; }
+.clickable-row:hover td { background:#fafafa; }
+@media (min-width: 768px) {
+  .container > div:nth-child(2) { grid-template-columns: repeat(4, 1fr); }
+}
