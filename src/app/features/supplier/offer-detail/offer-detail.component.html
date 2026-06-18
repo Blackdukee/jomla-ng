@@ -1,46 +1,133 @@
-<div class="container" style="max-width:900px;padding:2rem 1rem 4rem" role="main">
-  <button class="btn btn-ghost btn-sm" style="margin-bottom:1.5rem;margin-left:-0.5rem" (click)="router.navigate(['/supplier/offers'])">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-    Back to Offers
-  </button>
+<div class="container" style="max-width:1200px;padding:2rem 1rem 4rem" role="main">
+  <!-- Back Link -->
+  <div style="margin-bottom:1.5rem">
+    <a routerLink="/supplier/offers" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:0.375rem; display:inline-block; vertical-align:middle"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to Offers
+    </a>
+  </div>
 
-  <div class="card" style="padding:2rem">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:1rem">
-      <div>
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">
-          <span class="badge badge-brand-light" style="color:var(--brand);text-transform:uppercase;letter-spacing:0.05em;font-size:0.7rem">Live Batch</span>
-          <span style="font-size:0.8125rem;color:var(--text-secondary)">Batch #{{ offer().current_batch_id || 'N/A' }}</span>
+  <!-- Live Warning Banner -->
+  <div class="banner-alert">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Offer is live.</strong> Buyers can currently see and join this deal.</span>
+  </div>
+
+  <!-- Badges and Action Buttons Row -->
+  <div class="action-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem">
+    <div style="display:flex; gap:0.5rem; align-items:center">
+      <span class="badge badge-outline">{{ offer()?.category_name }}</span>
+      <span class="badge badge-brand">{{ offer()?.status }}</span>
+    </div>
+    <div style="display:flex; gap:0.75rem; align-items:center">
+      <button class="btn btn-outline" style="border-radius:9999px; font-size:0.875rem; padding:0.5rem 1.25rem">Deactivate</button>
+      <button class="btn btn-primary" style="border-radius:9999px; font-size:0.875rem; padding:0.5rem 1.25rem; display:flex; align-items:center; gap:0.375rem" (click)="router.navigate(['/manage/offers', offer()?.id])">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
+        Edit
+      </button>
+      <button class="btn" style="width:2.25rem; height:2.25rem; border-radius:50%; padding:0; display:flex; align-items:center; justify-content:center; border:1px solid #FCA5A5; background:transparent" aria-label="Delete">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#EF4444"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Title -->
+  <h1 style="font-size:2.25rem; font-weight:800; margin-bottom:2rem; color:var(--text-primary)">{{ offer()?.title }}</h1>
+
+  <!-- Columns Grid -->
+  <div class="offer-detail-grid">
+    <!-- Left Column -->
+    <div style="display:flex; flex-direction:column; gap:1.5rem">
+      <!-- Details Card -->
+      <div class="card" style="padding:2rem">
+        <h2 style="font-size:1.125rem; font-weight:700; margin-bottom:1.25rem">Details</h2>
+        <div style="margin-bottom:1.5rem">
+          <div style="font-size:0.8125rem; color:var(--text-secondary); font-weight:500; text-transform:uppercase; letter-spacing:0.05em">Description</div>
+          <div style="font-size:0.9375rem; color:var(--text-primary); margin-top:0.25rem">{{ offer()?.description }}</div>
         </div>
-        <h1 style="font-size:1.5rem;font-weight:800">{{ offer().title }}</h1>
+        <div class="separator" style="margin:1.5rem 0"></div>
+        <div class="details-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:1.5rem">
+          <div>
+            <div style="font-size:0.8125rem; color:var(--text-secondary)">Unit Price</div>
+            <div style="font-size:1.125rem; font-weight:700; margin-top:0.25rem">EGP {{ offer()?.unit_price }}</div>
+          </div>
+          <div>
+            <div style="font-size:0.8125rem; color:var(--text-secondary)">Discount</div>
+            <div style="font-size:1.125rem; font-weight:700; color:var(--brand); margin-top:0.25rem">{{ offer()?.discount_percent }}%</div>
+          </div>
+          <div>
+            <div style="font-size:0.8125rem; color:var(--text-secondary)">Wholesale Price</div>
+            <div style="font-size:1.125rem; font-weight:700; margin-top:0.25rem">EGP {{ offer()?.discounted_price }}</div>
+          </div>
+          <div>
+            <div style="font-size:0.8125rem; color:var(--text-secondary)">Target Qty</div>
+            <div style="font-size:1.125rem; font-weight:700; margin-top:0.25rem">{{ offer()?.hub_target_quantity }}</div>
+          </div>
+        </div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:0.25rem">Time Remaining</div>
-        <div style="font-family:monospace;font-weight:600;display:flex;align-items:center;gap:0.5rem;justify-content:flex-end">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          23:45:12
+
+      <!-- Batch History Card -->
+      <div class="card" style="padding:2rem">
+        <h2 style="font-size:1.125rem; font-weight:700; margin-bottom:1.25rem">Batch History</h2>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Batch #</th>
+                <th>Status</th>
+                <th>Filled</th>
+                <th>Target</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (offer()) {
+                <tr>
+                  <td style="font-weight:600">1</td>
+                  <td>
+                    <span class="badge badge-brand">{{ offer()?.status }}</span>
+                  </td>
+                  <td>{{ offer()?.committed_units }}</td>
+                  <td>{{ offer()?.hub_target_quantity }}</td>
+                  <td>{{ fmtDate(offer()?.expires_at) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
 
-    <div style="margin-bottom:2rem">
-      <div style="display:flex;justify-content:space-between;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem">
-        <span style="color:var(--brand)">{{ offer().committed_units }} of {{ offer().hub_target_quantity }} units committed</span>
-        <span style="color:var(--text-secondary)">{{ progress() }}%</span>
+    <!-- Right Column -->
+    <div style="display:flex; flex-direction:column; gap:1.5rem">
+      <!-- Images Card -->
+      <div class="card" style="padding:2rem">
+        <h2 style="font-size:1.125rem; font-weight:700; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.5rem">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Images <span style="font-weight:500; color:var(--text-secondary); font-size:0.875rem">(1)</span>
+        </h2>
+        
+        <div class="image-gallery-grid">
+          <div class="gallery-image-container">
+            <img [src]="offer()?.image_url || 'chihuahua_cover.png'" alt="Offer image" class="gallery-image">
+            <span class="cover-badge">Cover</span>
+          </div>
+        </div>
       </div>
-      <div class="progress-track" style="height:16px">
-        <div class="progress-fill" [style.width.%]="progress()"></div>
-      </div>
-    </div>
 
-    <div style="background:#F9FAFB;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;gap:1rem">
-
-      <div>
-        <h4 style="font-weight:700;margin-bottom:0.375rem">Batch Status</h4>
-        <p style="font-size:0.9375rem;color:var(--text-secondary)">This batch is currently open. Once the target is met or time expires, it will automatically close.</p>
-      </div>
-      <div style="display:flex;gap:0.75rem;flex-shrink:0">
-        <button class="btn btn-outline">Deactivate Offer</button>
-        <button class="btn btn-primary" (click)="router.navigate(['/manage/offers', offer().id])">Manage Details</button>
+      <!-- Inventory & Tracking Card -->
+      <div class="card" style="padding:2rem">
+        <h2 style="font-size:1.125rem; font-weight:700; margin-bottom:1.25rem">Inventory & Tracking</h2>
+        
+        <div>
+          <div style="font-size:0.8125rem; color:var(--text-secondary)">Total Available</div>
+          <div style="font-size:1.875rem; font-weight:800; margin-top:0.25rem">{{ offer()?.total_quantity_available }}</div>
+        </div>
+        <div class="separator" style="margin:1.5rem 0"></div>
+        <div>
+          <div style="font-size:0.8125rem; color:var(--text-secondary)">Expires At</div>
+          <div style="font-size:1.0625rem; font-weight:700; margin-top:0.25rem">{{ fmtExpiryLong(offer()?.expires_at) }}</div>
+        </div>
       </div>
     </div>
   </div>
