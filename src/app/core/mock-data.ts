@@ -1,7 +1,7 @@
 // Mock data for the Jomla Angular app
 
 export interface User {
-  id: number;
+  id: number | string;
   full_name: string;
   email: string;
   role: 'buyer' | 'supplier';
