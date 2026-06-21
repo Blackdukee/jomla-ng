@@ -78,13 +78,13 @@ import { AuthService } from '../../core/auth.service';
 
             <!-- Avatar dropdown -->
             <div style="position:relative">
-              <button class="avatar" (click)="avatarOpen.set(!avatarOpen())" [attr.aria-label]="'User menu for ' + auth.user()?.full_name">
+              <button class="avatar" (click)="avatarOpen.set(!avatarOpen())" [attr.aria-label]="'User menu for ' + userDisplayName()">
                 {{ initials() }}
               </button>
               @if (avatarOpen()) {
                 <div class="dropdown avatar-menu" role="menu">
                   <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--border)">
-                    <div style="font-weight:600;font-size:0.875rem">{{ auth.user()?.full_name }}</div>
+                    <div style="font-weight:600;font-size:0.875rem">{{ userDisplayName() }}</div>
                     <div style="font-size:0.75rem;color:var(--text-secondary)">{{ auth.user()?.email }}</div>
                   </div>
                   <a routerLink="/profile" class="dropdown-item" role="menuitem" (click)="avatarOpen.set(false)">Profile</a>
@@ -321,14 +321,31 @@ export class NavbarComponent {
     return [];
   }
 
+  protected userDisplayName(): string {
+    const u = this.auth.user();
+    if (!u) return '';
+    // Support both old (full_name) and new (firstName/lastName) user models
+    if ((u as any).full_name) return (u as any).full_name;
+    return `${(u as any).firstName ?? ''} ${(u as any).lastName ?? ''}`.trim();
+  }
+
   protected initials() {
-    const name = this.auth.user()?.full_name ?? '';
+    const name = this.userDisplayName();
+    const parts = name.split(' ').filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return name.substring(0, 2).toUpperCase();
   }
 
   protected logout() {
-    this.auth.logout();
-    this.avatarOpen.set(false);
-    this.router.navigate(['/']);
+    this.auth.logout().subscribe({
+      complete: () => {
+        this.avatarOpen.set(false);
+        this.router.navigate(['/']);
+      },
+      error: () => {
+        this.avatarOpen.set(false);
+        this.router.navigate(['/']);
+      }
+    });
   }
 }

@@ -2,9 +2,11 @@
 
 export interface User {
   id: number | string;
-  full_name: string;
+  full_name?: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
-  role: 'buyer' | 'supplier';
+  role: 'buyer' | 'supplier' | 'Buyer' | 'Supplier';
   avatar_url?: string;
 }
 

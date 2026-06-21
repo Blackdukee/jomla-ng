@@ -1,28 +1,21 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
-import { User } from './mock-data';
-
-interface AuthResponse {
-  token: string;
-  userId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  refreshTokenExpiresOn: string;
-}
+import { Observable, tap, finalize } from 'rxjs';
+import { AuthResponse, User } from './models/auth.models';
+import { SignalRService } from './services/signalr.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
+  private signalR = inject(SignalRService);
   private readonly baseUrl = 'http://localhost:5174/api/auth';
 
   private _user = signal<User | null>(null);
 
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._user() !== null);
-  readonly isBuyer = computed(() => this._user()?.role === 'buyer');
-  readonly isSupplier = computed(() => this._user()?.role === 'supplier');
+  readonly isBuyer = computed(() => this._user()?.role === 'Buyer');
+  readonly isSupplier = computed(() => this._user()?.role === 'Supplier');
 
   constructor() {
     // Restore from localStorage
@@ -35,6 +28,10 @@ export class AuthService {
 
     // Try to refresh token on startup to ensure we are logged in and get a fresh access token
     this.refreshAccessToken().subscribe({
+      next: () => {
+        // Connect SignalR after successful token refresh
+        this.signalR.connect();
+      },
       error: () => {
         // If refresh fails, clear auth state
         this.clearAuthState();
@@ -42,22 +39,22 @@ export class AuthService {
     });
   }
 
-  private handleAuthSuccess(res: AuthResponse, roleClaim?: string) {
-    let role: 'buyer' | 'supplier' = 'buyer';
+  private handleAuthSuccess(res: AuthResponse) {
+    // Determine role from JWT claims
+    let role: 'Buyer' | 'Supplier' = 'Buyer';
     const decoded = this.decodeToken(res.token);
     if (decoded) {
       const claim = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded["role"];
       const roleStr = Array.isArray(claim) ? claim[0] : claim;
       if (roleStr?.toLowerCase() === 'supplier') {
-        role = 'supplier';
+        role = 'Supplier';
       }
-    } else if (roleClaim) {
-      role = roleClaim.toLowerCase() === 'supplier' ? 'supplier' : 'buyer';
     }
 
     const u: User = {
       id: res.userId,
-      full_name: `${res.firstName} ${res.lastName}`,
+      firstName: res.firstName,
+      lastName: res.lastName,
       email: res.email,
       role: role
     };
@@ -65,12 +62,21 @@ export class AuthService {
     this._user.set(u);
     localStorage.setItem('jomla_user', JSON.stringify(u));
     localStorage.setItem('jomla_token', res.token);
+
+    // Connect SignalR with fresh token
+    this.signalR.connect();
   }
 
   private clearAuthState() {
     this._user.set(null);
     localStorage.removeItem('jomla_user');
     localStorage.removeItem('jomla_token');
+    this.signalR.disconnect();
+  }
+
+  updateUser(u: User) {
+    this._user.set(u);
+    localStorage.setItem('jomla_user', JSON.stringify(u));
   }
 
   loginWithData(data: { email: string; password: string }): Observable<AuthResponse> {
@@ -95,7 +101,7 @@ export class AuthService {
       confirmPassword: data.password,
       role: 'Buyer'
     }, { withCredentials: true }).pipe(
-      tap(res => this.handleAuthSuccess(res, 'buyer'))
+      tap(res => this.handleAuthSuccess(res))
     );
   }
 
@@ -112,7 +118,7 @@ export class AuthService {
       confirmPassword: data.password,
       role: 'Supplier'
     }, { withCredentials: true }).pipe(
-      tap(res => this.handleAuthSuccess(res, 'supplier'))
+      tap(res => this.handleAuthSuccess(res))
     );
   }
 
@@ -124,25 +130,17 @@ export class AuthService {
 
   logout(): Observable<any> {
     return this.http.post(`${this.baseUrl}/logout`, {}, { withCredentials: true }).pipe(
-      tap({
-        finalize: () => {
-          this.clearAuthState();
-        }
+      finalize(() => {
+        this.clearAuthState();
       })
     );
   }
 
-  // Demo login helper fallbacks
-  loginAsBuyer(full_name = 'Ahmed Mohamed', email = 'ahmed@example.com') {
-    const u: User = { id: 'demo-buyer-id', full_name, email, role: 'buyer' };
-    this._user.set(u);
-    localStorage.setItem('jomla_user', JSON.stringify(u));
-  }
-
-  loginAsSupplier(full_name = 'TechHub Egypt', email = 'sales@techhub.eg') {
-    const u: User = { id: 'demo-supplier-id', full_name, email, role: 'supplier' };
-    this._user.set(u);
-    localStorage.setItem('jomla_user', JSON.stringify(u));
+  /** Get the display name for the current user */
+  get displayName(): string {
+    const u = this._user();
+    if (!u) return '';
+    return `${u.firstName} ${u.lastName}`;
   }
 
   private decodeToken(token: string): any {

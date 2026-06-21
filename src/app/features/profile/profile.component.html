@@ -12,7 +12,7 @@
         <div class="profile-avatar">
           {{ initials() }}
         </div>
-        <h2 style="font-size:1.25rem;font-weight:700;margin-top:0.75rem">{{ auth.user()?.full_name }}</h2>
+        <h2 style="font-size:1.25rem;font-weight:700;margin-top:0.75rem">{{ auth.displayName }}</h2>
         <span class="badge" [class.badge-brand]="auth.isSupplier()" [class.badge-brand-light]="auth.isBuyer()" style="margin-top:0.5rem;text-transform:capitalize">
           {{ auth.user()?.role }}
         </span>

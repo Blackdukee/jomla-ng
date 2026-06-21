@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
+import { User } from '../../core/models';
 import { 
   MOCK_BUYER_HUBS, 
   MOCK_SUPPLIER_OFFERS, 
@@ -48,14 +49,14 @@ export class ProfileComponent {
     const user = this.auth.user();
     if (user) {
       this.form.patchValue({
-        full_name: user.full_name,
+        full_name: `${user.firstName} ${user.lastName}`.trim(),
         email: user.email,
       });
     }
   }
 
   protected initials() {
-    const name = this.auth.user()?.full_name ?? '';
+    const name = this.auth.displayName;
     return name.substring(0, 2).toUpperCase();
   }
 
@@ -70,16 +71,19 @@ export class ProfileComponent {
     this.loading.set(true);
     setTimeout(() => {
       const val = this.form.value as { full_name: string; email: string };
-      // Update local storage and auth service user state
       const currentUser = this.auth.user();
       if (currentUser) {
-        const updated = { ...currentUser, ...val };
-        // Trigger login method in auth service to refresh state
-        if (currentUser.role === 'buyer') {
-          this.auth.loginAsBuyer(val.full_name, val.email);
-        } else {
-          this.auth.loginAsSupplier(val.full_name, val.email);
-        }
+        const nameParts = val.full_name.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || 'User';
+
+        const updated: User = {
+          ...currentUser,
+          firstName,
+          lastName,
+          email: val.email
+        };
+        this.auth.updateUser(updated);
       }
       this.loading.set(false);
       this.toast.success('Profile updated!', 'Your personal information has been saved.');

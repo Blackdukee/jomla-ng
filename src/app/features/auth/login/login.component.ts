@@ -33,22 +33,22 @@ export class LoginComponent {
     this.loading.set(true);
     this.errorMsg.set('');
 
-    // Simulate async
-    setTimeout(() => {
-      const val = this.form.value as { email: string; password: string };
-      this.auth.loginWithData(val);
-      this.loading.set(false);
-      this.toast.success('Welcome back!', 'You have been signed in.');
-      if (this.auth.isBuyer()) this.router.navigate(['/discover']);
-      else this.router.navigate(['/supplier/requests']);
-    }, 600);
-  }
-
-  protected demoLogin(role: 'buyer' | 'supplier') {
-    if (role === 'buyer') this.auth.loginAsBuyer();
-    else this.auth.loginAsSupplier();
-    this.toast.success('Demo login', `Signed in as demo ${role}.`);
-    if (role === 'buyer') this.router.navigate(['/discover']);
-    else this.router.navigate(['/supplier/requests']);
+    const val = this.form.value as { email: string; password: string };
+    this.auth.loginWithData(val).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.toast.success('Welcome back!', 'You have been signed in.');
+        if (this.auth.isBuyer()) {
+          this.router.navigate(['/discover']);
+        } else {
+          this.router.navigate(['/supplier/requests']);
+        }
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.errorMsg.set(err?.error?.detail || err?.error?.title || 'Invalid credentials');
+        this.toast.error('Sign in failed', this.errorMsg());
+      }
+    });
   }
 }
