@@ -13,13 +13,23 @@
     </div>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="auth-form">
-      <div class="form-group">
-        <label class="form-label" for="full_name">Full Name</label>
-        <input id="full_name" type="text" class="form-input" formControlName="full_name" autocomplete="name" placeholder="John Doe"
-          [class.error]="submitted() && form.controls['full_name'].invalid">
-        @if (submitted() && form.controls['full_name'].invalid) {
-          <span class="form-error" role="alert">Full name must be at least 2 characters.</span>
-        }
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group">
+          <label class="form-label" for="firstName">First Name</label>
+          <input id="firstName" type="text" class="form-input" formControlName="firstName" autocomplete="given-name" placeholder="John"
+            [class.error]="submitted() && form.controls['firstName'].invalid">
+          @if (submitted() && form.controls['firstName'].invalid) {
+            <span class="form-error" role="alert">Required.</span>
+          }
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lastName">Last Name</label>
+          <input id="lastName" type="text" class="form-input" formControlName="lastName" autocomplete="family-name" placeholder="Doe"
+            [class.error]="submitted() && form.controls['lastName'].invalid">
+          @if (submitted() && form.controls['lastName'].invalid) {
+            <span class="form-error" role="alert">Required.</span>
+          }
+        </div>
       </div>
 
       <div class="form-group">
@@ -37,6 +47,17 @@
           [class.error]="submitted() && form.controls['password'].invalid">
         @if (submitted() && form.controls['password'].invalid) {
           <span class="form-error" role="alert">Password must be at least 8 characters.</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="confirmPassword">Confirm Password</label>
+        <input id="confirmPassword" type="password" class="form-input" formControlName="confirmPassword" autocomplete="new-password" placeholder="••••••••"
+          [class.error]="submitted() && (form.controls['confirmPassword'].invalid || form.errors?.['mismatch'])">
+        @if (submitted() && form.controls['confirmPassword'].invalid) {
+          <span class="form-error" role="alert">Please confirm your password.</span>
+        } @else if (submitted() && form.errors?.['mismatch']) {
+          <span class="form-error" role="alert">Passwords do not match.</span>
         }
       </div>
 

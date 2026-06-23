@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, finalize } from 'rxjs';
-import { AuthResponse, User } from './models/auth.models';
+import { AuthResponse, User, RegisterRequest } from './models/auth.models';
 import { SignalRService } from './services/signalr.service';
 
 @Injectable({ providedIn: 'root' })
@@ -88,34 +88,18 @@ export class AuthService {
     );
   }
 
-  registerBuyer(data: { full_name: string; email: string; password: string }): Observable<AuthResponse> {
-    const nameParts = data.full_name.trim().split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || 'User';
-
+  registerBuyer(data: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/register`, {
-      firstName,
-      lastName,
-      email: data.email,
-      password: data.password,
-      confirmPassword: data.password,
+      ...data,
       role: 'Buyer'
     }, { withCredentials: true }).pipe(
       tap(res => this.handleAuthSuccess(res))
     );
   }
 
-  registerSupplier(data: { full_name: string; email: string; password: string }): Observable<AuthResponse> {
-    const nameParts = data.full_name.trim().split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || 'User';
-
+  registerSupplier(data: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/register`, {
-      firstName,
-      lastName,
-      email: data.email,
-      password: data.password,
-      confirmPassword: data.password,
+      ...data,
       role: 'Supplier'
     }, { withCredentials: true }).pipe(
       tap(res => this.handleAuthSuccess(res))

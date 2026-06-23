@@ -13,13 +13,23 @@
     </div>
 
     <form [formGroup]="accountForm" (ngSubmit)="submit()" novalidate class="auth-form">
-      <div class="form-group">
-        <label class="form-label" for="company">Company Name</label>
-        <input id="company" type="text" class="form-input" formControlName="full_name" autocomplete="organization" placeholder="Acme Corp"
-          [class.error]="step1Submitted() && accountForm.controls['full_name'].invalid">
-        @if (step1Submitted() && accountForm.controls['full_name'].invalid) {
-          <span class="form-error" role="alert">Company name is required.</span>
-        }
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group">
+          <label class="form-label" for="firstName">Company First Name</label>
+          <input id="firstName" type="text" class="form-input" formControlName="firstName" autocomplete="organization-title" placeholder="Acme"
+            [class.error]="step1Submitted() && accountForm.controls['firstName'].invalid">
+          @if (step1Submitted() && accountForm.controls['firstName'].invalid) {
+            <span class="form-error" role="alert">Required.</span>
+          }
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lastName">Company Last Name</label>
+          <input id="lastName" type="text" class="form-input" formControlName="lastName" autocomplete="organization" placeholder="Corp"
+            [class.error]="step1Submitted() && accountForm.controls['lastName'].invalid">
+          @if (step1Submitted() && accountForm.controls['lastName'].invalid) {
+            <span class="form-error" role="alert">Required.</span>
+          }
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label" for="email">Email address</label>
@@ -37,6 +47,19 @@
           <span class="form-error" role="alert">Password must be at least 8 characters.</span>
         }
       </div>
+      <div class="form-group">
+        <label class="form-label" for="confirmPassword">Confirm Password</label>
+        <input id="confirmPassword" type="password" class="form-input" formControlName="confirmPassword" autocomplete="new-password" placeholder="••••••••"
+          [class.error]="step1Submitted() && (accountForm.controls['confirmPassword'].invalid || accountForm.errors?.['mismatch'])">
+        @if (step1Submitted() && accountForm.controls['confirmPassword'].invalid) {
+          <span class="form-error" role="alert">Please confirm your password.</span>
+        } @else if (step1Submitted() && accountForm.errors?.['mismatch']) {
+          <span class="form-error" role="alert">Passwords do not match.</span>
+        }
+      </div>
+      @if (errorMsg()) {
+        <div class="error-banner" role="alert">{{ errorMsg() }}</div>
+      }
       <button type="submit" class="btn btn-primary" style="width:100%;height:3rem;font-size:1rem" [disabled]="loading()">
         {{ loading() ? 'Creating account…' : 'Create account' }}
       </button>
