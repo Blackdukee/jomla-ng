@@ -15,7 +15,7 @@
     <form [formGroup]="accountForm" (ngSubmit)="submit()" novalidate class="auth-form">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
         <div class="form-group">
-          <label class="form-label" for="firstName">Company First Name</label>
+          <label class="form-label" for="firstName">Supplier First Name</label>
           <input id="firstName" type="text" class="form-input" formControlName="firstName" autocomplete="organization-title" placeholder="Acme"
             [class.error]="step1Submitted() && accountForm.controls['firstName'].invalid">
           @if (step1Submitted() && accountForm.controls['firstName'].invalid) {
@@ -23,7 +23,7 @@
           }
         </div>
         <div class="form-group">
-          <label class="form-label" for="lastName">Company Last Name</label>
+          <label class="form-label" for="lastName">Supplier Last Name</label>
           <input id="lastName" type="text" class="form-input" formControlName="lastName" autocomplete="organization" placeholder="Corp"
             [class.error]="step1Submitted() && accountForm.controls['lastName'].invalid">
           @if (step1Submitted() && accountForm.controls['lastName'].invalid) {
