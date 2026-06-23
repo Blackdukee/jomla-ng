@@ -8,3 +8,5 @@ export type {
   JoinBatchRequest,
   BatchStatus
 } from './batch.models';
+export type { CategoryDto } from './category.models';
+export type { OfferDto, MyOfferDto } from './offer.models';

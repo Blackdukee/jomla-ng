@@ -1,12 +1,12 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
-import { MOCK_CATEGORIES, Category } from '../../core/mock-data';
+import { CategoriesService } from '../../core/services/categories.service';
 
 interface CategoryPreference {
   id: string;
-  category_id: number;
+  category_id: string;
   category_name: string;
   min_quantity: number;
   is_active: boolean;
@@ -20,10 +20,11 @@ interface CategoryPreference {
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
 })
-export class SettingsComponent {
+export class SettingsComponent implements OnInit {
   protected auth = inject(AuthService);
   private fb = inject(FormBuilder);
   private toast = inject(ToastService);
+  private categoriesService = inject(CategoriesService);
 
   protected activeTab = signal<'security' | 'notifications' | 'preferences'>('security');
   
@@ -46,27 +47,17 @@ export class SettingsComponent {
   // Supplier Preferences
   protected prefSubmitted = signal(false);
   protected categoryPreferences = signal<CategoryPreference[]>([]);
-  protected flatCategories: { id: number; name: string }[] = [];
+  protected flatCategories: { id: string; name: string }[] = [];
 
   protected prefForm = this.fb.group({
     category_id: ['', Validators.required],
     min_quantity: [null as number | null, [Validators.required, Validators.min(1)]],
   });
 
-  constructor() {
-    this.flattenCategories();
-    this.loadPreferences();
-  }
-
-  private flattenCategories() {
-    // Populate simple flat list for select option dropdown from hierarchical categories
-    MOCK_CATEGORIES.forEach(cat => {
-      this.flatCategories.push({ id: cat.id, name: cat.name });
-      if (cat.children) {
-        cat.children.forEach(sub => {
-          this.flatCategories.push({ id: sub.id, name: `${cat.name} / ${sub.name}` });
-        });
-      }
+  ngOnInit(): void {
+    this.categoriesService.getCategories().subscribe(cats => {
+      this.flatCategories = cats.map(c => ({ id: c.id, name: c.name }));
+      this.loadPreferences();
     });
   }
 
@@ -80,19 +71,21 @@ export class SettingsComponent {
     }
     
     // Seed initial mock supplier preferences if empty
-    if (this.auth.isSupplier()) {
+    if (this.auth.isSupplier() && this.flatCategories.length > 0) {
+      const firstCat = this.flatCategories[0];
+      const secondCat = this.flatCategories[1] || firstCat;
       const initialPrefs: CategoryPreference[] = [
         {
           id: 'pref-1',
-          category_id: 11,
-          category_name: 'Electronics / Audio',
+          category_id: firstCat.id,
+          category_name: firstCat.name,
           min_quantity: 50,
           is_active: true
         },
         {
           id: 'pref-2',
-          category_id: 31,
-          category_name: 'Solar & Energy / Solar Panels',
+          category_id: secondCat.id,
+          category_name: secondCat.name,
           min_quantity: 100,
           is_active: true
         }
@@ -124,7 +117,7 @@ export class SettingsComponent {
     if (this.prefForm.invalid) return;
 
     const val = this.prefForm.value as { category_id: string; min_quantity: number };
-    const catId = Number(val.category_id);
+    const catId = val.category_id;
     
     // Find category name
     const foundCat = this.flatCategories.find(c => c.id === catId);

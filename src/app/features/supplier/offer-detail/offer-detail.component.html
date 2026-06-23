@@ -16,8 +16,8 @@
   <!-- Badges and Action Buttons Row -->
   <div class="action-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem">
     <div style="display:flex; gap:0.5rem; align-items:center">
-      <span class="badge badge-outline">{{ offer()?.category_name }}</span>
-      <span class="badge badge-brand">{{ offer()?.status }}</span>
+      <span class="badge badge-outline">{{ offer()?.categoryName }}</span>
+      <span class="badge badge-brand">Active</span>
     </div>
     <div style="display:flex; gap:0.75rem; align-items:center">
       <button class="btn btn-outline" style="border-radius:9999px; font-size:0.875rem; padding:0.5rem 1.25rem">Deactivate</button>
@@ -49,19 +49,19 @@
         <div class="details-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:1.5rem">
           <div>
             <div style="font-size:0.8125rem; color:var(--text-secondary)">Unit Price</div>
-            <div style="font-size:1.125rem; font-weight:700; margin-top:0.25rem">EGP {{ offer()?.unit_price }}</div>
+            <div style="font-size:1.125rem; font-weight:700; margin-top:0.25rem">EGP {{ offer()?.unitPrice }}</div>
           </div>
           <div>
             <div style="font-size:0.8125rem; color:var(--text-secondary)">Discount</div>
-            <div style="font-size:1.125rem; font-weight:700; color:var(--brand); margin-top:0.25rem">{{ offer()?.discount_percent }}%</div>
+            <div style="font-size:1.125rem; font-weight:700; color:var(--brand); margin-top:0.25rem">{{ offer()?.discountPercentage }}%</div>
           </div>
           <div>
             <div style="font-size:0.8125rem; color:var(--text-secondary)">Wholesale Price</div>
-            <div style="font-size:1.125rem; font-weight:700; margin-top:0.25rem">EGP {{ offer()?.discounted_price }}</div>
+            <div style="font-size:1.125rem; font-weight:700; margin-top:0.25rem">EGP {{ ((offer()?.unitPrice ?? 0) * (1 - (offer()?.discountPercentage ?? 0) / 100)).toFixed(2) }}</div>
           </div>
           <div>
             <div style="font-size:0.8125rem; color:var(--text-secondary)">Target Qty</div>
-            <div style="font-size:1.125rem; font-weight:700; margin-top:0.25rem">{{ offer()?.hub_target_quantity }}</div>
+            <div style="font-size:1.125rem; font-weight:700; margin-top:0.25rem">{{ offer()?.hubTargetQuantity }}</div>
           </div>
         </div>
       </div>
@@ -85,11 +85,11 @@
                 <tr>
                   <td style="font-weight:600">1</td>
                   <td>
-                    <span class="badge badge-brand">{{ offer()?.status }}</span>
+                    <span class="badge badge-brand">Active</span>
                   </td>
-                  <td>{{ offer()?.committed_units }}</td>
-                  <td>{{ offer()?.hub_target_quantity }}</td>
-                  <td>{{ fmtDate(offer()?.expires_at) }}</td>
+                  <td>{{ offer()?.committedUnits }}</td>
+                  <td>{{ offer()?.hubTargetQuantity }}</td>
+                  <td>{{ fmtDate(offer()?.expiresAt) }}</td>
                 </tr>
               }
             </tbody>
@@ -104,12 +104,12 @@
       <div class="card" style="padding:2rem">
         <h2 style="font-size:1.125rem; font-weight:700; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.5rem">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          Images <span style="font-weight:500; color:var(--text-secondary); font-size:0.875rem">(1)</span>
+          Images <span style="font-weight:500; color:var(--text-secondary); font-size:0.875rem">({{ offer()?.images?.length ?? 0 }})</span>
         </h2>
         
         <div class="image-gallery-grid">
           <div class="gallery-image-container">
-            <img [src]="offer()?.image_url || 'chihuahua_cover.png'" alt="Offer image" class="gallery-image">
+            <img [src]="(offer()?.images && offer()!.images.length > 0) ? offer()!.images[0] : 'chihuahua_cover.png'" alt="Offer image" class="gallery-image">
             <span class="cover-badge">Cover</span>
           </div>
         </div>
@@ -121,12 +121,12 @@
         
         <div>
           <div style="font-size:0.8125rem; color:var(--text-secondary)">Total Available</div>
-          <div style="font-size:1.875rem; font-weight:800; margin-top:0.25rem">{{ offer()?.total_quantity_available }}</div>
+          <div style="font-size:1.875rem; font-weight:800; margin-top:0.25rem">N/A</div>
         </div>
         <div class="separator" style="margin:1.5rem 0"></div>
         <div>
           <div style="font-size:0.8125rem; color:var(--text-secondary)">Expires At</div>
-          <div style="font-size:1.0625rem; font-weight:700; margin-top:0.25rem">{{ fmtExpiryLong(offer()?.expires_at) }}</div>
+          <div style="font-size:1.0625rem; font-weight:700; margin-top:0.25rem">{{ fmtExpiryLong(offer()?.expiresAt) }}</div>
         </div>
       </div>
     </div>

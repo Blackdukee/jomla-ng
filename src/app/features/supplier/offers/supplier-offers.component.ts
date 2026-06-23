@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MOCK_SUPPLIER_OFFERS, Offer } from '../../../core/mock-data';
+import { OffersService } from '../../../core/services/offers.service';
+import { MyOfferDto } from '../../../core/models';
 
 @Component({
   selector: 'app-supplier-offers',
@@ -10,15 +11,26 @@ import { MOCK_SUPPLIER_OFFERS, Offer } from '../../../core/mock-data';
   templateUrl: './supplier-offers.component.html',
   styleUrl: './supplier-offers.component.css'
 })
-export class SupplierOffersComponent {
+export class SupplierOffersComponent implements OnInit {
+  private offersService = inject(OffersService);
+
   protected tab = signal<'active' | 'inactive' | 'expired'>('active');
-  protected filteredOffers = computed(() => MOCK_SUPPLIER_OFFERS.filter(o => {
-    if (this.tab() === 'active') return o.status === 'open';
-    if (this.tab() === 'expired') return o.status === 'failed';
+  protected offers = signal<MyOfferDto[]>([]);
+
+  protected filteredOffers = computed(() => this.offers().filter(o => {
+    if (this.tab() === 'active') return o.status === 'Active';
+    if (this.tab() === 'inactive') return o.status === 'Inactive';
+    if (this.tab() === 'expired') return o.status === 'Expired';
     return false;
   }));
 
-  protected progress(o: Offer) {
-    return o.hub_target_quantity > 0 ? Math.round((o.committed_units / o.hub_target_quantity) * 100) : 0;
+  ngOnInit(): void {
+    this.offersService.getMyOffers().subscribe(offs => {
+      this.offers.set(offs);
+    });
+  }
+
+  protected progress(o: MyOfferDto) {
+    return o.batchTargetQuantity > 0 ? Math.round((o.committedUnits / o.batchTargetQuantity) * 100) : 0;
   }
 }

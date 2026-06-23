@@ -32,13 +32,8 @@
               <select id="category_id" class="form-input" formControlName="category_id"
                 [class.error]="submitted() && form.controls['category_id'].invalid">
                 <option value="">Select a category</option>
-                @for (cat of categories; track cat.id) {
+                @for (cat of categories(); track cat.id) {
                   <option [value]="cat.id">{{ cat.name }}</option>
-                  @if (cat.children) {
-                    @for (sub of cat.children; track sub.id) {
-                      <option [value]="sub.id">&nbsp;&nbsp;└ {{ sub.name }}</option>
-                    }
-                  }
                 }
               </select>
               @if (submitted() && form.controls['category_id'].invalid) {

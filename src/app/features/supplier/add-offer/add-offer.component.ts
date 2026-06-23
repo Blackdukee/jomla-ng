@@ -1,7 +1,9 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MOCK_CATEGORIES } from '../../../core/mock-data';
+import { OffersService } from '../../../core/services/offers.service';
+import { CategoriesService } from '../../../core/services/categories.service';
+import { CategoryDto } from '../../../core/models';
 import { ToastService } from '../../../core/toast.service';
 
 @Component({
@@ -12,16 +14,19 @@ import { ToastService } from '../../../core/toast.service';
   templateUrl: './add-offer.component.html',
   styleUrl: './add-offer.component.css'
 })
-export class AddOfferComponent {
+export class AddOfferComponent implements OnInit {
   private fb = inject(FormBuilder);
   protected router = inject(Router);
   private toast = inject(ToastService);
+  private offersService = inject(OffersService);
+  private categoriesService = inject(CategoriesService);
 
   protected submitted = signal(false);
   protected loading = signal(false);
   protected images = signal<string[]>([]);
+  protected selectedFiles = signal<File[]>([]);
   protected isDragging = signal(false);
-  protected categories = MOCK_CATEGORIES;
+  protected categories = signal<CategoryDto[]>([]);
 
   private defaultExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
 
@@ -37,7 +42,16 @@ export class AddOfferComponent {
     expires_at: [this.defaultExpiry],
   });
 
-  protected removeImage(i: number) { this.images.update(imgs => imgs.filter((_, idx) => idx !== i)); }
+  ngOnInit(): void {
+    this.categoriesService.getCategories().subscribe(cats => {
+      this.categories.set(cats);
+    });
+  }
+
+  protected removeImage(i: number) {
+    this.images.update(imgs => imgs.filter((_, idx) => idx !== i));
+    this.selectedFiles.update(files => files.filter((_, idx) => idx !== i));
+  }
 
   protected onDragOver(e: DragEvent) { e.preventDefault(); this.isDragging.set(true); }
 
@@ -54,7 +68,9 @@ export class AddOfferComponent {
 
   private processFiles(files: FileList) {
     const maxAdd = 8 - this.images().length;
-    Array.from(files).slice(0, maxAdd).forEach(file => {
+    const addedFiles = Array.from(files).slice(0, maxAdd);
+    addedFiles.forEach(file => {
+      this.selectedFiles.update(current => [...current, file]);
       const reader = new FileReader();
       reader.onload = () => this.images.update(imgs => [...imgs, reader.result as string]);
       reader.readAsDataURL(file);
@@ -65,10 +81,39 @@ export class AddOfferComponent {
     this.submitted.set(true);
     if (this.form.invalid) return;
     this.loading.set(true);
-    setTimeout(() => {
-      this.loading.set(false);
-      this.toast.success('Offer created!');
-      this.router.navigate(['/supplier/offers']);
-    }, 800);
+
+    const formData = new FormData();
+    const val = this.form.value;
+
+    formData.append('title', val.title || '');
+    formData.append('description', val.description || '');
+    formData.append('categoryId', val.category_id || '');
+    formData.append('unitPrice', (val.unit_price || 0).toString());
+    formData.append('discountPercentage', (val.discount_percent || 0).toString());
+    formData.append('batchTargetQuantity', (val.hub_target_quantity || 0).toString());
+    formData.append('totalQuantityAvailable', (val.total_quantity_available || 0).toString());
+
+    if (val.expiry_fallback_threshold !== null && val.expiry_fallback_threshold !== undefined) {
+      formData.append('minFallbackQuantity', String(val.expiry_fallback_threshold));
+    }
+    if (val.expires_at) {
+      formData.append('expiresAt', new Date(val.expires_at).toISOString());
+    }
+
+    this.selectedFiles().forEach(file => {
+      formData.append('images', file, file.name);
+    });
+
+    this.offersService.createOffer(formData).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.toast.success('Offer created!');
+        this.router.navigate(['/supplier/offers']);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.toast.error('Failed to create offer', err?.error?.detail || err?.error?.title || 'An error occurred');
+      }
+    });
   }
 }

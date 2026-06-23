@@ -1,7 +1,10 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { MOCK_OFFERS, MOCK_REQUESTS, MOCK_CATEGORIES, Offer, GroupRequest } from '../../../core/mock-data';
+import { MOCK_REQUESTS, GroupRequest } from '../../../core/mock-data';
+import { OffersService } from '../../../core/services/offers.service';
+import { CategoriesService } from '../../../core/services/categories.service';
+import { OfferDto, CategoryDto } from '../../../core/models';
 
 @Component({
   selector: 'app-discover',
@@ -11,33 +14,62 @@ import { MOCK_OFFERS, MOCK_REQUESTS, MOCK_CATEGORIES, Offer, GroupRequest } from
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.css'
 })
-export class DiscoverComponent {
+export class DiscoverComponent implements OnInit {
+  private offersService = inject(OffersService);
+  private categoriesService = inject(CategoriesService);
+  private router = inject(Router);
+
   protected tab = signal<'offers' | 'requests'>('offers');
   protected catFilter = signal('all');
   protected sort = signal('newest');
 
-  protected categories = MOCK_CATEGORIES;
+  protected categories = signal<CategoryDto[]>([]);
+  protected offers = signal<OfferDto[]>([]);
   protected requests = MOCK_REQUESTS;
 
-  private router = inject(Router);
+  ngOnInit(): void {
+    this.categoriesService.getCategories().subscribe(cats => {
+      this.categories.set(cats);
+    });
+
+    this.offersService.getAllOffers().subscribe(offs => {
+      this.offers.set(offs);
+    });
+  }
 
   protected filteredOffers = computed(() => {
-    let list = [...MOCK_OFFERS];
+    let list = [...this.offers()];
     if (this.catFilter() !== 'all') {
-      list = list.filter(o => o.category_id === Number(this.catFilter()));
+      list = list.filter(o => o.categoryName === this.catFilter());
     }
-    if (this.sort() === 'most_buyers') list.sort((a,b) => b.buyer_count - a.buyer_count);
-    else if (this.sort() === 'most_filled') list.sort((a,b) => (b.committed_units/b.hub_target_quantity) - (a.committed_units/a.hub_target_quantity));
+    if (this.sort() === 'most_buyers') {
+      list.sort((a, b) => b.buyerCount - a.buyerCount);
+    } else if (this.sort() === 'most_filled') {
+      list.sort((a, b) => {
+        const progressA = a.hubTargetQuantity > 0 ? a.committedUnits / a.hubTargetQuantity : 0;
+        const progressB = b.hubTargetQuantity > 0 ? b.committedUnits / b.hubTargetQuantity : 0;
+        return progressB - progressA;
+      });
+    }
     return list;
   });
 
   protected onCatChange(e: Event) { this.catFilter.set((e.target as HTMLSelectElement).value); }
   protected onSortChange(e: Event) { this.sort.set((e.target as HTMLSelectElement).value); }
 
-  protected progress(o: Offer) {
-    return o.hub_target_quantity > 0 ? Math.round((o.committed_units / o.hub_target_quantity) * 100) : 0;
+  protected progress(o: OfferDto) {
+    return o.hubTargetQuantity > 0 ? Math.round((o.committedUnits / o.hubTargetQuantity) * 100) : 0;
   }
 
-  protected goToHub(o: Offer) { this.router.navigate(['/hubs/supplier', o.current_batch_id]); }
-  protected joinHub(o: Offer) { this.router.navigate(['/hubs/supplier', o.current_batch_id]); }
+  protected goToHub(o: OfferDto) {
+    if (o.activeBatchId) {
+      this.router.navigate(['/hubs/supplier', o.activeBatchId]);
+    }
+  }
+
+  protected joinHub(o: OfferDto) {
+    if (o.activeBatchId) {
+      this.router.navigate(['/hubs/supplier', o.activeBatchId]);
+    }
+  }
 }
