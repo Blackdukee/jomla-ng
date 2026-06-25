@@ -131,11 +131,11 @@
 
     <!-- Join dialog -->
     @if (joinModalOpen()) {
-      <div class="dialog-backdrop" (click)="joinModalOpen.set(false)" role="dialog" aria-modal="true" aria-labelledby="join-title">
+      <div class="dialog-backdrop" (click)="closeJoinModal()" role="dialog" aria-modal="true" aria-labelledby="join-title">
         <div class="dialog" (click)="$event.stopPropagation()" style="max-width:420px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
             <h2 id="join-title" style="font-size:1.125rem;font-weight:700">Join hub — {{ b.offerTitle }}</h2>
-            <button (click)="joinModalOpen.set(false)" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.125rem" aria-label="Close dialog">✕</button>
+            <button (click)="closeJoinModal()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.125rem" aria-label="Close dialog">✕</button>
           </div>
 
           <div style="background:var(--bg-page);border-radius:10px;padding:1rem;margin-bottom:1.5rem;font-size:0.875rem">
@@ -152,7 +152,7 @@
           <div class="form-group" style="margin-bottom:0.75rem">
             <label class="form-label" for="join-qty">How many units do you want?</label>
             <input id="join-qty" type="number" min="1" [max]="b.remainingSlots"
-              class="form-input" [value]="joinQty()" (input)="onJoinQtyChange($event)">
+              class="form-input" [value]="joinQty()" (input)="onJoinQtyChange($event)" [disabled]="clientSecret() !== null">
           </div>
 
           <div style="background:var(--bg-page);border-radius:10px;padding:1rem;margin-bottom:1.5rem;font-size:0.875rem">
@@ -165,9 +165,24 @@
             </div>
           </div>
 
-          <button class="btn btn-primary" style="width:100%;height:3rem;font-size:1rem" [disabled]="joining()" (click)="joinHub()">
-            {{ joining() ? 'Placing hold…' : 'Confirm & join hub' }}
-          </button>
+          <!-- Stripe Card Input -->
+          <div class="form-group" style="margin-bottom:1.5rem;" [style.display]="clientSecret() ? 'block' : 'none'">
+            <label class="form-label" for="card-element">Credit or Debit Card</label>
+            <div id="card-element" style="padding:0.75rem;border:1px solid var(--border);border-radius:8px;background:white">
+              <!-- Stripe Element placeholder -->
+            </div>
+            <div id="card-errors" role="alert" style="color:var(--danger);font-size:0.75rem;margin-top:0.5rem"></div>
+          </div>
+
+          @if (!clientSecret()) {
+            <button class="btn btn-primary" style="width:100%;height:3rem;font-size:1rem" [disabled]="joining()" (click)="joinHub()">
+              {{ joining() ? 'Placing hold…' : 'Confirm & join hub' }}
+            </button>
+          } @else {
+            <button class="btn btn-primary" style="width:100%;height:3rem;font-size:1rem" [disabled]="joining()" (click)="confirmPayment()">
+              {{ joining() ? 'Authorizing hold…' : 'Pay & confirm join' }}
+            </button>
+          }
         </div>
       </div>
     }

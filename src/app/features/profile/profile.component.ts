@@ -1,15 +1,14 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
-import { User } from '../../core/models';
+import { OffersService } from '../../core/services/offers.service';
+import { User, MyOfferDto } from '../../core/models';
 import { 
   MOCK_BUYER_HUBS, 
-  MOCK_SUPPLIER_OFFERS, 
   MOCK_DEALS, 
   MOCK_ALERTS, 
-  MOCK_WISHLIST, 
-  Offer 
+  MOCK_WISHLIST
 } from '../../core/mock-data';
 
 @Component({
@@ -39,18 +38,31 @@ export class ProfileComponent {
   protected wishlistCount = signal(MOCK_WISHLIST.length);
   protected buyerHubs = signal([...MOCK_BUYER_HUBS.active, ...MOCK_BUYER_HUBS.fulfilled]);
 
-  // Supplier Mock Data Counts
-  protected supplierOffersCount = signal(MOCK_SUPPLIER_OFFERS.length);
+  private offersService = inject(OffersService);
+
+  // Supplier Data Counts
+  protected supplierOffersCount = signal(0);
   protected completedDealsCount = signal(MOCK_DEALS.length);
   protected alertsCount = signal(MOCK_ALERTS.length);
-  protected supplierOffers = signal<Offer[]>(MOCK_SUPPLIER_OFFERS);
+  protected supplierOffers = signal<MyOfferDto[]>([]);
 
   constructor() {
     const user = this.auth.user();
     if (user) {
       this.form.patchValue({
-        full_name: `${user.firstName} ${user.lastName}`.trim(),
+        full_name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
         email: user.email,
+      });
+    }
+  }
+
+  ngOnInit(): void {
+    if (this.auth.isSupplier()) {
+      this.offersService.getMyOffers().subscribe({
+        next: (offs) => {
+          this.supplierOffers.set(offs);
+          this.supplierOffersCount.set(offs.length);
+        }
       });
     }
   }

@@ -22,6 +22,20 @@ export class RegisterSupplierComponent {
   protected step1Submitted = signal(false);
   protected loading = signal(false);
   protected errorMsg = signal('');
+  protected showPassword = signal(false);
+  protected showConfirmPassword = signal(false);
+
+  protected get passwordsMatch(): boolean {
+    const pw = this.accountForm.get('password')?.value;
+    const conf = this.accountForm.get('confirmPassword')?.value;
+    return !!pw && !!conf && pw.length >= 8 && pw === conf;
+  }
+
+  protected get passwordsMismatch(): boolean {
+    const pw = this.accountForm.get('password')?.value;
+    const conf = this.accountForm.get('confirmPassword')?.value;
+    return !!pw && !!conf && pw !== conf;
+  }
 
   protected accountForm = this.fb.group({
     firstName: ['', [Validators.required, Validators.minLength(2)]],

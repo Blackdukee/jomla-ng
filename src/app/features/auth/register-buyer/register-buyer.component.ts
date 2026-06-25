@@ -36,6 +36,20 @@ export class RegisterBuyerComponent {
   protected submitted = signal(false);
   protected loading = signal(false);
   protected errorMsg = signal('');
+  protected showPassword = signal(false);
+  protected showConfirmPassword = signal(false);
+
+  protected get passwordsMatch(): boolean {
+    const pw = this.form.get('password')?.value;
+    const conf = this.form.get('confirmPassword')?.value;
+    return !!pw && !!conf && pw.length >= 8 && pw === conf;
+  }
+
+  protected get passwordsMismatch(): boolean {
+    const pw = this.form.get('password')?.value;
+    const conf = this.form.get('confirmPassword')?.value;
+    return !!pw && !!conf && pw !== conf;
+  }
 
   protected submit() {
     this.submitted.set(true);

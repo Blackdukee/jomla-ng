@@ -1,5 +1,6 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
@@ -11,6 +12,7 @@ import { AuthService } from './auth.service';
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
+  const router = inject(Router);
 
   // Attach token
   const token = localStorage.getItem('jomla_token');
@@ -44,7 +46,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(retryReq);
           }),
           catchError((refreshError) => {
-            // Refresh failed — user will be logged out by AuthService
+            authService.clearAuth();
+            router.navigate(['/login']);
             return throwError(() => refreshError);
           })
         );

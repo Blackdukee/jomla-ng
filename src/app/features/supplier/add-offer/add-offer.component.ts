@@ -32,7 +32,7 @@ export class AddOfferComponent implements OnInit {
 
   protected form = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(3)]],
-    description: ['', [Validators.required, Validators.minLength(10)]],
+    description: ['', [Validators.minLength(10)]],
     category_id: ['', Validators.required],
     unit_price: [0, [Validators.required, Validators.min(0.01)]],
     discount_percent: [0, [Validators.required, Validators.min(1), Validators.max(99)]],

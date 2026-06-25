@@ -12,6 +12,7 @@
 
   <div class="seg-control" style="margin-bottom:1.5rem" role="tablist" aria-label="Offer status">
     <button role="tab" [class]="tab() === 'active' ? 'active' : ''" [attr.aria-selected]="tab() === 'active'" (click)="tab.set('active')">Active</button>
+    <button role="tab" [class]="tab() === 'pending' ? 'active' : ''" [attr.aria-selected]="tab() === 'pending'" (click)="tab.set('pending')">Pending Review</button>
     <button role="tab" [class]="tab() === 'inactive' ? 'active' : ''" [attr.aria-selected]="tab() === 'inactive'" (click)="tab.set('inactive')">Inactive</button>
     <button role="tab" [class]="tab() === 'expired' ? 'active' : ''" [attr.aria-selected]="tab() === 'expired'" (click)="tab.set('expired')">Expired</button>
   </div>

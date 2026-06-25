@@ -29,9 +29,12 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
   protected joinModalOpen = signal(false);
   protected joinQty = signal(1);
   protected joining = signal(false);
+  protected clientSecret = signal<string | null>(null);
 
   private batchId = '';
   private unsubBatchUpdate: (() => void) | null = null;
+  private stripe: any = null;
+  private cardElement: any = null;
 
   ngOnInit(): void {
     this.batchId = this.route.snapshot.paramMap.get('batchId') ?? '';
@@ -133,13 +136,22 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     this.joining.set(true);
     this.batchesService.joinBatch(this.batchId, qty).subscribe({
       next: (res) => {
-        this.joining.set(false);
         if (res.success) {
-          this.joinModalOpen.set(false);
-          this.toast.success('Joined hub!', `You've committed ${qty} units. A payment hold of EGP ${res.totalAmount?.toFixed(2)} has been placed.`);
-          // Refresh batch data
-          this.loadBatch();
+          if (res.clientSecret) {
+            this.clientSecret.set(res.clientSecret);
+            this.joining.set(false);
+            setTimeout(() => {
+              this.initStripe();
+              this.cardElement.mount('#card-element');
+            }, 0);
+          } else {
+            this.joining.set(false);
+            this.joinModalOpen.set(false);
+            this.toast.success('Joined hub!', `You've committed ${qty} units. A payment hold has been placed.`);
+            this.loadBatch();
+          }
         } else {
+          this.joining.set(false);
           this.toast.error('Could not join', res.error || 'An error occurred');
         }
       },
@@ -148,6 +160,64 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
         this.toast.error('Error', err?.error?.detail || err?.error?.title || 'Failed to join batch');
       }
     });
+  }
+
+  private initStripe() {
+    if (this.stripe) return;
+    this.stripe = (window as any).Stripe('pk_test_51Tk8ptBjYscPhZ5LBYxqyxlHzLHiL1bhZ7OUGNhdFHJbhUkPC6vA8bxbpp5Gf0HCasOkkqVvCF7KOxP1gBY7mKY100JaqmlKa4');
+    const elements = this.stripe.elements();
+    this.cardElement = elements.create('card', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#32325d',
+          fontFamily: '"Inter", sans-serif',
+          '::placeholder': {
+            color: '#aab7c4'
+          }
+        },
+        invalid: {
+          color: '#fa755a',
+          iconColor: '#fa755a'
+        }
+      }
+    });
+  }
+
+  protected confirmPayment(): void {
+    if (!this.stripe || !this.cardElement || !this.clientSecret()) return;
+    this.joining.set(true);
+
+    this.stripe.confirmCardPayment(this.clientSecret(), {
+      payment_method: {
+        card: this.cardElement
+      }
+    }).then((result: any) => {
+      this.joining.set(false);
+      if (result.error) {
+        this.toast.error('Card verification failed', result.error.message);
+        const cardErrors = document.getElementById('card-errors');
+        if (cardErrors) cardErrors.textContent = result.error.message;
+      } else {
+        if (result.paymentIntent.status === 'requires_capture') {
+          this.toast.success('Joined hub!', `You've committed ${this.joinQty()} units. Payment hold authorized successfully.`);
+          this.joinModalOpen.set(false);
+          this.clientSecret.set(null);
+          this.loadBatch();
+        } else {
+          this.toast.error('Payment Error', 'Payment status is unexpected: ' + result.paymentIntent.status);
+        }
+      }
+    }).catch((err: any) => {
+      this.joining.set(false);
+      this.toast.error('Error', err?.message || 'Payment confirmation failed');
+    });
+  }
+
+  protected closeJoinModal(): void {
+    this.joinModalOpen.set(false);
+    this.clientSecret.set(null);
+    this.cardElement = null;
   }
 
   protected onJoinQtyChange(e: Event): void {

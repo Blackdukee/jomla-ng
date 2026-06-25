@@ -52,6 +52,7 @@ export interface JoinBatchResponse {
   participantQuantity?: number;
   totalAmount?: number;
   paymentIntentId?: string;
+  clientSecret?: string;
   batchCurrentQuantity?: number;
   batchTargetQuantity?: number;
   error?: string;

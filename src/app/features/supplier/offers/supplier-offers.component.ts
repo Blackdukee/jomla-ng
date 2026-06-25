@@ -14,11 +14,12 @@ import { MyOfferDto } from '../../../core/models';
 export class SupplierOffersComponent implements OnInit {
   private offersService = inject(OffersService);
 
-  protected tab = signal<'active' | 'inactive' | 'expired'>('active');
+  protected tab = signal<'active' | 'pending' | 'inactive' | 'expired'>('active');
   protected offers = signal<MyOfferDto[]>([]);
 
   protected filteredOffers = computed(() => this.offers().filter(o => {
     if (this.tab() === 'active') return o.status === 'Active';
+    if (this.tab() === 'pending') return o.status === 'PendingReview';
     if (this.tab() === 'inactive') return o.status === 'Inactive';
     if (this.tab() === 'expired') return o.status === 'Expired';
     return false;

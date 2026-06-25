@@ -48,7 +48,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="description">Description</label>
+            <label class="form-label" for="description">Description (Optional)</label>
             <textarea id="description" class="form-textarea" formControlName="description" rows="4" placeholder="Detailed product description…"
               [class.error]="submitted() && form.controls['description'].invalid"></textarea>
             @if (submitted() && form.controls['description'].invalid) {

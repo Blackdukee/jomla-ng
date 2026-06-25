@@ -74,6 +74,10 @@ export class AuthService {
     this.signalR.disconnect();
   }
 
+  clearAuth() {
+    this.clearAuthState();
+  }
+
   updateUser(u: User) {
     this._user.set(u);
     localStorage.setItem('jomla_user', JSON.stringify(u));

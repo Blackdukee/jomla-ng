@@ -26,6 +26,7 @@ export class LoginComponent {
   protected submitted = signal(false);
   protected loading = signal(false);
   protected errorMsg = signal('');
+  protected showPassword = signal(false);
 
   protected submit() {
     this.submitted.set(true);

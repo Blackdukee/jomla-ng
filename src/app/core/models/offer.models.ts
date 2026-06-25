@@ -22,7 +22,7 @@ export interface MyOfferDto {
   title: string;
   unitPrice: number;
   discountPercentage: number;
-  status: 'Active' | 'Inactive' | 'Expired';
+  status: 'PendingReview' | 'Active' | 'Inactive' | 'Expired';
   totalQuantityAvailable: number;
   committedUnits: number;
   batchTargetQuantity: number;
