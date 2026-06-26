@@ -1,8 +1,8 @@
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MOCK_WISHLIST, GroupRequest } from '../../../core/mock-data';
 import { ToastService } from '../../../core/toast.service';
-import { inject } from '@angular/core';
+import { GroupRequestsService } from '../../../core/services/group-requests.service';
+import { GroupRequestListItemDto } from '../../../core/models';
 
 @Component({
   selector: 'app-wishlist',
@@ -14,9 +14,11 @@ import { inject } from '@angular/core';
 })
 export class WishlistComponent {
   private toast = inject(ToastService);
+  private groupRequestsService = inject(GroupRequestsService);
 
-  protected requests = signal<GroupRequest[]>([...MOCK_WISHLIST]);
+  protected requests = signal<GroupRequestListItemDto[]>([]);
   protected modalOpen = signal(false);
+  protected title = signal('');
   protected desc = signal('');
   protected qty = signal('');
   protected detecting = signal(false);
@@ -24,6 +26,7 @@ export class WishlistComponent {
 
   protected closeModal() {
     this.modalOpen.set(false);
+    this.title.set('');
     this.desc.set('');
     this.qty.set('');
     this.detectedCat.set(null);
@@ -39,21 +42,27 @@ export class WishlistComponent {
   }
 
   protected submitRequest() {
-    const newReq: GroupRequest = {
-      id: Date.now(),
-      description: this.desc(),
-      quantity: Number(this.qty()),
-      buyer_count: 1,
-      status: 'active',
-      created_at: new Date().toISOString(),
-      creator_name: 'You',
-      category_name: this.detectedCat() ?? undefined,
-      participants: [],
-      current_user_joined: true,
-    };
-    this.requests.update(r => [newReq, ...r]);
-    this.toast.success('Request posted!', 'Your group request is now live.');
-    this.closeModal();
+    const qtyNum = Number(this.qty());
+    if (!this.title() || qtyNum <= 0) return;
+
+    this.groupRequestsService.createGroupRequest({
+      title: this.title(),
+      quantity: qtyNum,
+      description: this.desc() || null,
+      imageUrls: null
+    }).subscribe({
+      next: () => {
+        this.toast.success('Request posted!', 'Your group request is now live.');
+        this.closeModal();
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.detail || 'Failed to post request.');
+      }
+    });
+  }
+
+  protected onTitleChange(e: Event) {
+    this.title.set((e.target as HTMLInputElement).value);
   }
 
   protected onDescChange(e: Event) {

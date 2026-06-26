@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { MOCK_REQUESTS, MOCK_OFFER_RESPONSES, GroupRequest, OfferResponse } from '../../../core/mock-data';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastService } from '../../../core/toast.service';
+import { GroupRequestsService } from '../../../core/services/group-requests.service';
+import { GroupRequestDetailDto } from '../../../core/models';
 import { format } from 'date-fns';
 
 @Component({
@@ -11,40 +12,58 @@ import { format } from 'date-fns';
   templateUrl: './request-hub.component.html',
   styleUrl: './request-hub.component.css'
 })
-export class RequestHubComponent {
+export class RequestHubComponent implements OnInit {
   protected router = inject(Router);
+  private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
+  private groupRequestsService = inject(GroupRequestsService);
 
-  protected request = signal<GroupRequest>({ ...MOCK_REQUESTS[0] });
-  protected offers = signal<OfferResponse[]>([...MOCK_OFFER_RESPONSES]);
+  protected request = signal<GroupRequestDetailDto | null>(null);
+  protected offers = signal<any[]>([]);
+  private requestId = '';
 
-  protected sortedOffers() {
-    return [...this.offers()].sort((a, b) => a.current_unit_price - b.current_unit_price);
+  ngOnInit(): void {
+    this.requestId = this.route.snapshot.paramMap.get('requestId') ?? '';
+    if (!this.requestId) {
+      this.toast.error('Error', 'No request ID provided.');
+      this.router.navigate(['/my-hubs']);
+      return;
+    }
+    this.loadRequest();
+  }
+
+  private loadRequest() {
+    this.groupRequestsService.getGroupRequest(this.requestId).subscribe({
+      next: (req) => {
+        this.request.set(req);
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.detail || 'Failed to load request details.');
+        this.router.navigate(['/my-hubs']);
+      }
+    });
+  }
+
+  protected sortedOffers(): any[] {
+    return [];
   }
 
   protected fmtExpiry(d: string) { return format(new Date(d), 'MMM d, ha'); }
 
-  protected accept(offer: OfferResponse) {
-    this.offers.update(o => o.map(x => x.id === offer.id ? { ...x, current_user_accepted: true, accepted_count: x.accepted_count + 1 } : x));
-    this.toast.success('Offer accepted');
-  }
-
-  protected cancelAccept(offer: OfferResponse) {
-    this.offers.update(o => o.map(x => x.id === offer.id ? { ...x, current_user_accepted: false, accepted_count: Math.max(0, x.accepted_count - 1) } : x));
-    this.toast.success('Acceptance cancelled');
-  }
-
-  protected reject(offer: OfferResponse) {
-    this.offers.update(o => o.filter(x => x.id !== offer.id));
-    this.toast.success('Offer rejected');
-  }
-
-  protected proceed(responseId: number) {
-    this.router.navigate(['/payment', responseId]);
-  }
+  protected accept(offer: any) {}
+  protected cancelAccept(offer: any) {}
+  protected reject(offer: any) {}
+  protected proceed(responseId: any) {}
 
   protected leaveRequest() {
-    this.toast.success('Left hub', 'You have left this request.');
-    this.router.navigate(['/my-hubs']);
+    this.groupRequestsService.leaveGroupRequest(this.requestId).subscribe({
+      next: () => {
+        this.toast.success('Left hub', 'You have left this request.');
+        this.router.navigate(['/my-hubs']);
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.detail || 'Failed to leave group request.');
+      }
+    });
   }
 }

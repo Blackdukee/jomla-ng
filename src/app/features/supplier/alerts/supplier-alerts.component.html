@@ -4,7 +4,7 @@
     <p style="color:var(--text-secondary)">Notifications for group requests matching your categories.</p>
   </div>
 
-  @if (alerts.length === 0) {
+  @if (alerts().length === 0) {
     <div style="padding:6rem 2rem;text-align:center;background:#F9FAFB;border:1px dashed var(--border);border-radius:16px">
       <div class="icon-container" style="margin:0 auto 1.25rem;width:4rem;height:4rem" aria-hidden="true">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -16,7 +16,7 @@
     </div>
   } @else {
     <div style="display:flex;flex-direction:column;gap:1rem" role="list">
-      @for (alert of alerts; track alert.id) {
+      @for (alert of alerts(); track alert.id) {
         <a [routerLink]="['/manage/requests', alert.request_id]" class="card card-hover alert-row" role="listitem"
           [style.border-left]="alert.status === 'pending' ? '4px solid var(--brand)' : ''"
           [attr.aria-label]="'Alert: ' + alert.item_title + ', status: ' + alert.status">

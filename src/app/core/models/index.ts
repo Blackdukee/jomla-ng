@@ -10,3 +10,8 @@ export type {
 } from './batch.models';
 export type { CategoryDto } from './category.models';
 export type { OfferDto, MyOfferDto } from './offer.models';
+export type {
+  GroupRequestListItemDto,
+  GroupRequestDetailDto,
+  CreateGroupRequestRequest
+} from './group-request.models';

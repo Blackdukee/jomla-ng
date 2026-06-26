@@ -1,0 +1,75 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import {
+  GroupRequestListItemDto,
+  GroupRequestDetailDto,
+  CreateGroupRequestRequest
+} from '../models';
+
+@Injectable({ providedIn: 'root' })
+export class GroupRequestsService {
+  private http = inject(HttpClient);
+  private readonly baseUrl = 'http://localhost:5174/api/group-requests';
+
+  /** GET /api/group-requests — Get active, approved group requests */
+  getGroupRequests(filters?: {
+    categoryId?: string;
+    titleSearch?: string;
+    status?: string;
+    page?: number;
+    pageSize?: number;
+  }): Observable<{ items: GroupRequestListItemDto[]; totalCount: number; page: number; pageSize: number }> {
+    let params = new HttpParams();
+    if (filters?.categoryId) params = params.set('categoryId', filters.categoryId);
+    if (filters?.titleSearch) params = params.set('titleSearch', filters.titleSearch);
+    if (filters?.status) params = params.set('status', filters.status);
+    if (filters?.page) params = params.set('page', filters.page.toString());
+    if (filters?.pageSize) params = params.set('pageSize', filters.pageSize.toString());
+
+    return this.http.get<{ items: GroupRequestListItemDto[]; totalCount: number; page: number; pageSize: number }>(
+      this.baseUrl,
+      { params, withCredentials: true }
+    );
+  }
+
+  /** GET /api/group-requests/{id} — Get details of a group request */
+  getGroupRequest(id: string): Observable<GroupRequestDetailDto> {
+    return this.http.get<GroupRequestDetailDto>(`${this.baseUrl}/${id}`, {
+      withCredentials: true
+    });
+  }
+
+  /** POST /api/group-requests — Create a new group request */
+  createGroupRequest(request: CreateGroupRequestRequest): Observable<any> {
+    return this.http.post<any>(this.baseUrl, request, {
+      withCredentials: true
+    });
+  }
+
+  /** POST /api/group-requests/{id}/join — Join a group request */
+  joinGroupRequest(id: string, quantity: number): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${id}/join`, { quantity }, {
+      withCredentials: true
+    });
+  }
+
+  /** DELETE /api/group-requests/{id}/leave — Leave a group request */
+  leaveGroupRequest(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/${id}/leave`, {
+      withCredentials: true
+    });
+  }
+
+  /** GET /api/group-requests/matched — Get supplier's matched group requests */
+  getMatchedGroupRequests(page = 1, pageSize = 10): Observable<{ items: any[]; totalCount: number; page: number; pageSize: number }> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+
+    return this.http.get<{ items: any[]; totalCount: number; page: number; pageSize: number }>(
+      `${this.baseUrl}/matched`,
+      { params, withCredentials: true }
+    );
+  }
+}

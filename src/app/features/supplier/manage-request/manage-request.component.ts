@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { MOCK_REQUESTS, MOCK_OFFER_RESPONSES, GroupRequest, OfferResponse } from '../../../core/mock-data';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { GroupRequestsService } from '../../../core/services/group-requests.service';
+import { GroupRequestDetailDto } from '../../../core/models';
 import { ToastService } from '../../../core/toast.service';
 
 @Component({
@@ -10,41 +11,35 @@ import { ToastService } from '../../../core/toast.service';
   templateUrl: './manage-request.component.html',
   styleUrl: './manage-request.component.css'
 })
-export class ManageRequestComponent {
+export class ManageRequestComponent implements OnInit {
   protected router = inject(Router);
+  private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
+  private groupRequestsService = inject(GroupRequestsService);
 
-  protected request = signal<GroupRequest>({ ...MOCK_REQUESTS[0] });
-  protected myOffer = signal<OfferResponse | null>(null);
-
-  protected qty = signal('');
-  protected price = signal('');
-  protected minPrice = signal('');
+  protected request = signal<GroupRequestDetailDto | null>(null);
+  protected myOffer = signal<any | null>(null);
   protected loading = signal(false);
 
-  protected submitOffer() {
-    this.loading.set(true);
-    setTimeout(() => {
-      this.loading.set(false);
-      this.myOffer.set({
-        id: 999,
-        request_id: this.request().id,
-        supplier_id: 99,
-        supplier_name: 'My Company',
-        unit_price: Number(this.price()),
-        current_unit_price: Number(this.price()),
-        min_unit_price: Number(this.minPrice()),
-        quantity_available: Number(this.qty()),
-        accepted_count: 0,
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        status: 'active',
-        current_user_accepted: false,
-      });
-      this.toast.success('Offer placed successfully!');
-    }, 700);
-  }
+  ngOnInit(): void {
+    const requestId = this.route.snapshot.paramMap.get('requestId');
+    if (!requestId) {
+      this.toast.error('Error', 'No request ID provided.');
+      this.router.navigate(['/supplier/requests']);
+      return;
+    }
 
-  protected onQtyChange(e: Event) { this.qty.set((e.target as HTMLInputElement).value); }
-  protected onPriceChange(e: Event) { this.price.set((e.target as HTMLInputElement).value); }
-  protected onMinPriceChange(e: Event) { this.minPrice.set((e.target as HTMLInputElement).value); }
+    this.loading.set(true);
+    this.groupRequestsService.getGroupRequest(requestId).subscribe({
+      next: (req) => {
+        this.request.set(req);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.detail || 'Failed to load request details.');
+        this.router.navigate(['/supplier/requests']);
+        this.loading.set(false);
+      }
+    });
+  }
 }

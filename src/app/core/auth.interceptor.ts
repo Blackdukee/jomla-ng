@@ -14,10 +14,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Attach token
+  // Attach token (exclude auth endpoints)
   const token = localStorage.getItem('jomla_token');
   let authReq = req;
-  if (token) {
+  const isAuthEndpoint = req.url.includes('/auth/login') ||
+                         req.url.includes('/auth/register') ||
+                         req.url.includes('/auth/refresh');
+
+  if (token && !isAuthEndpoint) {
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`

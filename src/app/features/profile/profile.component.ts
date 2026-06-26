@@ -4,12 +4,6 @@ import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
 import { OffersService } from '../../core/services/offers.service';
 import { User, MyOfferDto } from '../../core/models';
-import { 
-  MOCK_BUYER_HUBS, 
-  MOCK_DEALS, 
-  MOCK_ALERTS, 
-  MOCK_WISHLIST
-} from '../../core/mock-data';
 
 @Component({
   selector: 'app-profile',
@@ -19,7 +13,7 @@ import {
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
   protected auth = inject(AuthService);
   private fb = inject(FormBuilder);
   private toast = inject(ToastService);
@@ -32,18 +26,18 @@ export class ProfileComponent {
     email: ['', [Validators.required, Validators.email]],
   });
 
-  // Buyer Mock Data Counts
-  protected activeHubsCount = signal(MOCK_BUYER_HUBS.active.length);
-  protected completedOrdersCount = signal(MOCK_BUYER_HUBS.fulfilled.length);
-  protected wishlistCount = signal(MOCK_WISHLIST.length);
-  protected buyerHubs = signal([...MOCK_BUYER_HUBS.active, ...MOCK_BUYER_HUBS.fulfilled]);
+  // Buyer Counts (Unsupported by backend - set to 0/empty)
+  protected activeHubsCount = signal(0);
+  protected completedOrdersCount = signal(0);
+  protected wishlistCount = signal(0);
+  protected buyerHubs = signal<any[]>([]);
 
   private offersService = inject(OffersService);
 
   // Supplier Data Counts
   protected supplierOffersCount = signal(0);
-  protected completedDealsCount = signal(MOCK_DEALS.length);
-  protected alertsCount = signal(MOCK_ALERTS.length);
+  protected completedDealsCount = signal(0);
+  protected alertsCount = signal(0);
   protected supplierOffers = signal<MyOfferDto[]>([]);
 
   constructor() {

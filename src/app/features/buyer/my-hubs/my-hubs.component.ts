@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MOCK_BUYER_HUBS, BuyerHub } from '../../../core/mock-data';
+import { BuyerHub } from '../../../core/mock-data';
 
 @Component({
   selector: 'app-my-hubs',
@@ -12,7 +12,7 @@ import { MOCK_BUYER_HUBS, BuyerHub } from '../../../core/mock-data';
 })
 export class MyHubsComponent {
   protected tab = signal<'active' | 'fulfilled'>('active');
-  protected hubs = computed(() => this.tab() === 'active' ? MOCK_BUYER_HUBS.active : MOCK_BUYER_HUBS.fulfilled);
+  protected hubs = computed<BuyerHub[]>(() => []);
 
   protected hubLink(hub: BuyerHub) {
     return hub.type === 'supplier_offer' ? ['/hubs/supplier', hub.batch_id] : ['/hubs/request', hub.request_id];

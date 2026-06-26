@@ -1,10 +1,11 @@
 import { Component, ChangeDetectionStrategy, signal, computed, OnInit } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { MOCK_REQUESTS, GroupRequest } from '../../../core/mock-data';
+import { MOCK_REQUESTS } from '../../../core/mock-data';
 import { OffersService } from '../../../core/services/offers.service';
 import { CategoriesService } from '../../../core/services/categories.service';
-import { OfferDto, CategoryDto } from '../../../core/models';
+import { GroupRequestsService } from '../../../core/services/group-requests.service';
+import { OfferDto, CategoryDto, GroupRequestListItemDto } from '../../../core/models';
 
 @Component({
   selector: 'app-discover',
@@ -17,6 +18,7 @@ import { OfferDto, CategoryDto } from '../../../core/models';
 export class DiscoverComponent implements OnInit {
   private offersService = inject(OffersService);
   private categoriesService = inject(CategoriesService);
+  private groupRequestsService = inject(GroupRequestsService);
   private router = inject(Router);
 
   protected tab = signal<'offers' | 'requests'>('offers');
@@ -25,7 +27,7 @@ export class DiscoverComponent implements OnInit {
 
   protected categories = signal<CategoryDto[]>([]);
   protected offers = signal<OfferDto[]>([]);
-  protected requests = MOCK_REQUESTS;
+  protected requests = signal<GroupRequestListItemDto[]>([]);
 
   ngOnInit(): void {
     this.categoriesService.getCategories().subscribe(cats => {
@@ -34,6 +36,10 @@ export class DiscoverComponent implements OnInit {
 
     this.offersService.getAllOffers().subscribe(offs => {
       this.offers.set(offs);
+    });
+
+    this.groupRequestsService.getGroupRequests().subscribe(res => {
+      this.requests.set(res.items);
     });
   }
 

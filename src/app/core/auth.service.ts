@@ -20,23 +20,40 @@ export class AuthService {
   constructor() {
     // Restore from localStorage
     const storedUser = localStorage.getItem('jomla_user');
-    if (storedUser) {
+    const storedToken = localStorage.getItem('jomla_token');
+
+    if (storedUser && storedToken) {
       try {
         this._user.set(JSON.parse(storedUser));
-      } catch {}
-    }
-
-    // Try to refresh token on startup to ensure we are logged in and get a fresh access token
-    this.refreshAccessToken().subscribe({
-      next: () => {
-        // Connect SignalR after successful token refresh
-        this.signalR.connect();
-      },
-      error: () => {
-        // If refresh fails, clear auth state
+        
+        // If token is expired or close to expiring (within 2 minutes), refresh it.
+        // Otherwise, keep the user logged in and connect SignalR.
+        if (this.isTokenExpired(storedToken)) {
+          this.refreshAccessToken().subscribe({
+            next: () => {
+              this.signalR.connect();
+            },
+            error: () => {
+              this.clearAuthState();
+            }
+          });
+        } else {
+          this.signalR.connect();
+        }
+      } catch {
         this.clearAuthState();
       }
-    });
+    } else {
+      // If we don't have token/user in storage, try silent login via cookie
+      this.refreshAccessToken().subscribe({
+        next: () => {
+          this.signalR.connect();
+        },
+        error: () => {
+          this.clearAuthState();
+        }
+      });
+    }
   }
 
   private handleAuthSuccess(res: AuthResponse) {
@@ -140,5 +157,13 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  isTokenExpired(token: string): boolean {
+    const decoded = this.decodeToken(token);
+    if (!decoded || !decoded.exp) return true;
+    const expirationDate = decoded.exp * 1000;
+    const buffer = 2 * 60 * 1000; // 2 minutes buffer
+    return Date.now() >= (expirationDate - buffer);
   }
 }
