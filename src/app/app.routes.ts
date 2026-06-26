@@ -97,7 +97,7 @@ export const routes: Routes = [
   },
   {
     path: 'manage/offers/:offerId',
-    loadComponent: () => import('./features/supplier/manage-offer/manage-offer.component').then(m => m.ManageOfferComponent),
+    loadComponent: () => import('./features/supplier/add-offer/add-offer.component').then(m => m.AddOfferComponent),
     canActivate: [supplierGuard],
   },
   {

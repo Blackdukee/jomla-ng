@@ -5,8 +5,12 @@
   </button>
 
   <div style="margin-bottom:2rem">
-    <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.25rem">Create Offer</h1>
-    <p style="color:var(--text-secondary)">Post a new group deal for buyers to join.</p>
+    <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.25rem">
+      @if (isEditMode()) { Edit Offer } @else { Create Offer }
+    </h1>
+    <p style="color:var(--text-secondary)">
+      @if (isEditMode()) { Modify your posted group deal. } @else { Post a new group deal for buyers to join. }
+    </p>
   </div>
 
   <div class="card" style="padding:2rem">
@@ -131,7 +135,7 @@
       </section>
 
       <button type="submit" class="btn btn-primary" style="height:3.25rem;font-size:1rem" [disabled]="loading()">
-        {{ loading() ? 'Creating…' : 'Create Offer' }}
+        {{ loading() ? (isEditMode() ? 'Saving...' : 'Creating…') : (isEditMode() ? 'Save Changes' : 'Create Offer') }}
       </button>
     </form>
   </div>

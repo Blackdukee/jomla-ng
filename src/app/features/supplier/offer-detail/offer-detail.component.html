@@ -8,10 +8,12 @@
   </div>
 
   <!-- Live Warning Banner -->
-  <div class="banner-alert">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <span><strong>Offer is live.</strong> Buyers can currently see and join this deal.</span>
-  </div>
+  @if (showLiveBanner()) {
+    <div class="banner-alert">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span><strong>Offer is live.</strong> Buyers can currently see and join this deal.</span>
+    </div>
+  }
 
   <!-- Badges and Action Buttons Row -->
   <div class="action-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem">
@@ -21,15 +23,27 @@
     </div>
     <div style="display:flex; gap:0.75rem; align-items:center">
       <button class="btn btn-outline" style="border-radius:9999px; font-size:0.875rem; padding:0.5rem 1.25rem">Deactivate</button>
-      <button class="btn btn-primary" style="border-radius:9999px; font-size:0.875rem; padding:0.5rem 1.25rem; display:flex; align-items:center; gap:0.375rem" (click)="router.navigate(['/manage/offers', offer()?.id])">
+      <button class="btn btn-primary" 
+        style="border-radius:9999px; font-size:0.875rem; padding:0.5rem 1.25rem; display:flex; align-items:center; gap:0.375rem" 
+        (click)="onEditClick()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
         Edit
       </button>
-      <button class="btn" style="width:2.25rem; height:2.25rem; border-radius:50%; padding:0; display:flex; align-items:center; justify-content:center; border:1px solid #FCA5A5; background:transparent" aria-label="Delete">
+      <button class="btn" 
+        style="width:2.25rem; height:2.25rem; border-radius:50%; padding:0; display:flex; align-items:center; justify-content:center; border:1px solid #FCA5A5; background:transparent" 
+        (click)="onDeleteClick()"
+        aria-label="Delete">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#EF4444"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
       </button>
     </div>
   </div>
+
+  @if (showValidationWarning()) {
+    <div style="background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2); border-radius:12px; padding:0.75rem 1rem; color:#D97706; font-size:0.875rem; display:flex; align-items:center; gap:0.5rem; margin-bottom:1.5rem">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>This offer has an open batch and cannot be modified or deleted.</span>
+    </div>
+  }
 
   <!-- Title -->
   <h1 style="font-size:2.25rem; font-weight:800; margin-bottom:2rem; color:var(--text-primary)">{{ offer()?.title }}</h1>
@@ -61,7 +75,7 @@
           </div>
           <div>
             <div style="font-size:0.8125rem; color:var(--text-secondary)">Target Qty</div>
-            <div style="font-size:1.125rem; font-weight:700; margin-top:0.25rem">{{ offer()?.hubTargetQuantity }}</div>
+            <div style="font-size:1.125rem; font-weight:700; margin-top:0.25rem">{{ (offer()?.hubTargetQuantity || targetQuantity()) ?? 0 }}</div>
           </div>
         </div>
       </div>
@@ -88,7 +102,7 @@
                     <span class="badge badge-brand">Active</span>
                   </td>
                   <td>{{ offer()?.committedUnits }}</td>
-                  <td>{{ offer()?.hubTargetQuantity }}</td>
+                  <td>{{ (offer()?.hubTargetQuantity || targetQuantity()) ?? 0 }}</td>
                   <td>{{ fmtDate(offer()?.expiresAt) }}</td>
                 </tr>
               }
@@ -108,10 +122,18 @@
         </h2>
         
         <div class="image-gallery-grid">
-          <div class="gallery-image-container">
-            <img [src]="(offer()?.images && offer()!.images.length > 0) ? offer()!.images[0] : 'chihuahua_cover.png'" alt="Offer image" class="gallery-image">
-            <span class="cover-badge">Cover</span>
-          </div>
+          @for (imgUrl of offer()?.images; track imgUrl; let idx = $index) {
+            <div class="gallery-image-container" style="cursor: pointer;" (click)="openLightbox(idx)" role="button" [attr.aria-label]="'View image ' + (idx + 1)">
+              <img [src]="imgUrl" alt="Offer image" class="gallery-image">
+              @if (idx === 0) {
+                <span class="cover-badge">Cover</span>
+              }
+            </div>
+          } @empty {
+            <div class="gallery-image-container">
+              <img src="chihuahua_cover.png" alt="No image available" class="gallery-image">
+            </div>
+          }
         </div>
       </div>
 
@@ -121,14 +143,70 @@
         
         <div>
           <div style="font-size:0.8125rem; color:var(--text-secondary)">Total Available</div>
-          <div style="font-size:1.875rem; font-weight:800; margin-top:0.25rem">N/A</div>
+          <div style="font-size:1.875rem; font-weight:800; margin-top:0.25rem">{{ totalAvailable() !== null ? totalAvailable() : 'N/A' }}</div>
         </div>
         <div class="separator" style="margin:1.5rem 0"></div>
         <div>
           <div style="font-size:0.8125rem; color:var(--text-secondary)">Expires At</div>
           <div style="font-size:1.0625rem; font-weight:700; margin-top:0.25rem">{{ fmtExpiryLong(offer()?.expiresAt) }}</div>
         </div>
+        @if (offer()?.minFallbackQuantity) {
+          <div class="separator" style="margin:1.5rem 0"></div>
+          <div>
+            <div style="font-size:0.8125rem; color:var(--text-secondary)">Fallback Threshold</div>
+            <div style="font-size:1.0625rem; font-weight:700; margin-top:0.25rem">{{ offer()?.minFallbackQuantity }} units</div>
+          </div>
+        }
       </div>
     </div>
   </div>
+
+  <!-- Lightbox Modal Overlay -->
+  @if (isLightboxOpen() && offer()?.images && offer()!.images.length > 0) {
+    <div class="lightbox-overlay" (click)="closeLightbox()" role="dialog" aria-modal="true" aria-label="Image gallery lightbox">
+      <div class="lightbox-container" (click)="$event.stopPropagation()">
+        <!-- Close button -->
+        <button class="lightbox-close" (click)="closeLightbox()" aria-label="Close gallery">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+
+        <!-- Main Image with Nav Arrows -->
+        <div class="lightbox-content-wrapper">
+          @if (offer()!.images.length > 1) {
+            <button class="lightbox-nav lightbox-prev" (click)="prevImage($event)" aria-label="Previous image">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+          }
+
+          <img [src]="offer()!.images[activeImageIndex()]" alt="Offer detail image enlarged" class="lightbox-main-image">
+
+          @if (offer()!.images.length > 1) {
+            <button class="lightbox-nav lightbox-next" (click)="nextImage($event)" aria-label="Next image">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          }
+        </div>
+
+        <!-- Dots Indicators -->
+        @if (offer()!.images.length > 1) {
+          <div class="lightbox-dots">
+            @for (img of offer()!.images; track img; let idx = $index) {
+              <button class="lightbox-dot" [class.active]="idx === activeImageIndex()" (click)="selectImage(idx)" [attr.aria-label]="'Go to image ' + (idx + 1)"></button>
+            }
+          </div>
+        }
+
+        <!-- Thumbnails at bottom -->
+        @if (offer()!.images.length > 1) {
+          <div class="lightbox-thumbnails">
+            @for (img of offer()!.images; track img; let idx = $index) {
+              <button class="lightbox-thumb-btn" [class.active]="idx === activeImageIndex()" (click)="selectImage(idx)" [attr.aria-label]="'View image ' + (idx + 1)">
+                <img [src]="img" alt="Thumbnail" class="lightbox-thumb-img">
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
 </div>

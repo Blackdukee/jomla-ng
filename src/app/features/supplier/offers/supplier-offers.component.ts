@@ -16,6 +16,7 @@ export class SupplierOffersComponent implements OnInit {
 
   protected tab = signal<'active' | 'pending' | 'inactive' | 'expired'>('active');
   protected offers = signal<MyOfferDto[]>([]);
+  protected offerImages = signal<Record<string, string[]>>({});
 
   protected filteredOffers = computed(() => this.offers().filter(o => {
     if (this.tab() === 'active') return o.status === 'Active';
@@ -28,6 +29,20 @@ export class SupplierOffersComponent implements OnInit {
   ngOnInit(): void {
     this.offersService.getMyOffers().subscribe(offs => {
       this.offers.set(offs);
+      
+      // Load details for each offer to get image URLs without modifying the backend MyOfferDto
+      offs.forEach(o => {
+        this.offersService.getOfferById(o.id).subscribe({
+          next: (detail) => {
+            if (detail.images && detail.images.length > 0) {
+              this.offerImages.update(prev => ({
+                ...prev,
+                [o.id]: detail.images
+              }));
+            }
+          }
+        });
+      });
     });
   }
 

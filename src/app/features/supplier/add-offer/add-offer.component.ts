@@ -1,9 +1,9 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, computed } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { OffersService } from '../../../core/services/offers.service';
 import { CategoriesService } from '../../../core/services/categories.service';
-import { CategoryDto } from '../../../core/models';
+import { CategoryDto, OfferDto } from '../../../core/models';
 import { ToastService } from '../../../core/toast.service';
 
 @Component({
@@ -17,6 +17,7 @@ import { ToastService } from '../../../core/toast.service';
 export class AddOfferComponent implements OnInit {
   private fb = inject(FormBuilder);
   protected router = inject(Router);
+  private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
   private offersService = inject(OffersService);
   private categoriesService = inject(CategoriesService);
@@ -27,6 +28,10 @@ export class AddOfferComponent implements OnInit {
   protected selectedFiles = signal<File[]>([]);
   protected isDragging = signal(false);
   protected categories = signal<CategoryDto[]>([]);
+
+  protected offerId = signal<string | null>(null);
+  protected isEditMode = computed(() => this.offerId() !== null);
+  private loadedOffer = signal<OfferDto | null>(null);
 
   private defaultExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
 
@@ -45,7 +50,46 @@ export class AddOfferComponent implements OnInit {
   ngOnInit(): void {
     this.categoriesService.getCategories().subscribe(cats => {
       this.categories.set(cats);
+      // If we have an offer already loaded, patch its category_id now
+      const off = this.loadedOffer();
+      if (off) {
+        const cat = cats.find(c => c.name === off.categoryName);
+        if (cat) {
+          this.form.patchValue({ category_id: cat.id });
+        }
+      }
     });
+
+    const id = this.route.snapshot.paramMap.get('offerId');
+    if (id) {
+      this.offerId.set(id);
+      this.loading.set(true);
+      this.offersService.getOfferById(id).subscribe({
+        next: (off) => {
+          this.loadedOffer.set(off);
+          this.form.patchValue({
+            title: off.title,
+            description: off.description || '',
+            category_id: this.categories().find(c => c.name === off.categoryName)?.id || '',
+            unit_price: off.unitPrice,
+            discount_percent: off.discountPercentage,
+            hub_target_quantity: off.hubTargetQuantity,
+            total_quantity_available: (off as any).totalQuantityAvailable || off.hubTargetQuantity,
+            expiry_fallback_threshold: (off as any).minFallbackQuantity || null,
+            expires_at: off.expiresAt ? new Date(off.expiresAt).toISOString().slice(0, 16) : this.defaultExpiry
+          });
+          if (off.images && off.images.length > 0) {
+            this.images.set(off.images);
+          }
+          this.loading.set(false);
+        },
+        error: () => {
+          this.toast.error('Error', 'Failed to load offer details.');
+          this.router.navigate(['/supplier/offers']);
+          this.loading.set(false);
+        }
+      });
+    }
   }
 
   protected removeImage(i: number) {
@@ -104,16 +148,36 @@ export class AddOfferComponent implements OnInit {
       formData.append('images', file, file.name);
     });
 
-    this.offersService.createOffer(formData).subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.toast.success('Offer created!');
-        this.router.navigate(['/supplier/offers']);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.toast.error('Failed to create offer', err?.error?.detail || err?.error?.title || 'An error occurred');
-      }
-    });
+    if (this.isEditMode()) {
+      const id = this.offerId()!;
+      formData.append('id', id);
+      this.offersService.updateOffer(id, formData).subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.toast.success('Offer updated successfully!');
+          this.router.navigate(['/supplier/offers', id]);
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.toast.error('Failed to update offer', err?.error?.detail || err?.error?.title || 'An error occurred');
+        }
+      });
+    } else {
+      this.offersService.createOffer(formData).subscribe({
+        next: (res) => {
+          this.loading.set(false);
+          this.toast.success('Offer created!');
+          if (res && res.offerId) {
+            this.router.navigate(['/supplier/offers', res.offerId], { queryParams: { created: 'true' } });
+          } else {
+            this.router.navigate(['/supplier/offers']);
+          }
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.toast.error('Failed to create offer', err?.error?.detail || err?.error?.title || 'An error occurred');
+        }
+      });
+    }
   }
 }

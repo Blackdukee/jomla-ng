@@ -14,6 +14,7 @@ export interface OfferDto {
   committedUnits: number;
   hubTargetQuantity: number;
   buyerCount: number;
+  minFallbackQuantity?: number;
 }
 
 /** Matches backend MyOfferDto */
