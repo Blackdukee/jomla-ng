@@ -20,7 +20,7 @@ export class ToastService {
   }
 
   success(title: string, description?: string) { this.show(title, description, 'success'); }
-  error(title: string, description?: string)   { this.show(title, description, 'danger'); }
+  error(title: string, description?: string) { this.show(title, description, 'danger'); }
   warning(title: string, description?: string) { this.show(title, description, 'warning'); }
 
   remove(id: number) {

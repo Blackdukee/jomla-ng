@@ -42,3 +42,8 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Agent Customizations and Skills
+.agents/
+skills-lock.json
+

@@ -29,4 +29,4 @@ import { ToastComponent } from './shared/toast/toast.component';
     }
   `],
 })
-export class AppComponent {}
+export class AppComponent { }
