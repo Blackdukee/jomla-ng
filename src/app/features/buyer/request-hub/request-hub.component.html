@@ -61,9 +61,35 @@
             No offers from sellers yet.
           </div>
         } @else {
-          <div style="display:flex;flex-direction:column;gap:1rem">
-            @for (offer of sortedOffers(); track offer.id) {
-              <!-- Empty state is shown because offers list is always empty -->
+          <div style="display:flex;flex-direction:column;gap:1.25rem">
+            @for (offer of offers(); track offer.id) {
+              <div class="card" style="padding:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;border-left:4px solid var(--brand)">
+                <div>
+                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem">
+                    <span style="font-weight:700;font-size:1.0625rem">{{ offer.supplierName }}</span>
+                    <span class="badge badge-outline" style="font-size:0.75rem">Round {{ offer.roundNumber }}</span>
+                    <span class="badge" [class]="offer.status === 'Open' ? 'badge-brand' : 'badge-muted'" style="font-size:0.75rem">{{ offer.status }}</span>
+                  </div>
+                  <div style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.75rem">
+                    Price: <span style="color:var(--brand);font-weight:700;font-size:1.125rem">EGP {{ offer.currentUnitPrice }}</span> per unit
+                  </div>
+                  <div style="display:flex;gap:1.5rem;color:var(--text-secondary);font-size:0.875rem">
+                    <span>Available Capacity: <strong>{{ offer.quantityAvailable }} units</strong></span>
+                    <span>Accepted: <strong>{{ offer.acceptedQuantity }} units</strong></span>
+                  </div>
+                  <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem">
+                    Expires: {{ fmtExpiry(offer.expiresAt) }}
+                  </div>
+                </div>
+                
+                <div style="display:flex;gap:0.5rem;align-items:center">
+                  @if (offer.status === 'Open') {
+                    <button class="btn btn-primary" (click)="accept(offer)">Accept Offer</button>
+                  } @else if (offer.status === 'Accepted') {
+                    <button class="btn btn-outline" style="color:var(--danger)" (click)="cancelAccept(offer)">Leave Offer</button>
+                  }
+                </div>
+              </div>
             }
           </div>
         }

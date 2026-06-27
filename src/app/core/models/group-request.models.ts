@@ -9,6 +9,22 @@ export interface GroupRequestListItemDto {
   participantsCount: number;
 }
 
+export interface GroupRequestOfferDto {
+  id: string;
+  supplierId: string;
+  supplierName: string;
+  unitPrice: number;
+  minUnitPrice?: number;
+  currentUnitPrice: number;
+  quantityAvailable: number;
+  minFallbackQuantity?: number;
+  acceptedQuantity: number;
+  status: string;
+  createdAt: string;
+  expiresAt: string;
+  roundNumber: number;
+}
+
 export interface GroupRequestDetailDto {
   id: string;
   title: string;
@@ -22,6 +38,7 @@ export interface GroupRequestDetailDto {
   initiatorId: string;
   categoryName: string;
   participantsCount: number;
+  offers: GroupRequestOfferDto[];
 }
 
 export interface CreateGroupRequestRequest {
@@ -30,3 +47,4 @@ export interface CreateGroupRequestRequest {
   description: string | null;
   imageUrls: string[] | null;
 }
+

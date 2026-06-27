@@ -3,14 +3,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
 import { CategoriesService } from '../../core/services/categories.service';
-
-interface CategoryPreference {
-  id: string;
-  category_id: string;
-  category_name: string;
-  min_quantity: number;
-  is_active: boolean;
-}
+import { SupplierPreferencesService } from '../../core/services/supplier-preferences.service';
+import { SupplierCategoryPreferenceDto } from '../../core/models';
 
 @Component({
   selector: 'app-settings',
@@ -25,6 +19,7 @@ export class SettingsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private toast = inject(ToastService);
   private categoriesService = inject(CategoriesService);
+  private supplierPrefsService = inject(SupplierPreferencesService);
 
   protected activeTab = signal<'security' | 'notifications' | 'preferences'>('security');
   
@@ -46,7 +41,7 @@ export class SettingsComponent implements OnInit {
 
   // Supplier Preferences
   protected prefSubmitted = signal(false);
-  protected categoryPreferences = signal<CategoryPreference[]>([]);
+  protected categoryPreferences = signal<SupplierCategoryPreferenceDto[]>([]);
   protected flatCategories: { id: string; name: string }[] = [];
 
   protected prefForm = this.fb.group({
@@ -62,36 +57,15 @@ export class SettingsComponent implements OnInit {
   }
 
   private loadPreferences() {
-    const stored = localStorage.getItem('jomla_seller_prefs');
-    if (stored) {
-      try {
-        this.categoryPreferences.set(JSON.parse(stored));
-        return;
-      } catch {}
-    }
-    
-    // Seed initial mock supplier preferences if empty
-    if (this.auth.isSupplier() && this.flatCategories.length > 0) {
-      const firstCat = this.flatCategories[0];
-      const secondCat = this.flatCategories[1] || firstCat;
-      const initialPrefs: CategoryPreference[] = [
-        {
-          id: 'pref-1',
-          category_id: firstCat.id,
-          category_name: firstCat.name,
-          min_quantity: 50,
-          is_active: true
+    if (this.auth.isSupplier()) {
+      this.supplierPrefsService.getPreferences().subscribe({
+        next: (prefs) => {
+          this.categoryPreferences.set(prefs);
         },
-        {
-          id: 'pref-2',
-          category_id: secondCat.id,
-          category_name: secondCat.name,
-          min_quantity: 100,
-          is_active: true
+        error: (err) => {
+          this.toast.error('Error', err?.error?.detail || 'Failed to load category preferences.');
         }
-      ];
-      this.categoryPreferences.set(initialPrefs);
-      localStorage.setItem('jomla_seller_prefs', JSON.stringify(initialPrefs));
+      });
     }
   }
 
@@ -124,44 +98,41 @@ export class SettingsComponent implements OnInit {
     const catName = foundCat ? foundCat.name : 'Unknown Category';
 
     // Check duplicate
-    if (this.categoryPreferences().some(p => p.category_id === catId)) {
+    if (this.categoryPreferences().some(p => p.categoryId === catId)) {
       this.toast.warning('Duplicate preference', 'You already have alerts configured for this category.');
       return;
     }
 
-    const newPref: CategoryPreference = {
-      id: `pref-${Date.now()}`,
-      category_id: catId,
-      category_name: catName,
-      min_quantity: val.min_quantity,
-      is_active: true
-    };
-
-    const updated = [...this.categoryPreferences(), newPref];
-    this.categoryPreferences.set(updated);
-    localStorage.setItem('jomla_seller_prefs', JSON.stringify(updated));
-
-    this.prefForm.reset({ category_id: '', min_quantity: null });
-    this.prefSubmitted.set(false);
-    this.toast.success('Alert preference added', `You will now be notified of requests in ${catName}.`);
-  }
-
-  protected togglePreference(pref: CategoryPreference) {
-    const updated = this.categoryPreferences().map(p => {
-      if (p.id === pref.id) {
-        return { ...p, is_active: !p.is_active };
+    this.supplierPrefsService.savePreference(catId, val.min_quantity).subscribe({
+      next: (success) => {
+        if (success) {
+          this.toast.success('Alert preference added', `You will now be notified of requests in ${catName}.`);
+          this.loadPreferences();
+          this.prefForm.reset({ category_id: '', min_quantity: null });
+          this.prefSubmitted.set(false);
+        } else {
+          this.toast.error('Error', 'Failed to add alert preference.');
+        }
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.detail || 'Failed to add alert preference.');
       }
-      return p;
     });
-    this.categoryPreferences.set(updated);
-    localStorage.setItem('jomla_seller_prefs', JSON.stringify(updated));
-    this.toast.success('Alert status toggled', `Preference status updated.`);
   }
 
-  protected deletePreference(id: string) {
-    const updated = this.categoryPreferences().filter(p => p.id !== id);
-    this.categoryPreferences.set(updated);
-    localStorage.setItem('jomla_seller_prefs', JSON.stringify(updated));
-    this.toast.success('Alert preference removed', 'Successfully deleted the alert rule.');
+  protected deletePreference(categoryId: string) {
+    this.supplierPrefsService.removePreference(categoryId).subscribe({
+      next: (success) => {
+        if (success) {
+          this.toast.success('Alert preference removed', 'Successfully deleted the alert rule.');
+          this.loadPreferences();
+        } else {
+          this.toast.error('Error', 'Failed to remove alert preference.');
+        }
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.detail || 'Failed to remove alert preference.');
+      }
+    });
   }
 }

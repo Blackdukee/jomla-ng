@@ -188,28 +188,16 @@
                 <tr>
                   <th>Category</th>
                   <th>Min Demand Quantity</th>
-                  <th>Status</th>
                   <th style="text-align:right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                @for (pref of categoryPreferences(); track pref.id) {
+                @for (pref of categoryPreferences(); track pref.categoryId) {
                   <tr>
-                    <td style="font-weight:600">{{ pref.category_name }}</td>
-                    <td>{{ pref.min_quantity }} units</td>
-                    <td>
-                      <button 
-                        class="badge-btn"
-                        [class.badge-success]="pref.is_active"
-                        [class.badge-muted]="!pref.is_active"
-                        (click)="togglePreference(pref)"
-                        [title]="pref.is_active ? 'Click to deactivate' : 'Click to activate'"
-                      >
-                        {{ pref.is_active ? 'Active' : 'Inactive' }}
-                      </button>
-                    </td>
+                    <td style="font-weight:600">{{ pref.categoryName }}</td>
+                    <td>{{ pref.minQuantity }} units</td>
                     <td style="text-align:right">
-                      <button class="btn-icon btn btn-ghost btn-sm" (click)="deletePreference(pref.id)" aria-label="Delete preference">
+                      <button class="btn-icon btn btn-ghost btn-sm" (click)="deletePreference(pref.categoryId)" aria-label="Delete preference">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--danger)">
                           <polyline points="3 6 5 6 21 6"></polyline>
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>

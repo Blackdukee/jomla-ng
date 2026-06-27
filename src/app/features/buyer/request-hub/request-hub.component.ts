@@ -2,7 +2,8 @@ import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@ang
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToastService } from '../../../core/toast.service';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
-import { GroupRequestDetailDto } from '../../../core/models';
+import { GroupRequestOffersService } from '../../../core/services/group-request-offers.service';
+import { GroupRequestDetailDto, GroupRequestOfferDto } from '../../../core/models';
 import { format } from 'date-fns';
 
 @Component({
@@ -17,9 +18,10 @@ export class RequestHubComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
   private groupRequestsService = inject(GroupRequestsService);
+  private groupRequestOffersService = inject(GroupRequestOffersService);
 
   protected request = signal<GroupRequestDetailDto | null>(null);
-  protected offers = signal<any[]>([]);
+  protected offers = signal<GroupRequestOfferDto[]>([]);
   private requestId = '';
 
   ngOnInit(): void {
@@ -36,6 +38,7 @@ export class RequestHubComponent implements OnInit {
     this.groupRequestsService.getGroupRequest(this.requestId).subscribe({
       next: (req) => {
         this.request.set(req);
+        this.offers.set(req.offers || []);
       },
       error: (err) => {
         this.toast.error('Error', err?.error?.detail || 'Failed to load request details.');
@@ -44,16 +47,45 @@ export class RequestHubComponent implements OnInit {
     });
   }
 
-  protected sortedOffers(): any[] {
-    return [];
+  protected fmtExpiry(d: string) {
+    try {
+      return format(new Date(d), 'MMM d, ha');
+    } catch {
+      return '';
+    }
   }
 
-  protected fmtExpiry(d: string) { return format(new Date(d), 'MMM d, ha'); }
+  protected accept(offer: GroupRequestOfferDto) {
+    this.groupRequestOffersService.acceptOffer(offer.id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toast.success('Offer accepted!', 'You have successfully accepted this supplier offer.');
+          this.loadRequest();
+        } else {
+          this.toast.error('Error', res.error || 'Failed to accept offer');
+        }
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.detail || err?.error?.error || 'Failed to accept offer');
+      }
+    });
+  }
 
-  protected accept(offer: any) {}
-  protected cancelAccept(offer: any) {}
-  protected reject(offer: any) {}
-  protected proceed(responseId: any) {}
+  protected cancelAccept(offer: GroupRequestOfferDto) {
+    this.groupRequestOffersService.leaveOffer(offer.id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toast.success('Left offer', 'You have successfully left this supplier offer.');
+          this.loadRequest();
+        } else {
+          this.toast.error('Error', res.error || 'Failed to leave offer');
+        }
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.detail || err?.error?.error || 'Failed to leave offer');
+      }
+    });
+  }
 
   protected leaveRequest() {
     this.groupRequestsService.leaveGroupRequest(this.requestId).subscribe({

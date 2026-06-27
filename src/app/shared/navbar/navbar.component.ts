@@ -1,6 +1,11 @@
-import { Component, ChangeDetectionStrategy, inject, signal, HostListener } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, HostListener, OnInit, OnDestroy, effect } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { ToastService } from '../../core/toast.service';
+import { NotificationsService } from '../../core/services/notifications.service';
+import { SignalRService } from '../../core/services/signalr.service';
+import { NotificationDto } from '../../core/models';
+import { formatDistanceToNow } from 'date-fns';
 
 @Component({
   selector: 'app-navbar',
@@ -56,21 +61,37 @@ import { AuthService } from '../../core/auth.service';
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                 </svg>
-                <span class="bell-dot" aria-hidden="true"></span>
+                @if (unreadCount() > 0) {
+                  <span class="bell-dot" aria-hidden="true"></span>
+                }
               </button>
               @if (notifOpen()) {
                 <div class="dropdown notif-panel" role="dialog" aria-label="Notifications">
                   <div class="dropdown-header">
-                    <span style="font-weight:600">Notifications</span>
-                    <button class="btn-ghost btn btn-sm" style="font-size:0.75rem;height:auto;padding:0.25rem 0.5rem" (click)="notifOpen.set(false)">Mark all read</button>
+                    <span style="font-weight:600">Notifications ({{ unreadCount() }})</span>
+                    @if (unreadCount() > 0) {
+                      <button class="btn-ghost btn btn-sm" style="font-size:0.75rem;height:auto;padding:0.25rem 0.5rem" (click)="markAllRead()">Mark all read</button>
+                    }
                   </div>
-                  <div class="notif-item unread">
-                    <div class="notif-dot" aria-hidden="true"></div>
-                    <div>
-                      <div style="font-weight:600;font-size:0.875rem">Deal Reached</div>
-                      <div style="font-size:0.8rem;color:var(--text-secondary)">Your group request has been accepted.</div>
-                      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">2m ago</div>
-                    </div>
+                  <div style="max-height:360px;overflow-y:auto">
+                    @if (notifications().length === 0) {
+                      <div style="padding:2rem;text-align:center;color:var(--text-secondary);font-size:0.875rem">
+                        No notifications yet.
+                      </div>
+                    } @else {
+                      @for (notif of notifications(); track notif.id) {
+                        <div class="notif-item" [class.unread]="!notif.isRead" (click)="markAsRead(notif)">
+                          @if (!notif.isRead) {
+                            <div class="notif-dot" aria-hidden="true"></div>
+                          }
+                          <div>
+                            <div style="font-weight:600;font-size:0.875rem">{{ notif.title }}</div>
+                            <div style="font-size:0.8rem;color:var(--text-secondary)">{{ notif.body }}</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">{{ getRelativeTime(notif.createdAt) }}</div>
+                          </div>
+                        </div>
+                      }
+                    }
                   </div>
                 </div>
               }
@@ -283,14 +304,92 @@ import { AuthService } from '../../core/auth.service';
     .mobile-link:hover { background: rgba(0,0,0,0.05); }
   `],
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit, OnDestroy {
   protected auth = inject(AuthService);
   private router = inject(Router);
+  private toast = inject(ToastService);
+  private notificationsService = inject(NotificationsService);
+  private signalRService = inject(SignalRService);
 
   protected mobileOpen = signal(false);
   protected notifOpen = signal(false);
   protected avatarOpen = signal(false);
   protected isScrolled = signal(false);
+
+  protected notifications = signal<NotificationDto[]>([]);
+  protected unreadCount = signal<number>(0);
+  private notifUnsubscribe: (() => void) | null = null;
+
+  constructor() {
+    effect(() => {
+      if (this.auth.isAuthenticated()) {
+        this.loadNotifications();
+      } else {
+        this.notifications.set([]);
+        this.unreadCount.set(0);
+      }
+    });
+  }
+
+  ngOnInit() {
+    this.notifUnsubscribe = this.signalRService.onNotification((notif) => {
+      this.notifications.update(list => [notif, ...list]);
+      this.unreadCount.update(count => count + 1);
+      this.toast.success(notif.title, notif.body);
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.notifUnsubscribe) {
+      this.notifUnsubscribe();
+    }
+  }
+
+  protected loadNotifications() {
+    this.notificationsService.getNotifications(false, 1, 20).subscribe({
+      next: (res) => {
+        this.notifications.set(res.items);
+        this.unreadCount.set(res.unreadCount);
+      },
+      error: (err) => {
+        console.error('Failed to load notifications:', err);
+      }
+    });
+  }
+
+  protected markAllRead() {
+    this.notificationsService.markAllAsRead().subscribe({
+      next: () => {
+        this.notifications.update(list => list.map(n => ({ ...n, isRead: true })));
+        this.unreadCount.set(0);
+        this.toast.success('Success', 'All notifications marked as read.');
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.detail || 'Failed to mark notifications as read.');
+      }
+    });
+  }
+
+  protected markAsRead(notif: NotificationDto) {
+    if (notif.isRead) return;
+    this.notificationsService.markAsRead(notif.id).subscribe({
+      next: () => {
+        this.notifications.update(list => list.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+        this.unreadCount.update(count => Math.max(0, count - 1));
+      },
+      error: (err) => {
+        console.error('Failed to mark notification as read:', err);
+      }
+    });
+  }
+
+  protected getRelativeTime(dateStr: string): string {
+    try {
+      return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
+    } catch {
+      return '';
+    }
+  }
 
   @HostListener('window:scroll', [])
   onWindowScroll() {
@@ -349,3 +448,4 @@ export class NavbarComponent {
     });
   }
 }
+
