@@ -189,22 +189,30 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     this.joining.set(true);
 
     this.stripe.confirmCardPayment(this.clientSecret(), {
-      payment_method: {
-        card: this.cardElement
-      }
+      payment_method: { card: this.cardElement }
     }).then((result: any) => {
-      this.joining.set(false);
       if (result.error) {
+        this.joining.set(false);
         this.toast.error('Card verification failed', result.error.message);
         const cardErrors = document.getElementById('card-errors');
         if (cardErrors) cardErrors.textContent = result.error.message;
       } else {
         if (result.paymentIntent.status === 'requires_capture') {
-          this.toast.success('Joined hub!', `You've committed ${this.joinQty()} units. Payment hold authorized successfully.`);
-          this.joinModalOpen.set(false);
-          this.clientSecret.set(null);
-          this.loadBatch();
+          this.batchesService.confirmJoinBatch(this.batchId, result.paymentIntent.id, this.joinQty()).subscribe({
+            next: (confirmRes) => {
+              this.joining.set(false);
+              this.toast.success('Joined hub!', `You've committed ${this.joinQty()} units. Payment hold authorized and joined successfully.`);
+              this.joinModalOpen.set(false);
+              this.clientSecret.set(null);
+              this.loadBatch();
+            },
+            error: (err) => {
+              this.joining.set(false);
+              this.toast.error('Verification Error', err?.error?.detail || 'Failed to complete registration');
+            }
+          });
         } else {
+          this.joining.set(false);
           this.toast.error('Payment Error', 'Payment status is unexpected: ' + result.paymentIntent.status);
         }
       }

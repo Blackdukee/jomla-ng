@@ -44,4 +44,14 @@ export class BatchesService {
       { withCredentials: true }
     );
   }
+
+  /** POST /api/batches/{batchId}/confirm-join — Confirm joining a batch after successful payment */
+  confirmJoinBatch(batchId: string, paymentIntentId: string, quantity: number): Observable<any> {
+    const body = { paymentIntentId, quantity };
+    return this.http.post<any>(
+      `${this.baseUrl}/${batchId}/confirm-join`,
+      body,
+      { withCredentials: true }
+    );
+  }
 }

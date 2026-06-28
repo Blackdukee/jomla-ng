@@ -95,15 +95,23 @@
               </tr>
             </thead>
             <tbody>
-              @if (offer()) {
+              @for (batch of offer()?.batches; track batch.id) {
                 <tr>
-                  <td style="font-weight:600">1</td>
+                  <td style="font-weight:600">#{{ batch.batchNumber }}</td>
                   <td>
-                    <span class="badge badge-brand">Active</span>
+                    <span class="badge" [class]="batch.status === 'Open' ? 'badge-brand' : batch.status === 'Completed' ? 'badge-success' : 'badge-muted'">
+                      {{ batch.status }}
+                    </span>
                   </td>
-                  <td>{{ offer()?.committedUnits }}</td>
-                  <td>{{ (offer()?.hubTargetQuantity || targetQuantity()) ?? 0 }}</td>
-                  <td>{{ fmtDate(offer()?.expiresAt) }}</td>
+                  <td>{{ batch.currentQuantity }} units</td>
+                  <td>{{ batch.targetQuantity }} units</td>
+                  <td>{{ fmtDate(batch.createdAt) }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" style="text-align:center;color:var(--text-secondary);padding:1.5rem">
+                    No batch history available.
+                  </td>
                 </tr>
               }
             </tbody>

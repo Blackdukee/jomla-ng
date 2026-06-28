@@ -15,6 +15,17 @@ export interface OfferDto {
   hubTargetQuantity: number;
   buyerCount: number;
   minFallbackQuantity?: number;
+  batches?: OfferBatchDto[];
+}
+
+export interface OfferBatchDto {
+  id: string;
+  batchNumber: number;
+  targetQuantity: number;
+  currentQuantity: number;
+  status: 'Open' | 'Completed' | 'Failed';
+  createdAt: string;
+  completedAt?: string;
 }
 
 /** Matches backend MyOfferDto */
