@@ -1,10 +1,12 @@
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { fadeInUp, staggerFadeIn, tabAnimation } from '../../shared/animations/animations';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [RouterLink],
+  animations: [fadeInUp, staggerFadeIn, tabAnimation],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'

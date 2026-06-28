@@ -43,3 +43,15 @@ export interface MyOfferDto {
   createdAt: string;
   expiresAt?: string;
 }
+
+export interface GetAllOffersPagedResponse {
+  items: OfferDto[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  activeOffersCount: number;
+  expiredOffersCount: number;
+  pendingModerationCount: number;
+}
+

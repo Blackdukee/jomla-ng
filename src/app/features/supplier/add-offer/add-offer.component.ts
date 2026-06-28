@@ -32,6 +32,10 @@ export class AddOfferComponent implements OnInit {
   protected offerId = signal<string | null>(null);
   protected isEditMode = computed(() => this.offerId() !== null);
   private loadedOffer = signal<OfferDto | null>(null);
+  protected hasOpenBatch = computed(() => {
+    const off = this.loadedOffer();
+    return off ? (!!off.activeBatchId || (off.batches?.some(b => b.status === 'Open') ?? false)) : false;
+  });
 
   private defaultExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
 
@@ -78,6 +82,18 @@ export class AddOfferComponent implements OnInit {
             expiry_fallback_threshold: (off as any).minFallbackQuantity || null,
             expires_at: off.expiresAt ? new Date(off.expiresAt).toISOString().slice(0, 16) : this.defaultExpiry
           });
+          
+          // Programmatically disable locked controls if batch is open
+          const hasBatch = !!off.activeBatchId || (off.batches?.some(b => b.status === 'Open') ?? false);
+          if (hasBatch) {
+            this.form.controls['title'].disable();
+            this.form.controls['description'].disable();
+            this.form.controls['category_id'].disable();
+            this.form.controls['unit_price'].disable();
+            this.form.controls['discount_percent'].disable();
+            this.form.controls['hub_target_quantity'].disable();
+          }
+
           if (off.images && off.images.length > 0) {
             this.images.set(off.images);
           }
@@ -127,7 +143,7 @@ export class AddOfferComponent implements OnInit {
     this.loading.set(true);
 
     const formData = new FormData();
-    const val = this.form.value;
+    const val = this.form.getRawValue();
 
     formData.append('title', val.title || '');
     formData.append('description', val.description || '');

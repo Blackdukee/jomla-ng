@@ -20,6 +20,7 @@ export class OfferDetailComponent implements OnInit {
   private toast = inject(ToastService);
 
   protected offer = signal<OfferDto | null>(null);
+  protected offerStatus = signal<'PendingReview' | 'Active' | 'Inactive' | 'Expired' | null>(null);
   protected showLiveBanner = signal(false);
   protected showValidationWarning = signal(false);
   protected totalAvailable = signal<number | null>(null);
@@ -91,6 +92,7 @@ export class OfferDetailComponent implements OnInit {
           if (matched) {
             this.totalAvailable.set(matched.totalQuantityAvailable);
             this.targetQuantity.set(matched.batchTargetQuantity);
+            this.offerStatus.set(matched.status);
           }
         }
       });
@@ -114,11 +116,7 @@ export class OfferDetailComponent implements OnInit {
   }
 
   protected onEditClick() {
-    if (this.offer()?.activeBatchId) {
-      this.triggerWarning();
-    } else {
-      this.router.navigate(['/manage/offers', this.offer()?.id]);
-    }
+    this.router.navigate(['/manage/offers', this.offer()?.id]);
   }
 
   protected onDeleteClick() {

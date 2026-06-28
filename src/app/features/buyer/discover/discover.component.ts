@@ -5,7 +5,7 @@ import { MOCK_REQUESTS } from '../../../core/mock-data';
 import { OffersService } from '../../../core/services/offers.service';
 import { CategoriesService } from '../../../core/services/categories.service';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
-import { OfferDto, CategoryDto, GroupRequestListItemDto } from '../../../core/models';
+import { OfferDto, CategoryDto, GroupRequestListItemDto, GetAllOffersPagedResponse } from '../../../core/models';
 
 @Component({
   selector: 'app-discover',
@@ -29,13 +29,33 @@ export class DiscoverComponent implements OnInit {
   protected offers = signal<OfferDto[]>([]);
   protected requests = signal<GroupRequestListItemDto[]>([]);
 
+  // Pagination state
+  protected pageNumber = signal(1);
+  protected pageSize = signal(6);
+
+  protected totalPages = computed(() => {
+    const list = this.filteredOffers();
+    return Math.ceil(list.length / this.pageSize()) || 1;
+  });
+
+  protected paginatedOffers = computed(() => {
+    const list = this.filteredOffers();
+    const start = (this.pageNumber() - 1) * this.pageSize();
+    return list.slice(start, start + this.pageSize());
+  });
+
+  protected pagesArray = computed(() => {
+    const total = this.totalPages();
+    return Array.from({ length: total }, (_, i) => i + 1);
+  });
+
   ngOnInit(): void {
     this.categoriesService.getCategories().subscribe(cats => {
       this.categories.set(cats);
     });
 
-    this.offersService.getAllOffers().subscribe(offs => {
-      this.offers.set(offs);
+    this.offersService.getAllOffers().subscribe(res => {
+      this.offers.set(res.items);
     });
 
     this.groupRequestsService.getGroupRequests().subscribe(res => {
@@ -60,8 +80,20 @@ export class DiscoverComponent implements OnInit {
     return list;
   });
 
-  protected onCatChange(e: Event) { this.catFilter.set((e.target as HTMLSelectElement).value); }
-  protected onSortChange(e: Event) { this.sort.set((e.target as HTMLSelectElement).value); }
+  protected onCatChange(e: Event) {
+    this.catFilter.set((e.target as HTMLSelectElement).value);
+    this.pageNumber.set(1);
+  }
+  protected onSortChange(e: Event) {
+    this.sort.set((e.target as HTMLSelectElement).value);
+    this.pageNumber.set(1);
+  }
+
+  protected goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.pageNumber.set(page);
+    }
+  }
 
   protected progress(o: OfferDto) {
     return o.hubTargetQuantity > 0 ? Math.round((o.committedUnits / o.hubTargetQuantity) * 100) : 0;

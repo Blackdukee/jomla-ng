@@ -1,4 +1,4 @@
-<div class="home">
+<div class="home" @staggerFadeIn>
   <!-- Hero -->
   <section class="hero-section">
     <div class="container hero-inner">
@@ -48,7 +48,7 @@
       <!-- Hero card mockup -->
       <div class="hero-right" aria-label="Live group deal example" role="img">
         <div class="hero-glow" aria-hidden="true"></div>
-        <div class="card hero-card">
+        <div class="card hero-card animate-float">
           <div class="hero-card-header">
             <span class="badge badge-muted">Group deal</span>
             <span class="badge badge-brand">-35%</span>
@@ -104,7 +104,7 @@
       </div>
 
       @if (howTab() === 'buyers') {
-      <div id="panel-buyers" role="tabpanel" aria-labelledby="tab-buyers" class="steps-grid">
+      <div id="panel-buyers" role="tabpanel" aria-labelledby="tab-buyers" class="steps-grid" @tabAnimation>
         @for (step of buyerSteps; track step.num) {
         <div class="card step-card">
           <div class="step-num" aria-hidden="true">{{ step.num }}</div>
@@ -115,7 +115,7 @@
       </div>
       }
       @if (howTab() === 'suppliers') {
-      <div id="panel-suppliers" role="tabpanel" aria-labelledby="tab-suppliers" class="steps-grid">
+      <div id="panel-suppliers" role="tabpanel" aria-labelledby="tab-suppliers" class="steps-grid" @tabAnimation>
         @for (step of supplierSteps; track step.num) {
         <div class="card step-card">
           <div class="step-num" aria-hidden="true">{{ step.num }}</div>

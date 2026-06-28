@@ -2,11 +2,13 @@ import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/cor
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToastService } from '../../core/toast.service';
+import { fadeInUp } from '../../shared/animations/animations';
 
 @Component({
   selector: 'app-payment',
   standalone: true,
   imports: [ReactiveFormsModule],
+  animations: [fadeInUp],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './payment.component.html',
   styleUrl: './payment.component.css'

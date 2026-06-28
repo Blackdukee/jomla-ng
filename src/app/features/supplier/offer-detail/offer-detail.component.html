@@ -19,7 +19,13 @@
   <div class="action-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem">
     <div style="display:flex; gap:0.5rem; align-items:center">
       <span class="badge badge-outline">{{ offer()?.categoryName }}</span>
-      <span class="badge badge-brand">Active</span>
+      @if (offerStatus()) {
+        <span class="badge" [class]="offerStatus() === 'Active' ? 'badge-brand' : offerStatus() === 'PendingReview' ? 'badge-warning' : offerStatus() === 'Inactive' ? 'badge-muted' : 'badge-danger'">
+          {{ offerStatus() === 'PendingReview' ? 'Pending Review' : offerStatus() }}
+        </span>
+      } @else {
+        <span class="badge badge-brand">Active</span>
+      }
     </div>
     <div style="display:flex; gap:0.75rem; align-items:center">
       <button class="btn btn-outline" style="border-radius:9999px; font-size:0.875rem; padding:0.5rem 1.25rem">Deactivate</button>
@@ -41,7 +47,7 @@
   @if (showValidationWarning()) {
     <div style="background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2); border-radius:12px; padding:0.75rem 1rem; color:#D97706; font-size:0.875rem; display:flex; align-items:center; gap:0.5rem; margin-bottom:1.5rem">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span>This offer has an open batch and cannot be modified or deleted.</span>
+      <span>This offer has an open batch and cannot be deleted.</span>
     </div>
   }
 

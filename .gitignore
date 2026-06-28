@@ -5,7 +5,9 @@
 /tmp
 /out-tsc
 /bazel-out
-
+.impeccable 
+.gemini
+integration_guide.md
 # Node
 /node_modules
 npm-debug.log

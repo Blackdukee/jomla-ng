@@ -43,7 +43,7 @@
     <div class="empty-state" aria-live="polite">No active offers found. Check back later.</div>
     } @else {
     <div class="offers-grid">
-      @for (offer of filteredOffers(); track offer.id) {
+      @for (offer of paginatedOffers(); track offer.id) {
       <article class="card card-hover offer-card" (click)="goToHub(offer)" style="cursor:pointer"
         [attr.aria-label]="offer.title + ' group deal'">
         <div class="offer-img-wrap">
@@ -104,6 +104,31 @@
       </article>
       }
     </div>
+
+    <!-- Pagination controls -->
+    @if (totalPages() > 1) {
+    <div class="pagination-row" style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-top:2.5rem" role="navigation" aria-label="Pagination">
+      <button class="btn btn-outline btn-sm" [disabled]="pageNumber() <= 1" (click)="goToPage(pageNumber() - 1)" aria-label="Previous page">
+        ← Prev
+      </button>
+      
+      @for (p of pagesArray(); track p) {
+        <button 
+          [class]="p === pageNumber() ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'" 
+          [attr.aria-current]="p === pageNumber() ? 'page' : null"
+          (click)="goToPage(p)"
+          [attr.aria-label]="'Page ' + p"
+        >
+          {{ p }}
+        </button>
+      }
+      
+      <button class="btn btn-outline btn-sm" [disabled]="pageNumber() >= totalPages()" (click)="goToPage(pageNumber() + 1)" aria-label="Next page">
+        Next →
+      </button>
+    </div>
+    }
+
     }
   </div>
   }

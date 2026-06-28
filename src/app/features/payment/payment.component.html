@@ -1,6 +1,6 @@
 <div class="container" style="max-width:480px;padding:3rem 1rem" role="main">
   @if (!successData()) {
-  <div class="card" style="overflow:hidden">
+  <div @fadeInUp class="card" style="overflow:hidden">
     <div style="padding:2rem;text-align:center;border-bottom:1px solid var(--border)">
       <div class="icon-container" style="margin:0 auto 1rem;width:3rem;height:3rem" aria-hidden="true">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -50,14 +50,14 @@
     </form>
   </div>
   } @else {
-  <div class="card" style="text-align:center;padding:3rem 2rem">
+  <div @fadeInUp class="card" style="text-align:center;padding:3rem 2rem">
     <div
       style="width:5rem;height:5rem;background:#DCFCE7;color:#16a34a;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem"
       aria-hidden="true">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
         stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22 4 12 14.01 9 11.01" />
+        <path class="checkmark-circle" d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline class="checkmark-check" points="22 4 12 14.01 9 11.01" />
       </svg>
     </div>
     <h2 style="font-size:1.75rem;font-weight:800;margin-bottom:0.5rem">Order Confirmed</h2>
