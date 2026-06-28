@@ -31,6 +31,10 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
   protected joining = signal(false);
   protected clientSecret = signal<string | null>(null);
 
+  protected updateQtyModalOpen = signal(false);
+  protected updateQty = signal(1);
+  protected updatingQty = signal(false);
+
   private batchId = '';
   private unsubBatchUpdate: (() => void) | null = null;
   private stripe: any = null;
@@ -230,5 +234,36 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
 
   protected onJoinQtyChange(e: Event): void {
     this.joinQty.set(+((e.target as HTMLInputElement).value));
+  }
+
+  protected openUpdateQtyModal(): void {
+    const userId = this.authService.user()?.id;
+    const participant = this.batch()?.participants.find(p => p.buyerId === userId);
+    if (participant) {
+      this.updateQty.set(participant.quantity);
+      this.updateQtyModalOpen.set(true);
+    }
+  }
+
+  protected submitUpdateQty(): void {
+    const newQty = this.updateQty();
+    if (newQty <= 0) return;
+    this.updatingQty.set(true);
+    this.batchesService.updateBatchParticipantQuantity(this.batchId, newQty).subscribe({
+      next: (res) => {
+        this.updatingQty.set(false);
+        this.updateQtyModalOpen.set(false);
+        this.toast.success('Quantity updated!', `Your committed quantity is now ${newQty} units. Your payment hold has been cycled.`);
+        this.loadBatch();
+      },
+      error: (err) => {
+        this.updatingQty.set(false);
+        this.toast.error('Error', err?.error?.detail || err?.error?.title || 'Failed to update quantity');
+      }
+    });
+  }
+
+  protected onUpdateQtyChange(e: Event): void {
+    this.updateQty.set(+((e.target as HTMLInputElement).value));
   }
 }

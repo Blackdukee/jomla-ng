@@ -37,10 +37,11 @@ export class BatchesService {
     );
   }
 
-  /** DELETE /api/batches/{batchId}/leave — Leave a batch */
+  /** POST /api/batches/{batchId}/leave — Leave a batch */
   leaveBatch(batchId: string): Observable<LeaveBatchResponse> {
-    return this.http.delete<LeaveBatchResponse>(
+    return this.http.post<LeaveBatchResponse>(
       `${this.baseUrl}/${batchId}/leave`,
+      {},
       { withCredentials: true }
     );
   }
@@ -50,6 +51,16 @@ export class BatchesService {
     const body = { paymentIntentId, quantity };
     return this.http.post<any>(
       `${this.baseUrl}/${batchId}/confirm-join`,
+      body,
+      { withCredentials: true }
+    );
+  }
+
+  /** PUT /api/batches/{batchId}/quantity — Update participant quantity in batch, cycling Stripe hold */
+  updateBatchParticipantQuantity(batchId: string, newQuantity: number): Observable<any> {
+    const body = { newQuantity };
+    return this.http.put<any>(
+      `${this.baseUrl}/${batchId}/quantity`,
       body,
       { withCredentials: true }
     );

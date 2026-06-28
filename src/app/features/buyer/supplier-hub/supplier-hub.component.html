@@ -140,6 +140,9 @@
       <div
         style="padding-top:1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.75rem">
         @if (isParticipant()) {
+        <button class="btn btn-outline" (click)="openUpdateQtyModal()" aria-label="Update committed quantity">
+          Update Quantity
+        </button>
         <button class="btn btn-outline" style="color:var(--danger);border-color:rgba(239,68,68,0.3)" (click)="leave()"
           [disabled]="leaving()" aria-label="Leave this hub">
           {{ leaving() ? 'Leaving…' : 'Leave Hub' }}
@@ -211,6 +214,48 @@
         {{ joining() ? 'Authorizing hold…' : 'Pay & confirm join' }}
       </button>
       }
+    </div>
+  </div>
+  }
+
+  <!-- Update Quantity dialog -->
+  @if (updateQtyModalOpen()) {
+  <div class="dialog-backdrop" (click)="updateQtyModalOpen.set(false)" role="dialog" aria-modal="true" aria-labelledby="update-qty-title">
+    <div class="dialog" (click)="$event.stopPropagation()" style="max-width:420px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+        <h2 id="update-qty-title" style="font-size:1.125rem;font-weight:700">Update quantity — {{ b.offerTitle }}</h2>
+        <button (click)="updateQtyModalOpen.set(false)"
+          style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.125rem"
+          aria-label="Close dialog">✕</button>
+      </div>
+
+      <div style="background:var(--bg-page);border-radius:10px;padding:1rem;margin-bottom:1.5rem;font-size:0.875rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem">
+          <span style="color:var(--text-secondary)">Price per unit</span>
+          <span style="font-weight:700;color:var(--brand)">EGP {{ b.discountedPrice }}</span>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0.75rem">
+        <label class="form-label" for="update-qty-input">How many units do you want?</label>
+        <input id="update-qty-input" type="number" min="1" class="form-input" [value]="updateQty()"
+          (input)="onUpdateQtyChange($event)" [disabled]="updatingQty()">
+      </div>
+
+      <div style="background:var(--bg-page);border-radius:10px;padding:1rem;margin-bottom:1.5rem;font-size:0.875rem">
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--text-secondary)">New total hold amount</span>
+          <span style="font-weight:700;font-size:1rem">EGP {{ (updateQty() * b.discountedPrice).toFixed(2) }}</span>
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem">
+          💳 The previous hold will be released and a new hold for the updated amount will be placed.
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;height:3rem;font-size:1rem" [disabled]="updatingQty()"
+        (click)="submitUpdateQty()">
+        {{ updatingQty() ? 'Updating hold…' : 'Update quantity' }}
+      </button>
     </div>
   </div>
   }

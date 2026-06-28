@@ -42,7 +42,18 @@ export class GroupRequestsService {
 
   /** POST /api/group-requests — Create a new group request */
   createGroupRequest(request: CreateGroupRequestRequest): Observable<any> {
-    return this.http.post<any>(this.baseUrl, request, {
+    const formData = new FormData();
+    formData.append('title', request.title);
+    formData.append('quantity', request.quantity.toString());
+    if (request.description) {
+      formData.append('description', request.description);
+    }
+    if (request.images) {
+      request.images.forEach(file => {
+        formData.append('images', file, file.name);
+      });
+    }
+    return this.http.post<any>(this.baseUrl, formData, {
       withCredentials: true
     });
   }

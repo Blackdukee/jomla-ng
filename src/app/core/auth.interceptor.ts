@@ -1,14 +1,19 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, filter, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+
+// Global state variables for interceptor instance
+let isRefreshing = false;
+const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
 /**
  * HTTP interceptor that:
  * 1. Attaches the Bearer JWT token to all outgoing requests
- * 2. On 401 responses, attempts a silent token refresh and retries the original request
- * 3. On refresh failure, clears auth state (handled by AuthService)
+ * 2. On 401 responses, locks and attempts a silent token refresh, queuing other concurrent requests
+ * 3. On refresh success, retries all queued requests with the new token
+ * 4. On refresh failure, clears auth state and redirects to login
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
@@ -38,23 +43,44 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         !req.url.includes('/auth/register') &&
         !req.url.includes('/auth/refresh')
       ) {
-        return authService.refreshAccessToken().pipe(
-          switchMap(() => {
-            // Retry the original request with the new token
-            const newToken = localStorage.getItem('jomla_token');
-            const retryReq = req.clone({
-              setHeaders: {
-                Authorization: `Bearer ${newToken ?? ''}`
-              }
-            });
-            return next(retryReq);
-          }),
-          catchError((refreshError) => {
-            authService.clearAuth();
-            router.navigate(['/login']);
-            return throwError(() => refreshError);
-          })
-        );
+        if (!isRefreshing) {
+          isRefreshing = true;
+          refreshTokenSubject.next(null);
+
+          return authService.refreshAccessToken().pipe(
+            switchMap((res) => {
+              isRefreshing = false;
+              refreshTokenSubject.next(res.token);
+              
+              const retryReq = req.clone({
+                setHeaders: {
+                  Authorization: `Bearer ${res.token}`
+                }
+              });
+              return next(retryReq);
+            }),
+            catchError((refreshError) => {
+              isRefreshing = false;
+              authService.clearAuth();
+              router.navigate(['/login']);
+              return throwError(() => refreshError);
+            })
+          );
+        } else {
+          // Queue request until token is refreshed
+          return refreshTokenSubject.pipe(
+            filter(token => token !== null),
+            take(1),
+            switchMap((newToken) => {
+              const retryReq = req.clone({
+                setHeaders: {
+                  Authorization: `Bearer ${newToken}`
+                }
+              });
+              return next(retryReq);
+            })
+          );
+        }
       }
       return throwError(() => error);
     })

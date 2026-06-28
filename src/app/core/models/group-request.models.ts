@@ -45,6 +45,6 @@ export interface CreateGroupRequestRequest {
   title: string;
   quantity: number;
   description: string | null;
-  imageUrls: string[] | null;
+  images: File[] | null;
 }
 

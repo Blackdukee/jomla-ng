@@ -13,26 +13,14 @@ export class GroupRequestOffersService {
     });
   }
 
+  rejectOffer(offerId: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${offerId}/reject`, {}, {
+      withCredentials: true
+    });
+  }
+
   leaveOffer(offerId: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/leave`, {}, {
-      withCredentials: true
-    });
-  }
-
-  completeOffer(offerId: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/complete`, {}, {
-      withCredentials: true
-    });
-  }
-
-  cancelOffer(offerId: string): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/${offerId}/cancel`, {}, {
-      withCredentials: true
-    });
-  }
-
-  expireOffer(offerId: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/expire`, {}, {
       withCredentials: true
     });
   }

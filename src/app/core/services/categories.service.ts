@@ -13,4 +13,20 @@ export class CategoriesService {
       withCredentials: true
     });
   }
+
+  createCategory(name: string, description?: string): Observable<any> {
+    return this.http.post<any>(this.baseUrl, { name, description }, { withCredentials: true });
+  }
+
+  getCategoryById(id: string): Observable<CategoryDto> {
+    return this.http.get<CategoryDto>(`${this.baseUrl}/${id}`, { withCredentials: true });
+  }
+
+  updateCategory(id: string, name: string, description?: string): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/${id}`, { id, name, description }, { withCredentials: true });
+  }
+
+  deleteCategory(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/${id}`, { withCredentials: true });
+  }
 }
