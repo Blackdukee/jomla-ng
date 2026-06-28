@@ -6,6 +6,8 @@
 /out-tsc
 /bazel-out
 .impeccable 
+DESIGN.md 
+PRODUCT.md
 .gemini
 integration_guide.md
 # Node
