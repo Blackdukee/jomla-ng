@@ -14,6 +14,13 @@ export class CategoriesService {
     });
   }
 
+  detectCategory(title: string): Observable<CategoryDto> {
+    return this.http.get<CategoryDto>(`${this.baseUrl}/detect`, {
+      params: { title },
+      withCredentials: true
+    });
+  }
+
   createCategory(name: string, description?: string): Observable<any> {
     return this.http.post<any>(this.baseUrl, { name, description }, { withCredentials: true });
   }

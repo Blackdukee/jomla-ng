@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@ang
 import { RouterLink } from '@angular/router';
 import { ToastService } from '../../../core/toast.service';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
+import { CategoriesService } from '../../../core/services/categories.service';
 import { GroupRequestListItemDto } from '../../../core/models';
 
 @Component({
@@ -15,6 +16,7 @@ import { GroupRequestListItemDto } from '../../../core/models';
 export class WishlistComponent implements OnInit {
   private toast = inject(ToastService);
   private groupRequestsService = inject(GroupRequestsService);
+  private categoriesService = inject(CategoriesService);
 
   protected requests = signal<GroupRequestListItemDto[]>([]);
   protected modalOpen = signal(false);
@@ -54,12 +56,18 @@ export class WishlistComponent implements OnInit {
   }
 
   protected detectCategory() {
-    if (!this.desc() || this.detectedCat() || this.detecting()) return;
+    if (!this.title() || this.detecting()) return;
     this.detecting.set(true);
-    setTimeout(() => {
-      this.detecting.set(false);
-      this.detectedCat.set('Electronics');
-    }, 1200);
+    this.categoriesService.detectCategory(this.title()).subscribe({
+      next: (cat) => {
+        this.detecting.set(false);
+        this.detectedCat.set(cat.name);
+      },
+      error: () => {
+        this.detecting.set(false);
+        this.detectedCat.set('Other');
+      }
+    });
   }
 
   protected removeImage(i: number) {
