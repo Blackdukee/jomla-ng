@@ -9,10 +9,10 @@ export const fadeInUp = trigger('fadeInUp', [
 
 export const staggerFadeIn = trigger('staggerFadeIn', [
   transition(':enter', [
-    query('.step-card, .value-card, .stat-item, .hero-inner > *', [
-      style({ opacity: 0, transform: 'translateY(20px)' }),
+    query('.sheet-card, .deck-card, .step-card, .value-card, .section-header, .cta-section', [
+      style({ opacity: 0 }),
       stagger(60, [
-        animate('450ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+        animate('500ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1 }))
       ])
     ], { optional: true })
   ])

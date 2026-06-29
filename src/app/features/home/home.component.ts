@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, ElementRef, AfterViewInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { fadeInUp, staggerFadeIn, tabAnimation } from '../../shared/animations/animations';
 
@@ -11,8 +11,40 @@ import { fadeInUp, staggerFadeIn, tabAnimation } from '../../shared/animations/a
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
-export class HomeComponent {
+export class HomeComponent implements AfterViewInit {
+  private el = inject(ElementRef);
   protected howTab = signal<'buyers' | 'suppliers'>('buyers');
+  protected tabChanged = signal(false);
+  protected isVisible = signal(false);
+
+  protected setTab(tab: 'buyers' | 'suppliers') {
+    this.howTab.set(tab);
+    this.tabChanged.set(true);
+  }
+
+  ngAfterViewInit() {
+    if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          this.isVisible.set(true);
+          observer.disconnect();
+        }
+      }, {
+        threshold: 0,
+        rootMargin: '0px 0px -25% 0px'
+      });
+
+      // Delay observation slightly to allow client layout to settle (preventing immediate triggers on page load)
+      setTimeout(() => {
+        const section = this.el.nativeElement.querySelector('.how-section');
+        if (section) {
+          observer.observe(section);
+        }
+      }, 150);
+    } else {
+      this.isVisible.set(true);
+    }
+  }
 
   protected buyerSteps = [
     { num: '1', title: 'Join a hub', desc: 'Find a group deal that matches your need, or create a request to signal demand.' },

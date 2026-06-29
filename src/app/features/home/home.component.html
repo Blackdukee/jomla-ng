@@ -3,82 +3,94 @@
   <section class="hero-section">
     <div class="container hero-inner">
       <div class="hero-left">
-        <div class="eyebrow-badge">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-            <polyline points="17 6 23 6 23 12" />
-          </svg>
-          Wholesale prices, unlocked together
+        <div class="eyebrow-badge line-wrapper">
+          <span class="line-content animate-eyebrow" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+              <polyline points="17 6 23 6 23 12" />
+            </svg>
+            Wholesale prices, unlocked together
+          </span>
         </div>
 
         <h1 class="hero-headline">
-          Buy in groups.<br>
-          <span class="text-brand">Pay wholesale.</span>
+          <span class="line-wrapper"><span class="line-content text-line-1">Buy in groups.</span></span>
+          <span class="line-wrapper"><span class="line-content text-line-2 text-brand">Pay wholesale.</span></span>
         </h1>
 
         <p class="hero-sub">
-          Jomla pools B2B demand so you can unlock supplier volume discounts. Join an active deal or post a request and
-          let suppliers compete.
+          <span class="line-wrapper"><span class="line-content text-sub-1">Jomla pools B2B demand so you can unlock supplier volume discounts.</span></span>
+          <span class="line-wrapper"><span class="line-content text-sub-2">Join an active deal or post a request and let suppliers compete.</span></span>
         </p>
 
-        <div class="hero-ctas">
-          <a routerLink="/register/buyer" class="btn btn-primary btn-xl">Start buying →</a>
-          <a routerLink="/register/supplier" class="btn btn-outline btn-xl">Sell on Jomla</a>
+        <div class="hero-ctas line-wrapper">
+          <div class="line-content animate-cta" style="display: flex; gap: 1rem; width: 100%; flex-wrap: wrap;">
+            <a routerLink="/register/buyer" class="btn btn-primary btn-xl">Start buying →</a>
+            <a routerLink="/register/supplier" class="btn btn-outline btn-xl">Sell on Jomla</a>
+          </div>
         </div>
 
-        <div class="hero-stats" role="list">
-          <div class="stat-item" role="listitem">
-            <span class="stat-num">12k+</span>
-            <span class="stat-label">Active buyers</span>
-          </div>
-          <div class="stat-divider" aria-hidden="true"></div>
-          <div class="stat-item" role="listitem">
-            <span class="stat-num">35%</span>
-            <span class="stat-label">Avg. savings</span>
-          </div>
-          <div class="stat-divider" aria-hidden="true"></div>
-          <div class="stat-item" role="listitem">
-            <span class="stat-num">2.4k</span>
-            <span class="stat-label">Deals closed</span>
+        <div class="stats-table line-wrapper">
+          <div class="stats-table-row line-content animate-stats" style="display: flex; width: 100%;">
+            <div class="stats-table-cell">
+              <span class="cell-num"><span class="num-buyers"></span>,000+</span>
+              <span class="cell-label">Active Buyers</span>
+            </div>
+            <div class="stats-table-cell">
+              <span class="cell-num"><span class="num-savings"></span>%</span>
+              <span class="cell-label">Average Savings</span>
+            </div>
+            <div class="stats-table-cell">
+              <span class="cell-num"><span class="num-deals"></span>k</span>
+              <span class="cell-label">Deals Closed</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Hero card mockup -->
-      <div class="hero-right" aria-label="Live group deal example" role="img">
+      <div class="hero-right">
         <div class="hero-glow" aria-hidden="true"></div>
-        <div class="card hero-card animate-float">
-          <div class="hero-card-header">
-            <span class="badge badge-muted">Group deal</span>
-            <span class="badge badge-brand">-35%</span>
-          </div>
-          <h3 class="hero-card-title">Premium Wireless Headphones</h3>
-          <div class="hero-card-price">
-            <span class="hero-price">EGP 83.85</span>
-            <span class="hero-price-orig">EGP 129.00</span>
-          </div>
+        <div class="card hero-card momentum-card">
+          <div class="card-inner-content">
+            <div class="deal-profile">
+              <span class="deal-category">ELECTRONICS</span>
+              <h3 class="hero-card-title">Premium Wireless Headphones</h3>
+            </div>
 
-          <div class="hero-card-body">
-            <div class="progress-labels">
-              <span class="text-brand" style="font-weight:600;font-size:0.875rem">38 of 50 units committed</span>
-              <span style="color:var(--text-secondary);font-size:0.875rem">76%</span>
-            </div>
-            <div class="progress-track" style="margin:0.5rem 0 1rem">
-              <div class="progress-fill" style="width:76%"></div>
-            </div>
-            <div class="hero-card-footer">
-              <div style="display:flex;align-items:center;gap:0.5rem;color:var(--text-secondary);font-size:0.875rem">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                31 buyers in this hub
+            <div class="deal-price-matrix">
+              <div class="price-tier reached">
+                <span class="tier-name">Retail Price</span>
+                <span class="tier-val">EGP 129.00</span>
               </div>
-              <span style="font-weight:600;font-size:0.875rem">12 more to unlock</span>
+              <div class="price-tier reached">
+                <span class="tier-name">Tier 1 (10 units)</span>
+                <span class="tier-val">EGP 109.00</span>
+              </div>
+              <div class="price-tier active">
+                <span class="tier-name">Tier 3 (50 units)</span>
+                <span class="tier-val">EGP 83.85</span>
+              </div>
+            </div>
+
+            <div class="momentum-progress-section">
+              <div class="progress-labels">
+                <span class="progress-desc">38 of 50 units committed</span>
+                <span class="progress-pct">76%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill"></div>
+              </div>
+
+              <div class="deal-ticker">
+                <div class="ticker-avatar-group">
+                  <span class="avatar-stub">A</span>
+                  <span class="avatar-stub">B</span>
+                  <span class="avatar-stub">C</span>
+                  <span class="ticker-label">Joined by 31 retailers</span>
+                </div>
+                <span class="ticker-highlight">12 left</span>
+              </div>
             </div>
           </div>
         </div>
@@ -87,40 +99,56 @@
   </section>
 
   <!-- How it works -->
-  <section class="how-section" aria-labelledby="how-heading">
+  <section class="how-section" [class.visible]="isVisible()" [class.tab-changed]="tabChanged()" aria-labelledby="how-heading">
     <div class="container">
       <div class="section-header">
-        <h2 id="how-heading" class="section-title">How Jomla works</h2>
+        <h2 id="how-heading" class="section-title">
+          <span class="letter" style="--li: 1">H</span>
+          <span class="letter" style="--li: 2">o</span>
+          <span class="letter" style="--li: 3">w</span>
+          <span class="letter-space"> </span>
+          <span class="letter" style="--li: 4">J</span>
+          <span class="letter" style="--li: 5">o</span>
+          <span class="letter" style="--li: 6">m</span>
+          <span class="letter" style="--li: 7">l</span>
+          <span class="letter" style="--li: 8">a</span>
+          <span class="letter-space"> </span>
+          <span class="letter" style="--li: 9">w</span>
+          <span class="letter" style="--li: 10">o</span>
+          <span class="letter" style="--li: 11">r</span>
+          <span class="letter" style="--li: 12">k</span>
+          <span class="letter" style="--li: 13">s</span>
+        </h2>
         <p class="section-sub">Two sides, one marketplace. Pick your role to see the flow.</p>
       </div>
 
       <div class="tab-toggle" role="tablist" aria-label="How it works tabs">
         <button role="tab" [class]="howTab() === 'buyers' ? 'tab-btn active' : 'tab-btn'"
-          [attr.aria-selected]="howTab() === 'buyers'" (click)="howTab.set('buyers')" id="tab-buyers"
+          [attr.aria-selected]="howTab() === 'buyers'" (click)="setTab('buyers')" id="tab-buyers"
           aria-controls="panel-buyers">For Buyers</button>
         <button role="tab" [class]="howTab() === 'suppliers' ? 'tab-btn active' : 'tab-btn'"
-          [attr.aria-selected]="howTab() === 'suppliers'" (click)="howTab.set('suppliers')" id="tab-suppliers"
+          [attr.aria-selected]="howTab() === 'suppliers'" (click)="setTab('suppliers')" id="tab-suppliers"
           aria-controls="panel-suppliers">For Suppliers</button>
       </div>
 
       @if (howTab() === 'buyers') {
-      <div id="panel-buyers" role="tabpanel" aria-labelledby="tab-buyers" class="steps-grid" @tabAnimation>
+      <div class="steps-grid-sheet" id="panel-buyers" role="tabpanel" aria-labelledby="tab-buyers" @tabAnimation>
         @for (step of buyerSteps; track step.num) {
-        <div class="card step-card">
-          <div class="step-num" aria-hidden="true">{{ step.num }}</div>
-          <h3 class="step-title">{{ step.title }}</h3>
-          <p class="step-desc">{{ step.desc }}</p>
+        <div class="sheet-card">
+          <span class="sheet-num">Step <span class="step-num-val" [attr.data-final-num]="step.num"></span></span>
+          <h3 class="sheet-title">{{ step.title }}</h3>
+          <p class="sheet-desc">{{ step.desc }}</p>
         </div>
         }
       </div>
       }
       @if (howTab() === 'suppliers') {
-      <div id="panel-suppliers" role="tabpanel" aria-labelledby="tab-suppliers" class="steps-grid" @tabAnimation>
+      <div id="panel-suppliers" role="tabpanel" aria-labelledby="tab-suppliers" class="steps-grid-sheet" @tabAnimation>
         @for (step of supplierSteps; track step.num) {
-        <div class="card step-card">
-          <div class="step-num" aria-hidden="true">{{ step.num }}</div>
-          <h3 class="step-title">{{ step.title }}</h3>
-          <p class="step-desc">{{ step.desc }}</p>
+        <div class="sheet-card">
+          <span class="sheet-num">Step <span class="step-num-val" [attr.data-final-num]="step.num"></span></span>
+          <h3 class="sheet-title">{{ step.title }}</h3>
+          <p class="sheet-desc">{{ step.desc }}</p>
         </div>
         }
       </div>
@@ -134,11 +162,12 @@
       <div class="section-header">
         <h2 id="value-heading" class="section-title">Why buyers and sellers choose Jomla</h2>
       </div>
-      <div class="value-grid">
+      <div class="value-grid-deck">
         @for (vp of valueProps; track vp.title) {
-        <div class="card value-card">
-          <div class="icon-container" style="margin-bottom:1rem" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        <div class="deck-card">
+          <span class="deck-badge">Active Mode</span>
+          <div class="deck-icon-box" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round">
               <path [attr.d]="vp.iconPath" />
               @if (vp.iconPath2) {
@@ -146,8 +175,8 @@
               }
             </svg>
           </div>
-          <h3 class="value-title">{{ vp.title }}</h3>
-          <p class="value-desc">{{ vp.desc }}</p>
+          <h3 class="deck-title">{{ vp.title }}</h3>
+          <p class="deck-desc">{{ vp.desc }}</p>
         </div>
         }
       </div>

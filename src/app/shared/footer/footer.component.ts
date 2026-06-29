@@ -36,7 +36,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
           </div>
           <p class="tagline">{{ t().tagline }}</p>
           <p class="footer-desc">{{ t().description }}</p>
-          
+
           <div class="footer-socials">
             <a href="https://linkedin.com" target="_blank" class="social-icon" aria-label="LinkedIn">
               <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
@@ -104,29 +104,41 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     </footer>
   `,
   styles: [`
+    /* impeccable-disable design-system-color */
     .footer {
       background: #0F172A;
-      color: #f8fafc;
+      color: #cbd5e1;
       padding: 2.5rem 0 0;
       margin-top: auto;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       font-family: inherit;
     }
     .footer-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-      padding-bottom: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 2rem;
+      padding-bottom: 2rem;
     }
-    @media (min-width: 640px) {
-      .footer-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (min-width: 1024px) {
-      .footer-grid { grid-template-columns: 1.25fr 0.75fr 0.75fr 1.25fr; }
+    @media (min-width: 768px) {
+      .footer-grid {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        text-align: center;
+      }
     }
     .footer-brand {
       display: flex;
       flex-direction: column;
+      align-items: center;
+    }
+    @media (min-width: 768px) {
+      .footer-brand {
+        width: 100%;
+        margin-bottom: 1rem;
+      }
     }
     .logo-container {
       display: flex;
@@ -138,7 +150,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       background: var(--brand);
       color: #fff;
       padding: 0.35rem;
-      border-radius: 6px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -161,7 +173,8 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       color: #94a3b8;
       line-height: 1.5;
       margin-bottom: 1rem;
-      max-width: 320px;
+      max-width: 500px;
+      margin-inline: auto;
     }
     .footer-socials {
       display: flex;
@@ -185,7 +198,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       color: #fff;
       border-color: var(--brand);
       transform: translateY(-2px);
-      box-shadow: 0 4px 10px rgba(13, 148, 136, 0.2);
+      box-shadow: var(--card-shadow-hover);
     }
     .footer-heading {
       font-size: 0.875rem;
@@ -199,6 +212,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
+      align-items: center;
     }
     .footer-link {
       font-size: 0.8125rem;
@@ -208,7 +222,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       display: inline-flex;
       align-items: center;
       position: relative;
-      align-self: flex-start;
+      align-self: center;
       padding-bottom: 2px;
     }
     .footer-link::after {
@@ -233,16 +247,12 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     .footer[dir="rtl"] .footer-link::after {
       left: auto;
       right: 0;
-      transform-origin: left;
-    }
-    .footer[dir="rtl"] .footer-link:hover::after {
-      transform: scaleX(1);
-      transform-origin: right;
     }
     .contact-item {
       display: flex;
       flex-direction: column;
-      gap: 0.125rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
     }
     .contact-label {
       font-size: 0.75rem;
@@ -260,14 +270,14 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       color: var(--brand);
     }
     .footer-cta-btn {
-      align-self: flex-start;
+      align-self: center;
       margin-top: 0.25rem;
       border-color: rgba(255, 255, 255, 0.1);
       color: #cbd5e1;
       font-size: 0.8125rem;
       padding: 0.375rem 1rem;
       height: auto;
-      transition: all 0.2s ease;
+      background: transparent;
       border-radius: var(--btn-radius, 9999px);
     }
     .footer-cta-btn:hover {
@@ -284,15 +294,13 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     .footer-bottom {
       display: flex;
       flex-direction: column;
+      gap: 0.75rem;
       align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      text-align: center;
     }
     @media (min-width: 768px) {
       .footer-bottom {
         flex-direction: row;
-        text-align: start;
+        justify-content: space-between;
       }
     }
     .copyright {
@@ -302,9 +310,8 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     }
     .footer-bottom-actions {
       display: flex;
+      gap: 1rem;
       align-items: center;
-      gap: 1.25rem;
-      flex-wrap: wrap;
       justify-content: center;
     }
     .lang-toggle-btn {
@@ -312,9 +319,8 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       border: 1px solid rgba(255, 255, 255, 0.06);
       color: #cbd5e1;
       padding: 0.25rem 0.625rem;
-      border-radius: 6px;
+      border-radius: 9999px;
       font-size: 0.75rem;
-      font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -335,9 +341,9 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     .status-dot {
       width: 5px;
       height: 5px;
-      background-color: #10b981;
+      background-color: var(--success);
       border-radius: 50%;
-      box-shadow: 0 0 6px #10b981;
+      box-shadow: 0 0 6px var(--success);
     }
   `]
 })

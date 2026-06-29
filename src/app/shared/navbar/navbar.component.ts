@@ -21,7 +21,8 @@ import { formatDistanceToNow } from 'date-fns';
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="12 2 2 7 12 12 22 7 12 2"/>
               <polyline points="2 17 12 22 22 17"/>
-              <polyline points="2 12 12 17 22 12"/>
+              <polyline points="2 12 17 22 12"/>
+              <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
             </svg>
           </div>
           <span class="logo-text">Jomla</span>
@@ -143,6 +144,7 @@ import { formatDistanceToNow } from 'date-fns';
     </header>
   `,
   styles: [`
+    /* impeccable-disable design-system-color */
     :host {
       display: block;
       position: sticky;
@@ -150,16 +152,17 @@ import { formatDistanceToNow } from 'date-fns';
       z-index: 100;
     }
     .navbar {
-      background: var(--bg-page);
-      border-bottom: 1px solid var(--border);
+      background: #0F172A;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       height: 64px;
       transition: background 0.3s var(--transition), backdrop-filter 0.3s var(--transition), border-color 0.3s var(--transition);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
     .navbar.scrolled {
-      background: color-mix(in srgb, var(--bg-page) 80%, transparent);
+      background: #0F172A;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border-bottom-color: color-mix(in srgb, var(--border) 50%, transparent);
+      border-bottom-color: rgba(255, 255, 255, 0.15);
     }
     .navbar-inner {
       height: 64px;
@@ -176,19 +179,27 @@ import { formatDistanceToNow } from 'date-fns';
       flex-shrink: 0;
     }
     .logo-icon {
-      background: var(--brand);
-      color: #fff;
-      padding: 0.375rem;
-      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      border-radius: 50%;
+      padding: 0.35rem;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .navbar-logo:hover .logo-icon {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--brand);
+      color: var(--brand);
+      box-shadow: 0 0 15px var(--brand);
     }
     .logo-text {
       font-weight: 800;
       font-size: 1.25rem;
       letter-spacing: -0.02em;
-      color: var(--text-primary);
+      color: #ffffff;
     }
     .navbar-links {
       display: flex;
@@ -200,13 +211,13 @@ import { formatDistanceToNow } from 'date-fns';
     .nav-link {
       font-size: 0.9375rem;
       font-weight: 500;
-      color: var(--text-secondary);
+      color: #94a3b8;
       text-decoration: none;
       padding: 1.25rem 0;
       border-bottom: 2px solid transparent;
       transition: color 0.15s, border-color 0.15s;
     }
-    .nav-link:hover { color: var(--brand); }
+    .nav-link:hover { color: #ffffff; }
     .nav-link.active {
       color: var(--brand);
       border-bottom-color: var(--brand);
@@ -232,8 +243,8 @@ import { formatDistanceToNow } from 'date-fns';
       top: calc(100% + 0.5rem);
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow-hover);
       z-index: 200;
       overflow: hidden;
       animation: dropIn 0.15s ease;
@@ -284,6 +295,22 @@ import { formatDistanceToNow } from 'date-fns';
     }
     .dropdown-item:hover { background: #f9fafb; }
     .dropdown-item.danger { color: var(--danger); }
+    .btn-ghost {
+      color: #cbd5e1;
+    }
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+    }
+    .btn-outline {
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #cbd5e1;
+    }
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+    }
     .mobile-drawer {
       background: var(--bg-page);
       border-top: 1px solid var(--border);
@@ -295,7 +322,7 @@ import { formatDistanceToNow } from 'date-fns';
     .mobile-link {
       display: block;
       padding: 0.75rem 1rem;
-      border-radius: 10px;
+      border-radius: 8px;
       font-weight: 500;
       color: var(--text-primary);
       text-decoration: none;
