@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { OfferDto, MyOfferDto, GetAllOffersPagedResponse } from '../models';
+import { OfferDto, MyOfferDto, GetAllOffersPagedResponse, MyOffersPagedResponse } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class OffersService {
@@ -38,8 +38,8 @@ export class OffersService {
     });
   }
 
-  getMyOffers(): Observable<MyOfferDto[]> {
-    return this.http.get<MyOfferDto[]>(`${this.baseUrl}/my-offers`, {
+  getMyOffers(): Observable<MyOffersPagedResponse> {
+    return this.http.get<MyOffersPagedResponse>(`${this.baseUrl}/my-offers`, {
       withCredentials: true
     });
   }

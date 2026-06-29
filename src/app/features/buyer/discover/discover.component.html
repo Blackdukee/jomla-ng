@@ -5,20 +5,6 @@
     <p style="color:var(--text-secondary)">Find active group deals or join buyer requests.</p>
   </div>
 
-  <!-- Search Bar -->
-  <div class="search-bar-container" style="margin-bottom:1.5rem">
-    <input type="text"
-           class="search-input"
-           placeholder="Search for offers or requests..."
-           [value]="searchTerm()"
-           (input)="onSearchInput($event)"
-           (keyup.enter)="triggerSearch()"
-           aria-label="Search" />
-    <button class="btn btn-brand search-btn" (click)="triggerSearch()">
-      Search
-    </button>
-  </div>
-
   <!-- Controls row -->
   <div class="controls-row">
     <!-- Segmented control -->
@@ -34,7 +20,23 @@
     </div>
 
     <!-- Filters -->
-    <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center">
+      <div class="search-bar-container">
+        <span class="search-icon-wrap" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input type="text"
+               class="search-input"
+               placeholder="Search..."
+               [value]="searchTerm()"
+               (input)="onSearchInput($event)"
+               (keyup.enter)="triggerSearch()"
+               aria-label="Search" />
+      </div>
+
       <select class="filter-select" [value]="catFilter()" (change)="onCatChange($event)"
         aria-label="Filter by category">
         <option value="all">All Categories</option>

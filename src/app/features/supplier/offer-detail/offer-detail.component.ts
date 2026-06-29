@@ -88,7 +88,8 @@ export class OfferDetailComponent implements OnInit {
 
       this.offersService.getMyOffers().subscribe({
         next: (myOffers) => {
-          const matched = myOffers.find(o => o.id.toLowerCase() === offerIdStr.toLowerCase());
+          const items = myOffers.items || [];
+          const matched = items.find(o => o.id.toLowerCase() === offerIdStr.toLowerCase());
           if (matched) {
             this.totalAvailable.set(matched.totalQuantityAvailable);
             this.targetQuantity.set(matched.batchTargetQuantity);

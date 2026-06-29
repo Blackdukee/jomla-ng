@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OffersService } from '../../../core/services/offers.service';
-import { MyOfferDto } from '../../../core/models';
+import { MyOfferDto, MyOffersPagedResponse } from '../../../core/models';
 
 @Component({
   selector: 'app-supplier-offers',
@@ -27,7 +27,8 @@ export class SupplierOffersComponent implements OnInit {
   }));
 
   ngOnInit(): void {
-    this.offersService.getMyOffers().subscribe(offs => {
+    this.offersService.getMyOffers().subscribe(res => {
+      const offs = res.items || [];
       this.offers.set(offs);
       
       // Load details for each offer to get image URLs without modifying the backend MyOfferDto

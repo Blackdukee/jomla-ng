@@ -9,7 +9,7 @@ export type {
   BatchStatus
 } from './batch.models';
 export type { CategoryDto } from './category.models';
-export type { OfferDto, MyOfferDto, GetAllOffersPagedResponse } from './offer.models';
+export type { OfferDto, MyOfferDto, GetAllOffersPagedResponse, MyOffersPagedResponse } from './offer.models';
 export type {
   GroupRequestListItemDto,
   GroupRequestOfferDto,

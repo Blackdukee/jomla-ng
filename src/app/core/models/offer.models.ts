@@ -55,3 +55,14 @@ export interface GetAllOffersPagedResponse {
   pendingModerationCount: number;
 }
 
+export interface MyOffersPagedResponse {
+  items: MyOfferDto[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  activeOffersCount: number;
+  expiredOffersCount: number;
+  pendingModerationCount: number;
+}
+

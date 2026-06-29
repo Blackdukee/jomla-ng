@@ -53,9 +53,10 @@ export class ProfileComponent implements OnInit {
   ngOnInit(): void {
     if (this.auth.isSupplier()) {
       this.offersService.getMyOffers().subscribe({
-        next: (offs) => {
-          this.supplierOffers.set(offs);
-          this.supplierOffersCount.set(offs.length);
+        next: (res) => {
+          const items = res.items || [];
+          this.supplierOffers.set(items);
+          this.supplierOffersCount.set(items.length);
         }
       });
     }
