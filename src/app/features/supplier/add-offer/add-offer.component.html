@@ -49,7 +49,7 @@
                 [class.error]="submitted() && form.controls['category_id'].invalid">
                 <option value="">Select a category</option>
                 @for (cat of categories(); track cat.id) {
-                <option [value]="cat.id">{{ cat.name }}</option>
+                <option [value]="cat.id">{{ cat.displayName || cat.name }}</option>
                 }
               </select>
               @if (submitted() && form.controls['category_id'].invalid) {

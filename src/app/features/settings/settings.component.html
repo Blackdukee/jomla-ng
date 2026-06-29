@@ -141,7 +141,7 @@
             <select id="category_id" class="form-input" formControlName="category_id" style="border-radius:12px">
               <option value="" disabled selected>Select a category</option>
               @for (cat of flatCategories; track cat.id) {
-                <option [value]="cat.id">{{ cat.name }}</option>
+                <option [value]="cat.id">{{ cat.displayName || cat.name }}</option>
               }
             </select>
             @if (prefSubmitted() && prefForm.controls['category_id'].invalid) {

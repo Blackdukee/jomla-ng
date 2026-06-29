@@ -5,6 +5,20 @@
     <p style="color:var(--text-secondary)">Find active group deals or join buyer requests.</p>
   </div>
 
+  <!-- Search Bar -->
+  <div class="search-bar-container" style="margin-bottom:1.5rem">
+    <input type="text"
+           class="search-input"
+           placeholder="Search for offers or requests..."
+           [value]="searchTerm()"
+           (input)="onSearchInput($event)"
+           (keyup.enter)="triggerSearch()"
+           aria-label="Search" />
+    <button class="btn btn-brand search-btn" (click)="triggerSearch()">
+      Search
+    </button>
+  </div>
+
   <!-- Controls row -->
   <div class="controls-row">
     <!-- Segmented control -->
@@ -25,7 +39,7 @@
         aria-label="Filter by category">
         <option value="all">All Categories</option>
         @for (cat of categories(); track cat.id) {
-        <option [value]="cat.name">{{ cat.name }}</option>
+        <option [value]="cat.name">{{ cat.displayName || cat.name }}</option>
         }
       </select>
       <select class="filter-select" [value]="sort()" (change)="onSortChange($event)" aria-label="Sort offers">

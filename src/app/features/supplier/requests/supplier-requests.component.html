@@ -9,7 +9,7 @@
       <select class="filter-select" aria-label="Filter by category" [value]="catFilter()" (change)="onCatChange($event)">
         <option value="all">All Categories</option>
         @for (c of categories(); track c.id) {
-          <option [value]="c.name">{{ c.name }}</option>
+          <option [value]="c.name">{{ c.displayName || c.name }}</option>
         }
       </select>
       <select class="filter-select" aria-label="Sort by" [value]="sort()" (change)="onSortChange($event)">

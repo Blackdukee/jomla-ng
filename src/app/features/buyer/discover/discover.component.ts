@@ -24,6 +24,7 @@ export class DiscoverComponent implements OnInit {
   protected tab = signal<'offers' | 'requests'>('offers');
   protected catFilter = signal('all');
   protected sort = signal('newest');
+  protected searchTerm = signal('');
 
   protected categories = signal<CategoryDto[]>([]);
   protected offers = signal<OfferDto[]>([]);
@@ -54,13 +55,38 @@ export class DiscoverComponent implements OnInit {
       this.categories.set(cats);
     });
 
-    this.offersService.getAllOffers().subscribe(res => {
-      this.offers.set(res.items);
+    this.loadData();
+  }
+
+  protected loadData(): void {
+    const term = this.searchTerm().trim();
+
+    this.offersService.getAllOffers({ search: term || undefined }).subscribe({
+      next: (res) => {
+        this.offers.set(res.items);
+      },
+      error: (err) => console.error('Failed to load offers', err)
     });
 
-    this.groupRequestsService.getGroupRequests().subscribe(res => {
-      this.requests.set(res.items);
+    this.groupRequestsService.getGroupRequests({ titleSearch: term || undefined }).subscribe({
+      next: (res) => {
+        this.requests.set(res.items);
+      },
+      error: (err) => console.error('Failed to load group requests', err)
     });
+  }
+
+  protected onSearchInput(e: Event): void {
+    const val = (e.target as HTMLInputElement).value;
+    this.searchTerm.set(val);
+    if (!val.trim()) {
+      this.triggerSearch();
+    }
+  }
+
+  protected triggerSearch(): void {
+    this.pageNumber.set(1);
+    this.loadData();
   }
 
   protected filteredOffers = computed(() => {

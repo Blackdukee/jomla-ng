@@ -42,7 +42,7 @@ export class SettingsComponent implements OnInit {
   // Supplier Preferences
   protected prefSubmitted = signal(false);
   protected categoryPreferences = signal<SupplierCategoryPreferenceDto[]>([]);
-  protected flatCategories: { id: string; name: string }[] = [];
+  protected flatCategories: { id: string; name: string; displayName?: string }[] = [];
 
   protected prefForm = this.fb.group({
     category_id: ['', Validators.required],
@@ -51,7 +51,7 @@ export class SettingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.categoriesService.getCategories().subscribe(cats => {
-      this.flatCategories = cats.map(c => ({ id: c.id, name: c.name }));
+      this.flatCategories = cats.map(c => ({ id: c.id, name: c.name, displayName: c.displayName }));
       this.loadPreferences();
     });
   }
