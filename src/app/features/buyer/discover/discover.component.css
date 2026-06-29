@@ -52,3 +52,71 @@
   border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
+
+/* ─── Skeleton Loader ─────────────────────────────────────────── */
+.skeleton-card {
+  background: var(--bg-surface);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.skeleton-img {
+  height: 180px;
+  background: var(--border);
+}
+.skeleton-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.skeleton-text {
+  height: 12px;
+  background: var(--border);
+  border-radius: 4px;
+}
+.skeleton-supplier { width: 40%; }
+.skeleton-title { width: 85%; height: 18px; }
+.skeleton-price { width: 30%; height: 16px; }
+.skeleton-progress-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+}
+.skeleton-joined { width: 50%; }
+.skeleton-btn {
+  height: 38px;
+  background: var(--border);
+  border-radius: var(--btn-radius);
+  margin-top: 0.25rem;
+}
+
+/* Shimmer wave animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--border) 25%, #f8fafc 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* ─── Staggered Card Entrance ─────────────────────────────────── */
+@keyframes cardEntranceReveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animated-grid .offer-card {
+  opacity: 0;
+  animation: cardEntranceReveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animated-grid .offer-card:nth-child(1) { animation-delay: 80ms; }
+.animated-grid .offer-card:nth-child(2) { animation-delay: 180ms; }
+.animated-grid .offer-card:nth-child(3) { animation-delay: 280ms; }
+.animated-grid .offer-card:nth-child(4) { animation-delay: 380ms; }
+.animated-grid .offer-card:nth-child(5) { animation-delay: 480ms; }
+.animated-grid .offer-card:nth-child(6) { animation-delay: 580ms; }

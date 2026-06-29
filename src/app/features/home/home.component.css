@@ -485,15 +485,13 @@
 
 /* Value props */
 .value-section { padding: 5rem 0; }
-.value-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
+.value-section .section-header {
+  opacity: 0;
+  transform: translateY(20px);
 }
-@media (min-width: 768px) { .value-grid { grid-template-columns: repeat(3, 1fr); } }
-.value-card { padding: 2rem; }
-.value-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.75rem; }
-.value-desc { color: var(--text-secondary); line-height: 1.7; }
+.value-section.visible .section-header {
+  animation: elementReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
 /* CTA */
 .cta-section { padding: 6rem 0; }
@@ -504,6 +502,24 @@
   max-width: 560px;
   margin: 0 auto 2.5rem;
   line-height: 1.7;
+}
+.cta-section .cta-title,
+.cta-section .cta-sub,
+.cta-section .btn {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.cta-section.visible .cta-title {
+  animation: elementReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0ms;
+}
+.cta-section.visible .cta-sub {
+  animation: elementReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 150ms;
+}
+.cta-section.visible .btn {
+  animation: elementReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 300ms;
 }
 
 /* Entrance & line slide reveals */
@@ -626,7 +642,15 @@
   flex-direction: column;
   position: relative;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  opacity: 0;
+  transform: translateY(30px);
 }
+.value-section.visible .deck-card {
+  animation: stepPopUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.value-section.visible .deck-card:nth-child(1) { animation-delay: 150ms; }
+.value-section.visible .deck-card:nth-child(2) { animation-delay: 300ms; }
+.value-section.visible .deck-card:nth-child(3) { animation-delay: 450ms; }
 .deck-card:hover {
   transform: translate(-2px, -2px);
   box-shadow: 8px 8px 0px var(--text-primary);

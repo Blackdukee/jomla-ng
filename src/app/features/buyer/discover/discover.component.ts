@@ -25,6 +25,7 @@ export class DiscoverComponent implements OnInit {
   protected catFilter = signal('all');
   protected sort = signal('newest');
   protected searchTerm = signal('');
+  protected isLoading = signal(false);
 
   protected categories = signal<CategoryDto[]>([]);
   protected offers = signal<OfferDto[]>([]);
@@ -60,12 +61,17 @@ export class DiscoverComponent implements OnInit {
 
   protected loadData(): void {
     const term = this.searchTerm().trim();
+    this.isLoading.set(true);
 
     this.offersService.getAllOffers({ search: term || undefined }).subscribe({
       next: (res) => {
         this.offers.set(res.items);
+        this.isLoading.set(false);
       },
-      error: (err) => console.error('Failed to load offers', err)
+      error: (err) => {
+        console.error('Failed to load offers', err);
+        this.isLoading.set(false);
+      }
     });
 
     this.groupRequestsService.getGroupRequests({ titleSearch: term || undefined }).subscribe({

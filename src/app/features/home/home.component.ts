@@ -16,6 +16,8 @@ export class HomeComponent implements AfterViewInit {
   protected howTab = signal<'buyers' | 'suppliers'>('buyers');
   protected tabChanged = signal(false);
   protected isVisible = signal(false);
+  protected isValueVisible = signal(false);
+  protected isCtaVisible = signal(false);
 
   protected setTab(tab: 'buyers' | 'suppliers') {
     this.howTab.set(tab);
@@ -24,10 +26,33 @@ export class HomeComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
-      const observer = new IntersectionObserver((entries) => {
+      // 1. Observer for How Jomla works
+      const howObserver = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
           this.isVisible.set(true);
-          observer.disconnect();
+          howObserver.disconnect();
+        }
+      }, {
+        threshold: 0,
+        rootMargin: '0px 0px -25% 0px'
+      });
+
+      // 2. Observer for Value props
+      const valueObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          this.isValueVisible.set(true);
+          valueObserver.disconnect();
+        }
+      }, {
+        threshold: 0,
+        rootMargin: '0px 0px -25% 0px'
+      });
+
+      // 3. Observer for CTA
+      const ctaObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          this.isCtaVisible.set(true);
+          ctaObserver.disconnect();
         }
       }, {
         threshold: 0,
@@ -36,13 +61,23 @@ export class HomeComponent implements AfterViewInit {
 
       // Delay observation slightly to allow client layout to settle (preventing immediate triggers on page load)
       setTimeout(() => {
-        const section = this.el.nativeElement.querySelector('.how-section');
-        if (section) {
-          observer.observe(section);
+        const howSection = this.el.nativeElement.querySelector('.how-section');
+        if (howSection) {
+          howObserver.observe(howSection);
+        }
+        const valueSection = this.el.nativeElement.querySelector('.value-section');
+        if (valueSection) {
+          valueObserver.observe(valueSection);
+        }
+        const ctaSection = this.el.nativeElement.querySelector('.cta-section');
+        if (ctaSection) {
+          ctaObserver.observe(ctaSection);
         }
       }, 150);
     } else {
       this.isVisible.set(true);
+      this.isValueVisible.set(true);
+      this.isCtaVisible.set(true);
     }
   }
 

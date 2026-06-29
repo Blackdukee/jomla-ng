@@ -108,36 +108,36 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     .footer {
       background: #0F172A;
       color: #cbd5e1;
-      padding: 2.5rem 0 0;
+      padding: 1.75rem 0 0;
       margin-top: auto;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       font-family: inherit;
     }
     .footer-grid {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 2rem;
-      padding-bottom: 2rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      text-align: left;
+      align-items: start;
+      padding-bottom: 1.75rem;
     }
     @media (min-width: 768px) {
       .footer-grid {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-around;
-        text-align: center;
+        grid-template-columns: 1.2fr 0.8fr 0.8fr 1fr;
       }
     }
     .footer-brand {
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-start;
+      text-align: left;
     }
     @media (min-width: 768px) {
       .footer-brand {
-        width: 100%;
-        margin-bottom: 1rem;
+        width: auto;
+        margin-bottom: 0;
+        padding-inline-end: 1.5rem;
+        border-inline-end: 1px solid rgba(255, 255, 255, 0.05);
       }
     }
     .logo-container {
@@ -169,12 +169,12 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       letter-spacing: 0.01em;
     }
     .footer-desc {
-      font-size: 0.8125rem;
-      color: #94a3b8;
+      font-size: 0.75rem;
+      color: #64748b;
       line-height: 1.5;
       margin-bottom: 1rem;
-      max-width: 500px;
-      margin-inline: auto;
+      max-width: 280px;
+      margin-inline: 0;
     }
     .footer-socials {
       display: flex;
@@ -212,7 +212,15 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      align-items: center;
+      align-items: flex-start;
+    }
+    @media (min-width: 768px) {
+      .footer-col:not(:last-child) {
+        padding-inline-end: 1rem;
+        border-inline-end: 1px solid rgba(255, 255, 255, 0.05);
+        width: 100%;
+        height: 100%;
+      }
     }
     .footer-link {
       font-size: 0.8125rem;
@@ -222,7 +230,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       display: inline-flex;
       align-items: center;
       position: relative;
-      align-self: center;
+      align-self: flex-start;
       padding-bottom: 2px;
     }
     .footer-link::after {
@@ -251,7 +259,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     .contact-item {
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-start;
       margin-bottom: 0.5rem;
     }
     .contact-label {
@@ -270,7 +278,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       color: var(--brand);
     }
     .footer-cta-btn {
-      align-self: center;
+      align-self: flex-start;
       margin-top: 0.25rem;
       border-color: rgba(255, 255, 255, 0.1);
       color: #cbd5e1;

@@ -157,7 +157,7 @@
   </section>
 
   <!-- Value props -->
-  <section class="value-section" aria-labelledby="value-heading">
+  <section class="value-section" [class.visible]="isValueVisible()" aria-labelledby="value-heading">
     <div class="container">
       <div class="section-header">
         <h2 id="value-heading" class="section-title">Why buyers and sellers choose Jomla</h2>
@@ -184,7 +184,7 @@
   </section>
 
   <!-- CTA -->
-  <section class="cta-section" aria-labelledby="cta-heading">
+  <section class="cta-section" [class.visible]="isCtaVisible()" aria-labelledby="cta-heading">
     <div class="container" style="text-align:center">
       <h2 id="cta-heading" class="cta-title">Ready to join the trading floor?</h2>
       <p class="cta-sub">
