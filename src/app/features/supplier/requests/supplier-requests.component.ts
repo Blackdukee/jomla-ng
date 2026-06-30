@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { CategoriesService } from '../../../core/services/categories.service';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
 import { CategoryDto, GroupRequestListItemDto } from '../../../core/models';
@@ -9,6 +10,24 @@ import { CategoryDto, GroupRequestListItemDto } from '../../../core/models';
   standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('requestsEntrance', [
+      transition(':enter', [
+        query('.header-block, .filters-block', [
+          style({ opacity: 0, transform: 'translateY(12px)' }),
+          stagger('120ms', [
+            animate('1000ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+          ])
+        ], { optional: true }),
+        query('.req-row', [
+          style({ opacity: 0, transform: 'translateY(16px)' }),
+          stagger('150ms', [
+            animate('1200ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+          ])
+        ], { optional: true })
+      ])
+    ])
+  ],
   templateUrl: './supplier-requests.component.html',
   styleUrl: './supplier-requests.component.css'
 })
@@ -21,38 +40,61 @@ export class SupplierRequestsComponent implements OnInit {
   protected categories = signal<CategoryDto[]>([]);
   protected requests = signal<GroupRequestListItemDto[]>([]);
 
+  // Pagination State
+  protected pageNumber = signal(1);
+  protected readonly pageSize = 5;
+  protected totalItems = signal(0);
+  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize));
+
   ngOnInit(): void {
     this.categoriesService.getCategories().subscribe({
       next: (cats) => this.categories.set(cats),
       error: (err) => console.error('Failed to load categories', err)
     });
 
-    this.groupRequestsService.getGroupRequests().subscribe({
-      next: (res) => this.requests.set(res.items),
+    this.loadRequests();
+  }
+
+  protected loadRequests(): void {
+    const categoryId = this.catFilter() === 'all' ? undefined : this.catFilter();
+    this.groupRequestsService.getGroupRequests({
+      categoryId,
+      sortBy: this.sort(),
+      page: this.pageNumber(),
+      pageSize: this.pageSize,
+      status: 'Active'
+    }).subscribe({
+      next: (res) => {
+        this.requests.set(res.items);
+        this.totalItems.set(res.totalCount);
+      },
       error: (err) => console.error('Failed to load group requests', err)
     });
   }
 
-  protected filteredRequests = computed(() => {
-    let list = [...this.requests()];
-    if (this.catFilter() !== 'all') {
-      list = list.filter(r => r.categoryName === this.catFilter());
-    }
-    if (this.sort() === 'most_buyers') {
-      list.sort((a, b) => b.participantsCount - a.participantsCount);
-    } else if (this.sort() === 'most_units') {
-      list.sort((a, b) => b.currentQuantity - a.currentQuantity);
-    } else if (this.sort() === 'newest') {
-      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-    return list;
-  });
-
   protected onCatChange(e: Event) {
     this.catFilter.set((e.target as HTMLSelectElement).value);
+    this.pageNumber.set(1);
+    this.loadRequests();
   }
 
   protected onSortChange(e: Event) {
     this.sort.set((e.target as HTMLSelectElement).value);
+    this.pageNumber.set(1);
+    this.loadRequests();
+  }
+
+  protected prevPage(): void {
+    if (this.pageNumber() > 1) {
+      this.pageNumber.update(p => p - 1);
+      this.loadRequests();
+    }
+  }
+
+  protected nextPage(): void {
+    if (this.pageNumber() < this.totalPages()) {
+      this.pageNumber.update(p => p + 1);
+      this.loadRequests();
+    }
   }
 }

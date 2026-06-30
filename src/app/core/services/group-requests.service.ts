@@ -19,6 +19,7 @@ export class GroupRequestsService {
     status?: string;
     page?: number;
     pageSize?: number;
+    sortBy?: string;
   }): Observable<{ items: GroupRequestListItemDto[]; totalCount: number; page: number; pageSize: number }> {
     let params = new HttpParams();
     if (filters?.categoryId) params = params.set('categoryId', filters.categoryId);
@@ -26,6 +27,7 @@ export class GroupRequestsService {
     if (filters?.status) params = params.set('status', filters.status);
     if (filters?.page) params = params.set('page', filters.page.toString());
     if (filters?.pageSize) params = params.set('pageSize', filters.pageSize.toString());
+    if (filters?.sortBy) params = params.set('sortBy', filters.sortBy);
 
     return this.http.get<{ items: GroupRequestListItemDto[]; totalCount: number; page: number; pageSize: number }>(
       this.baseUrl,

@@ -1,15 +1,14 @@
-<div class="container" style="max-width:1000px;padding:2rem 1rem 3rem" role="main">
+<div class="container" style="max-width:1000px;padding:2rem 1rem 3rem" role="main" @requestsEntrance>
   <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:2rem">
-
-    <div>
+    <div class="header-block">
       <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.25rem">Group Requests</h1>
       <p style="color:var(--text-secondary)">Browse active buyer demand and place your offers.</p>
     </div>
-    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem">
+    <div class="filters-block" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem">
       <select class="filter-select" aria-label="Filter by category" [value]="catFilter()" (change)="onCatChange($event)">
         <option value="all">All Categories</option>
         @for (c of categories(); track c.id) {
-          <option [value]="c.name">{{ c.displayName || c.name }}</option>
+          <option [value]="c.id">{{ c.displayName || c.name }}</option>
         }
       </select>
       <select class="filter-select" aria-label="Sort by" [value]="sort()" (change)="onSortChange($event)">
@@ -20,13 +19,13 @@
     </div>
   </div>
 
-  @if (filteredRequests().length === 0) {
+  @if (requests().length === 0) {
     <div style="padding:5rem 2rem;text-align:center;background:#F9FAFB;border:1px dashed var(--border);border-radius:16px;color:var(--text-secondary)">
       No active group requests found matching your criteria.
     </div>
   } @else {
     <div style="display:flex;flex-direction:column;gap:1rem">
-      @for (req of filteredRequests(); track req.id) {
+      @for (req of requests(); track req.id) {
         <a [routerLink]="['/manage/requests', req.id]" class="card card-hover req-row">
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
@@ -52,5 +51,24 @@
         </a>
       }
     </div>
+
+    <!-- Pagination Footer Controls -->
+    @if (totalPages() > 1) {
+      <div style="display:flex;align-items:center;justify-content:center;gap:1.5rem;margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+        <button class="btn btn-muted btn-sm" [disabled]="pageNumber() === 1" (click)="prevPage()" style="display:flex;align-items:center;gap:0.375rem">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Previous
+        </button>
+        
+        <span style="font-size:0.875rem;font-weight:600;color:var(--text-secondary)">
+          Page {{ pageNumber() }} of {{ totalPages() }}
+        </span>
+
+        <button class="btn btn-muted btn-sm" [disabled]="pageNumber() === totalPages()" (click)="nextPage()" style="display:flex;align-items:center;gap:0.375rem">
+          Next
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    }
   }
 </div>
