@@ -29,10 +29,12 @@ export interface NotificationDto {
  *   - JoinOfferGroup(offerId: string)
  *   - LeaveOfferGroup(offerId: string)
  */
+import { environment } from '../../../environments/environment';
+
 @Injectable({ providedIn: 'root' })
 export class SignalRService implements OnDestroy {
   private connection: signalR.HubConnection | null = null;
-  private readonly hubUrl = 'http://localhost:5174/hubs/jomla';
+  private readonly hubUrl = environment.hubUrl;
 
   /** Observable signals for components to react to */
   readonly lastNotification = signal<NotificationDto | null>(null);

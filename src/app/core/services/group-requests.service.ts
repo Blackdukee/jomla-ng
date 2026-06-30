@@ -7,10 +7,12 @@ import {
   CreateGroupRequestRequest
 } from '../models';
 
+import { environment } from '../../../environments/environment';
+
 @Injectable({ providedIn: 'root' })
 export class GroupRequestsService {
   private http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:5174/api/group-requests';
+  private readonly baseUrl = `${environment.apiUrl}/group-requests`;
 
   /** GET /api/group-requests — Get active, approved group requests */
   getGroupRequests(filters?: {

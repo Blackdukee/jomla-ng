@@ -3,10 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { SupplierCategoryPreferenceDto, SavePreferenceRequest } from '../models';
 
+import { environment } from '../../../environments/environment';
+
 @Injectable({ providedIn: 'root' })
 export class SupplierPreferencesService {
   private http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:5174/api/supplier-category-preferences';
+  private readonly baseUrl = `${environment.apiUrl}/supplier-category-preferences`;
 
   getPreferences(): Observable<SupplierCategoryPreferenceDto[]> {
     return this.http.get<SupplierCategoryPreferenceDto[]>(this.baseUrl, {

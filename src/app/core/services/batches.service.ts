@@ -16,10 +16,12 @@ import {
  *   POST   /api/batches/{batchId}/join
  *   DELETE /api/batches/{batchId}/leave
  */
+import { environment } from '../../../environments/environment';
+
 @Injectable({ providedIn: 'root' })
 export class BatchesService {
   private http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:5174/api/batches';
+  private readonly baseUrl = `${environment.apiUrl}/batches`;
 
   /** GET /api/batches/{batchId} — Fetch batch detail with participants */
   getBatch(batchId: string): Observable<BatchDetailDto> {

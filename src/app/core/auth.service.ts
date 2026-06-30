@@ -4,11 +4,13 @@ import { Observable, tap, finalize } from 'rxjs';
 import { AuthResponse, User, RegisterRequest } from './models/auth.models';
 import { SignalRService } from './services/signalr.service';
 
+import { environment } from '../../environments/environment';
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
   private signalR = inject(SignalRService);
-  private readonly baseUrl = 'http://localhost:5174/api/auth';
+  private readonly baseUrl = `${environment.apiUrl}/auth`;
 
   private _user = signal<User | null>(null);
 

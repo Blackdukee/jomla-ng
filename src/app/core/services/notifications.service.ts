@@ -3,10 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { GetNotificationsResult } from '../models';
 
+import { environment } from '../../../environments/environment';
+
 @Injectable({ providedIn: 'root' })
 export class NotificationsService {
   private http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:5174/api/notifications';
+  private readonly baseUrl = `${environment.apiUrl}/notifications`;
 
   getNotifications(unreadOnly?: boolean, page = 1, pageSize = 20): Observable<GetNotificationsResult> {
     let params = new HttpParams()
