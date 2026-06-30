@@ -1,8 +1,8 @@
-<div class="container" style="max-width:900px;padding-top:2rem;padding-bottom:3rem" role="main">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem">
+<div class="container" style="max-width:1000px;padding-top:2rem;padding-bottom:3rem" role="main" @wishlistEntrance>
+  <div class="header-block" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem">
     <div>
       <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.25rem">My Wishlist</h1>
-      <p style="color:var(--text-secondary)">Group requests you've created.</p>
+      <p style="color:#374151">Group requests you've created.</p>
     </div>
     <button class="btn btn-primary" (click)="modalOpen.set(true)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -14,59 +14,116 @@
     </button>
   </div>
 
-  @if (requests().length === 0) {
-  <div class="empty-state"
-    style="text-align:center;padding:6rem 2rem;background:#F9FAFB;border:1px dashed var(--border);border-radius:16px">
-    <div class="icon-container" style="margin:0 auto 1.25rem;width:4rem;height:4rem" aria-hidden="true">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-      </svg>
-    </div>
-    <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:0.5rem">No requests yet</h2>
-    <p style="color:var(--text-secondary);max-width:360px;margin:0 auto 1.5rem">Post what you're looking to buy.
-      Suppliers will see your demand and compete to offer the best price.</p>
-    <button class="btn btn-primary" (click)="modalOpen.set(true)">Create request</button>
-  </div>
-  } @else {
-  <div style="display:flex;flex-direction:column;gap:1rem">
-    @for (req of requests(); track req.id) {
-    <a [routerLink]="['/hubs/request', req.id]" class="card card-hover req-row">
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
-          <span class="badge badge-muted">{{ req.categoryName || 'Uncategorized' }}</span>
-          <span class="badge" [class]="req.status === 'active' ? 'badge-brand' : 'badge-muted'">{{ req.status }}</span>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <div class="sidebar-column">
+      <div class="summary-card">
+        <div class="summary-title">Wishlist Stats</div>
+        <div class="stat-row">
+          <span class="stat-label">Total Requests</span>
+          <span class="stat-val">{{ totalCount() }}</span>
         </div>
-        <h3 style="font-size:1.0625rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{
-          req.title || req.description }}</h3>
-        <div
-          style="display:flex;align-items:center;gap:1rem;margin-top:0.5rem;font-size:0.875rem;color:var(--text-secondary)">
-          <span style="display:flex;align-items:center;gap:0.375rem">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path
-                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-            </svg>
-            {{ req.currentQuantity }} units
-          </span>
-          <span style="display:flex;align-items:center;gap:0.375rem">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-            </svg>
-            {{ req.participantsCount }} buyers joined
-          </span>
+        <div class="stat-row">
+          <span class="stat-label">Active Groups</span>
+          <span class="stat-val" style="color:var(--brand)">{{ totalCount() }}</span>
         </div>
       </div>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);flex-shrink:0" aria-hidden="true">
-        <polyline points="9 18 15 12 9 6" />
-      </svg>
-    </a>
-    }
+    </div>
+
+    <!-- Main Column -->
+    <div class="main-column">
+      <!-- Filters block -->
+      <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <input type="text" class="form-input" placeholder="Search wishlist..." [value]="searchQuery()" (input)="onSearchChange($event)" style="height:2.75rem">
+        </div>
+        <div style="width:160px">
+          <select class="form-input" (change)="onCategoryChange($event)" style="height:2.75rem;padding:0 0.5rem;cursor:pointer">
+            <option value="">All Categories</option>
+            @for (cat of categories(); track cat.id) {
+              <option [value]="cat.id">{{ cat.displayName || cat.name }}</option>
+            }
+          </select>
+        </div>
+        <div style="width:130px">
+          <select class="form-input" (change)="onStatusChange($event)" style="height:2.75rem;padding:0 0.5rem;cursor:pointer">
+            <option value="Active">Active</option>
+            <option value="Approved">Approved</option>
+            <option value="All">All Statuses</option>
+          </select>
+        </div>
+      </div>
+
+      @if (requests().length === 0) {
+      <div class="empty-state"
+        style="text-align:center;padding:6rem 2rem;background:#F9FAFB;border:1px dashed var(--border);border-radius:16px">
+        <div class="icon-container" style="margin:0 auto 1.25rem;width:4rem;height:4rem" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+          </svg>
+        </div>
+        <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:0.5rem">No requests yet</h2>
+        <p style="color:#4B5563;max-width:360px;margin:0 auto 1.5rem">Post what you're looking to buy.
+          Suppliers will see your demand and compete to offer the best price.</p>
+        <button class="btn btn-primary" (click)="modalOpen.set(true)">Create request</button>
+      </div>
+      } @else {
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        @for (req of requests(); track req.id) {
+        <a [routerLink]="['/hubs/request', req.id]" class="card card-hover req-row" [class.high-priority-req]="req.participantsCount > 1">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
+              <span class="badge badge-muted">{{ req.categoryName || 'Uncategorized' }}</span>
+              <span class="badge" [class]="req.status === 'active' ? 'badge-brand' : 'badge-muted'">{{ req.status }}</span>
+            </div>
+            <h3 style="font-size:1.0625rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{
+              req.title || req.description }}</h3>
+            <div
+              style="display:flex;align-items:center;gap:1rem;margin-top:0.5rem;font-size:0.875rem;color:var(--text-secondary)">
+              <span style="display:flex;align-items:center;gap:0.375rem" [class.qty-stat]="req.participantsCount > 1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                </svg>
+                {{ req.currentQuantity }} units
+              </span>
+              <span style="display:flex;align-items:center;gap:0.375rem" [class.qty-stat]="req.participantsCount > 1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                </svg>
+                {{ req.participantsCount }} joined
+              </span>
+            </div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);flex-shrink:0" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </a>
+        }
+      </div>
+
+      <!-- Pagination Controls -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <span style="font-size:0.875rem;color:var(--text-secondary)">
+          Showing {{ showingFrom() }} to {{ showingTo() }} of {{ totalCount() }} requests
+        </span>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-outline" [disabled]="page() === 1" (click)="changePage(page() - 1)" style="height:2.25rem;padding:0 0.75rem;font-size:0.875rem">
+            Previous
+          </button>
+          <button class="btn btn-outline" [disabled]="page() === totalPages()" (click)="changePage(page() + 1)" style="height:2.25rem;padding:0 0.75rem;font-size:0.875rem">
+            Next
+          </button>
+        </div>
+      </div>
+      }
+    </div>
   </div>
-  }
 
   <!-- Create request modal -->
   @if (modalOpen()) {
@@ -75,7 +132,7 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
         <h2 id="modal-title" style="font-size:1.25rem;font-weight:700">Post a group request</h2>
         <button (click)="closeModal()"
-          style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.25rem"
+          style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:1.25rem"
           aria-label="Close dialog">✕</button>
       </div>
 
@@ -101,7 +158,7 @@
           @if (detectedCat() && !detecting()) {
           <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem">
             <span
-              style="background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;padding:0.125rem 0.5rem;border-radius:6px;display:flex;align-items:center;gap:0.25rem">
+              style="background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;padding:0.125rem 0.5rem;border-radius:8px;display:flex;align-items:center;gap:0.25rem">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="20 6 9 17 4 12" />
@@ -125,12 +182,12 @@
       <!-- Images upload section -->
       <div class="form-group" style="margin-bottom:1.5rem">
         <label class="form-label">Images / Photos (Optional)</label>
-        
+
         @if (images().length > 0) {
         <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:0.5rem;margin-bottom:0.75rem">
           @for (img of images(); track img; let idx = $index) {
           <div style="position:relative;aspect-ratio:1;border:1px solid var(--border);border-radius:8px;overflow:hidden">
-            <img [src]="img" style="width:100%;height:100%;object-fit:cover" alt="Group Request Image Preview">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" [src]="img" style="width:100%;height:100%;object-fit:cover" alt="Group Request Image Preview">
             <button type="button" (click)="removeImage(idx)"
               style="position:absolute;top:0.25rem;right:0.25rem;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.625rem;cursor:pointer">✕</button>
           </div>
@@ -142,13 +199,13 @@
           (dragover)="onDragOver($event)" (dragleave)="isDragging.set(false)" (drop)="onDrop($event)" role="button"
           tabindex="0" aria-label="Upload images" (keydown.enter)="fileInput.click()" style="padding:1.5rem">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-bottom:0.25rem;color:var(--text-secondary)">
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-bottom:0.25rem;color:#4B5563">
             <polyline points="16 16 12 12 8 16" />
             <line x1="12" y1="12" x2="12" y2="21" />
             <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
           </svg>
           <p style="font-weight:600;margin-bottom:0.125rem;font-size:0.875rem">Click to upload or drag and drop</p>
-          <p style="font-size:0.75rem;color:var(--text-secondary)">Up to 8 images</p>
+          <p style="font-size:0.75rem;color:#4B5563">Up to 8 images</p>
         </div>
         <input #fileInput type="file" accept="image/*" multiple style="display:none" (change)="onFileChange($event)">
       </div>

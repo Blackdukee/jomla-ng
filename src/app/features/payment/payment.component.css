@@ -1,1 +1,9 @@
 /* Payment component styles */
+.card-input {
+  font-family: monospace;
+}
+.order-number {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 1.125rem;
+}

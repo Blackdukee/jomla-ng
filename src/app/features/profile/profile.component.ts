@@ -8,11 +8,25 @@ import { SupplierPreferencesService } from '../../core/services/supplier-prefere
 import { BatchesService } from '../../core/services/batches.service';
 import { User, MyOfferDto, CategoryDto, SupplierCategoryPreferenceDto, BuyerHubDto } from '../../core/models';
 
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
+
 @Component({
   selector: 'app-profile',
   standalone: true,
   imports: [ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('profileEntrance', [
+      transition(':enter', [
+        query('.profile-header-banner, .main-content-layout', [
+          style({ opacity: 0, transform: 'translateY(16px)' }),
+          stagger('150ms', [
+            animate('2200ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+          ])
+        ], { optional: true })
+      ])
+    ])
+  ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ToastService } from '../../../core/toast.service';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
@@ -18,13 +18,13 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
         query('.header-block', [
           style({ opacity: 0, transform: 'translateY(12px)' }),
           stagger('120ms', [
-            animate('1000ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+            animate('2000ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
           ])
         ], { optional: true }),
         query('.req-row', [
           style({ opacity: 0, transform: 'translateY(16px)' }),
           stagger('150ms', [
-            animate('1200ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+            animate('2200ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
           ])
         ], { optional: true })
       ])
@@ -39,6 +39,7 @@ export class WishlistComponent implements OnInit {
   private categoriesService = inject(CategoriesService);
 
   protected requests = signal<GroupRequestListItemDto[]>([]);
+  protected categories = signal<any[]>([]);
   protected modalOpen = signal(false);
   protected title = signal('');
   protected desc = signal('');
@@ -50,20 +51,83 @@ export class WishlistComponent implements OnInit {
   protected images = signal<string[]>([]);
   protected isDragging = signal(false);
 
+  // Filters and Pagination
+  protected searchQuery = signal('');
+  protected categoryId = signal('');
+  protected statusFilter = signal('Active');
+  protected page = signal(1);
+  protected pageSize = 5;
+  protected totalCount = signal(0);
+
+  protected totalPages = computed(() => {
+    return Math.max(1, Math.ceil(this.totalCount() / this.pageSize));
+  });
+
+  protected showingFrom = computed(() => {
+    if (this.totalCount() === 0) return 0;
+    return (this.page() - 1) * this.pageSize + 1;
+  });
+
+  protected showingTo = computed(() => {
+    return Math.min(this.page() * this.pageSize, this.totalCount());
+  });
+
   ngOnInit(): void {
+    this.loadCategories();
     this.loadRequests();
   }
 
+  protected loadCategories() {
+    this.categoriesService.getCategories().subscribe({
+      next: (cats) => this.categories.set(cats),
+      error: (err) => console.error('Failed to load categories', err)
+    });
+  }
+
   protected loadRequests() {
-    this.groupRequestsService.getGroupRequests({ status: 'Active', pageSize: 100, myRequestsOnly: true }).subscribe({
+    const filters: any = {
+      pageSize: this.pageSize,
+      page: this.page(),
+      myRequestsOnly: true
+    };
+    if (this.statusFilter() && this.statusFilter() !== 'All') filters.status = this.statusFilter();
+    if (this.searchQuery().trim()) filters.titleSearch = this.searchQuery().trim();
+    if (this.categoryId()) filters.categoryId = this.categoryId();
+
+    this.groupRequestsService.getGroupRequests(filters).subscribe({
       next: (res) => {
         this.requests.set(res.items);
+        this.totalCount.set(res.totalCount);
       },
       error: (err) => {
         this.toast.error('Error', 'Failed to load wishlist items.');
       }
     });
   }
+
+  protected onSearchChange(e: Event) {
+    this.searchQuery.set((e.target as HTMLInputElement).value);
+    this.page.set(1);
+    this.loadRequests();
+  }
+
+  protected onCategoryChange(e: Event) {
+    this.categoryId.set((e.target as HTMLSelectElement).value);
+    this.page.set(1);
+    this.loadRequests();
+  }
+
+  protected onStatusChange(e: Event) {
+    this.statusFilter.set((e.target as HTMLSelectElement).value);
+    this.page.set(1);
+    this.loadRequests();
+  }
+
+  protected changePage(p: number) {
+    this.page.set(p);
+    this.loadRequests();
+  }
+
 
   protected closeModal() {
     this.modalOpen.set(false);

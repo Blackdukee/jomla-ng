@@ -27,7 +27,7 @@
           {{ req.participantsCount }} <span style="font-size:1rem;font-weight:400;color:var(--text-secondary)">buyers joined</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:0.5rem">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;border-radius:10px;border:1px solid var(--border);background:#F9FAFB">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;border-radius:8px;border:1px solid var(--border);background:#F9FAFB">
             <span style="font-weight:500">Total Demand Volume</span>
             <span style="color:var(--text-secondary);font-size:0.875rem">{{ req.currentQuantity }} units</span>
           </div>
@@ -45,11 +45,11 @@
             </div>
             <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-                <div style="background:#fff;padding:1rem;border-radius:12px;border:1px solid var(--border)">
+                <div style="background:#fff;padding:1rem;border-radius:16px;border:1px solid var(--border)">
                   <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:0.25rem">Current Price</div>
                   <div style="font-size:1.5rem;font-weight:800;color:var(--brand)">EGP {{ myOffer()?.current_unit_price }}</div>
                 </div>
-                <div style="background:#fff;padding:1rem;border-radius:12px;border:1px solid var(--border)">
+                <div style="background:#fff;padding:1rem;border-radius:16px;border:1px solid var(--border)">
                   <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:0.25rem">Accepted By</div>
                   <div style="font-size:1.5rem;font-weight:800">{{ myOffer()?.accepted_count }} <span style="font-size:0.875rem;font-weight:400">buyers</span></div>
                 </div>
@@ -64,7 +64,7 @@
               <p style="font-size:0.9375rem;color:var(--text-secondary)">Compete for this buyer pool</p>
             </div>
             <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem">
-              <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:1rem;color:var(--danger);font-size:0.875rem;line-height:1.4">
+              <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:16px;padding:1rem;color:var(--danger);font-size:0.875rem;line-height:1.4">
                 Placing offers on group requests is currently disabled as the backend API does not support it.
               </div>
             </div>

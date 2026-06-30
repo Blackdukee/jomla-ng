@@ -17,7 +17,7 @@
 @media (min-width:640px) { .offers-grid, .requests-grid { grid-template-columns:repeat(2, 1fr); } }
 @media (min-width:1024px) { .offers-grid, .requests-grid { grid-template-columns:repeat(3, 1fr); } }
 .offer-card { display:flex; flex-direction:column; overflow:hidden; }
-.offer-img-wrap { aspect-ratio:4/3; background:#F3F4F6; position:relative; display:flex; align-items:center; justify-content:center; border-radius:12px 12px 0 0; }
+.offer-img-wrap { aspect-ratio:4/3; background:#F3F4F6; position:relative; display:flex; align-items:center; justify-content:center; border-radius:16px 16px 0 0; }
 .offer-img-placeholder { display:flex; align-items:center; justify-content:center; }
 .discount-badge { position:absolute; top:0.75rem; right:0.75rem; }
 .category-badge { position:absolute; top:0.75rem; left:0.75rem; }
@@ -87,7 +87,7 @@
 .skeleton-text {
   height: 12px;
   background: var(--border);
-  border-radius: 4px;
+  border-radius: 8px;
 }
 .skeleton-supplier { width: 40%; }
 .skeleton-title { width: 85%; height: 18px; }
@@ -95,7 +95,7 @@
 .skeleton-progress-bar {
   height: 6px;
   background: var(--border);
-  border-radius: 3px;
+  border-radius: 8px;
 }
 .skeleton-joined { width: 50%; }
 .skeleton-btn {

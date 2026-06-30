@@ -1,80 +1,108 @@
 <div class="auth-page" role="main">
-  <div class="auth-card card">
-    <!-- Logo -->
-    <div class="auth-logo">
-      <div class="logo-icon-lg" aria-hidden="true">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="12 2 2 7 12 12 22 7 12 2" />
-          <polyline points="2 17 12 22 22 17" />
-          <polyline points="2 12 12 17 22 12" />
-        </svg>
+
+  <div class="auth-container">
+    <div class="promo-side">
+      <h2 class="promo-title">Buy in groups.<br><span style="color:var(--brand)">Pay wholesale.</span></h2>
+      <p class="promo-subtitle">Join Jomla's B2B marketplace to pool purchasing volume with other retailers and unlock direct-from-supplier discounts.</p>
+      <div class="feature-list">
+        <div class="feature-item" style="--i: 0">
+          <div class="feature-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="feature-text-wrapper">
+            <div class="feature-title">Pooled B2B Demand</div>
+            <div class="feature-desc">Connect with hundreds of local businesses to hit supplier-required bulk quantities together.</div>
+          </div>
+        </div>
+        <div class="feature-item" style="--i: 1">
+          <div class="feature-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 17 22 12"/></svg>
+          </div>
+          <div class="feature-text-wrapper">
+            <div class="feature-title">Automated AI Negotiator</div>
+            <div class="feature-desc">Our intelligent agents automatically adjust offers to win group deals at the best margins.</div>
+          </div>
+        </div>
       </div>
-      <h1 class="auth-heading">Welcome back</h1>
-      <p class="auth-sub">
-        Don't have an account?
-        <a routerLink="/register/buyer" class="link">Register as buyer</a>
-        or
-        <a routerLink="/register/supplier" class="link">supplier</a>
-      </p>
     </div>
-
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="auth-form">
-      <!-- Email -->
-      <div class="form-group">
-        <label class="form-label" for="email">Email address</label>
-        <input id="email" type="email" class="form-input" [class.error]="submitted() && form.controls['email'].invalid"
-          formControlName="email" autocomplete="email" placeholder="you@company.com"
-          [attr.aria-invalid]="submitted() && form.controls['email'].invalid" aria-describedby="email-error">
-        @if (submitted() && form.controls['email'].invalid) {
-        <span id="email-error" class="form-error" role="alert">Please enter a valid email.</span>
-        }
+    <div class="form-side">
+      <!-- Logo -->
+      <div class="auth-logo">
+        <div class="logo-icon-lg" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2" />
+            <polyline points="2 17 12 22 22 17" />
+            <polyline points="2 12 12 17 22 12" />
+          </svg>
+        </div>
+        <h1 class="auth-heading">Welcome back</h1>
+        <p class="auth-sub">
+          Don't have an account?
+          <a routerLink="/register/buyer" class="link">Register as buyer</a>
+          or
+          <a routerLink="/register/supplier" class="link">supplier</a>
+        </p>
       </div>
 
-      <!-- Password -->
-      <div class="form-group">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <label class="form-label" for="password">Password</label>
-          <a href="#" class="link" style="font-size:0.8125rem">Forgot password?</a>
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="auth-form">
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="email-v1">Email address</label>
+          <input id="email-v1" type="email" class="form-input" [class.error]="submitted() && form.controls['email'].invalid"
+            formControlName="email" autocomplete="email" placeholder="you@company.com"
+            [attr.aria-invalid]="submitted() && form.controls['email'].invalid" aria-describedby="email-error-v1">
+          @if (submitted() && form.controls['email'].invalid) {
+          <span id="email-error-v1" class="form-error" role="alert">Please enter a valid email.</span>
+          }
         </div>
-        <div class="password-input-container">
-          <input id="password" [type]="showPassword() ? 'text' : 'password'" class="form-input"
-            [class.error]="submitted() && form.controls['password'].invalid" formControlName="password"
-            autocomplete="current-password" placeholder="••••••••"
-            [attr.aria-invalid]="submitted() && form.controls['password'].invalid" aria-describedby="password-error">
-          <button type="button" class="password-toggle-btn" (click)="showPassword.set(!showPassword())"
-            [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
-            @if (showPassword()) {
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-              <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-              <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-              <line x1="2" y1="2" x2="22" y2="22" />
-            </svg>
-            } @else {
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path
-                d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-            }
-          </button>
+
+        <!-- Password -->
+        <div class="form-group">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <label class="form-label" for="password-v1">Password</label>
+            <a href="#" class="link" style="font-size:0.8125rem">Forgot password?</a>
+          </div>
+          <div class="password-input-container">
+            <input id="password-v1" [type]="showPassword() ? 'text' : 'password'" class="form-input"
+              [class.error]="submitted() && form.controls['password'].invalid" formControlName="password"
+              autocomplete="current-password" placeholder="••••••••"
+              [attr.aria-invalid]="submitted() && form.controls['password'].invalid" aria-describedby="password-error-v1">
+            <button type="button" class="password-toggle-btn" (click)="showPassword.set(!showPassword())"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+              @if (showPassword()) {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                <line x1="2" y1="2" x2="22" y2="22" />
+              </svg>
+              } @else {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              }
+            </button>
+          </div>
+          @if (submitted() && form.controls['password'].invalid) {
+          <span id="password-error-v1" class="form-error" role="alert">Password is required.</span>
+          }
         </div>
-        @if (submitted() && form.controls['password'].invalid) {
-        <span id="password-error" class="form-error" role="alert">Password is required.</span>
+
+        @if (errorMsg()) {
+        <div class="error-banner" role="alert">{{ errorMsg() }}</div>
         }
-      </div>
 
-      @if (errorMsg()) {
-      <div class="error-banner" role="alert">{{ errorMsg() }}</div>
-      }
-
-      <button type="submit" class="btn btn-primary" style="width:100%;height:3rem;font-size:1rem"
-        [disabled]="loading()">
-        {{ loading() ? 'Signing in…' : 'Log in' }}
-      </button>
-    </form>
+        <button type="submit" class="btn btn-primary" style="width:100%;height:3rem;font-size:1rem"
+          [disabled]="loading()">
+          {{ loading() ? 'Signing in…' : 'Log in' }}
+        </button>
+      </form>
+    </div>
   </div>
+
 </div>

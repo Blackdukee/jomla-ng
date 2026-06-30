@@ -9,7 +9,7 @@
   align-items: center;
   padding: 1rem;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--bg-surface);
 }
 .preferences-container {
@@ -62,7 +62,7 @@ input:checked + .slider:before {
   transform: translateX(20px);
 }
 .slider.round {
-  border-radius: 34px;
+  border-radius: 9999px;
 }
 .slider.round:before {
   border-radius: 50%;
@@ -79,7 +79,7 @@ input:checked + .slider:before {
   color: var(--text-secondary);
   background: #F9FAFB;
   border: 1px dashed var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
 }
 .table-responsive {
   overflow-x: auto;

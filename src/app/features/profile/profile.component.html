@@ -1,4 +1,4 @@
-<div class="container" style="padding-top:2rem;padding-bottom:3rem" role="main">
+<div class="container" style="padding-top:2rem;padding-bottom:3rem" role="main" @profileEntrance>
   <!-- Page Header -->
   <div style="margin-bottom:2rem">
     <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.25rem">My Profile</h1>
@@ -173,7 +173,7 @@
                           <td><strong>{{ pref.minQuantity }} units</strong></td>
                           <td style="text-align:right">
                             <button class="btn btn-muted" 
-                                    style="padding:0.375rem 0.75rem;font-size:0.75rem;border-radius:6px;cursor:pointer" 
+                                    style="padding:0.375rem 0.75rem;font-size:0.75rem;border-radius:8px;cursor:pointer" 
                                     (click)="deletePreference(pref.categoryId)">
                               Remove
                             </button>
@@ -186,7 +186,7 @@
               }
 
               <!-- Inline Add Preference Form -->
-              <div style="background:#F9FAFB;border:1px solid var(--border);border-radius:12px;padding:1.25rem">
+              <div style="background:#F9FAFB;border:1px solid var(--border);border-radius:16px;padding:1.25rem">
                 <h4 style="margin:0 0 1rem;font-size:0.925rem;font-weight:700">Add Alert Preference</h4>
                 <form [formGroup]="prefForm" (ngSubmit)="addPreference()" class="form-container" style="gap:1rem">
                   <div style="display:flex;flex-wrap:wrap;gap:1rem">

@@ -16,8 +16,7 @@
       novalidate>
       <div class="form-group">
         <label class="form-label" for="card">Card Number</label>
-        <input id="card" type="text" class="form-input" formControlName="card" placeholder="0000 0000 0000 0000"
-          style="font-family:monospace">
+        <input id="card" type="text" class="form-input card-input" formControlName="card" placeholder="0000 0000 0000 0000">
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
@@ -65,9 +64,9 @@
     </p>
 
     <div
-      style="background:#F9FAFB;border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:2rem;font-size:0.875rem">
+      style="background:#F9FAFB;border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:2rem;font-size:0.875rem">
       <div style="color:var(--text-secondary);margin-bottom:0.25rem">Order Number</div>
-      <div style="font-family:monospace;font-weight:700;font-size:1.125rem">{{ successData()?.order_number }}</div>
+      <div class="order-number">{{ successData()?.order_number }}</div>
     </div>
 
     <button class="btn btn-primary" style="width:100%" (click)="router.navigate(['/my-hubs'])">Back to My Hubs</button>

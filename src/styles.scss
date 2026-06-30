@@ -248,7 +248,7 @@ h6 {
   transition: border-color var(--transition), box-shadow var(--transition);
 
   &::placeholder {
-    color: var(--text-muted);
+    color: var(--text-secondary);
   }
 
   &:focus {
@@ -378,7 +378,7 @@ h6 {
 .badge-muted {
   @extend .badge;
   background: #F3F4F6; /* impeccable-disable-line design-system-color */
-  color: var(--text-secondary);
+  color: #4B5563;
 }
 
 .badge-success {

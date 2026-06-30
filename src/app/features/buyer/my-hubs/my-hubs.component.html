@@ -1,22 +1,36 @@
-<div class="container" style="max-width:900px;padding-top:2rem;padding-bottom:3rem" role="main">
-  <div style="margin-bottom:2rem">
+<div class="container" style="max-width:900px;padding-top:2rem;padding-bottom:3rem" role="main" @hubsEntrance>
+  <div class="header-block" style="margin-bottom:2rem">
     <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.25rem">My Hubs</h1>
     <p style="color:var(--text-secondary)">Track the group deals you've joined.</p>
   </div>
 
-  <div class="seg-control" style="margin-bottom:1.5rem" role="tablist" aria-label="Hub status">
-    <button role="tab" [class]="tab() === 'active' ? 'active' : ''" [attr.aria-selected]="tab() === 'active'" (click)="tab.set('active')" id="tab-active" aria-controls="panel-active">Active</button>
-    <button role="tab" [class]="tab() === 'fulfilled' ? 'active' : ''" [attr.aria-selected]="tab() === 'fulfilled'" (click)="tab.set('fulfilled')" id="tab-fulfilled" aria-controls="panel-fulfilled">Fulfilled</button>
+  <div class="seg-control tabs-block" style="margin-bottom:1.5rem" role="tablist" aria-label="Hub status">
+    <button role="tab" [class]="tab() === 'active' ? 'active' : ''" [attr.aria-selected]="tab() === 'active'" (click)="setTab('active')" id="tab-active" aria-controls="panel-active">Active</button>
+    <button role="tab" [class]="tab() === 'fulfilled' ? 'active' : ''" [attr.aria-selected]="tab() === 'fulfilled'" (click)="setTab('fulfilled')" id="tab-fulfilled" aria-controls="panel-fulfilled">Fulfilled</button>
+  </div>
+
+  <!-- Filters block -->
+  <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px">
+      <input type="text" class="form-input" placeholder="Search hubs by title..." [value]="searchQuery()" (input)="onSearchChange($event)" style="height:2.75rem">
+    </div>
+    <div style="width:180px">
+      <select class="form-input" (change)="onTypeChange($event)" style="height:2.75rem;padding:0 1rem;cursor:pointer">
+        <option value="all">All Types</option>
+        <option value="supplier_offer">Supplier Offers</option>
+        <option value="group_request">Group Requests</option>
+      </select>
+    </div>
   </div>
 
   <div [id]="'panel-' + tab()" role="tabpanel" [attr.aria-labelledby]="'tab-' + tab()">
-    @if (hubs().length === 0) {
+    @if (filteredHubs().length === 0) {
       <div style="padding:5rem 2rem;text-align:center;background:#F9FAFB;border:1px dashed var(--border);border-radius:16px;color:var(--text-secondary)" aria-live="polite">
-        {{ tab() === 'active' ? "You haven't joined any active hubs." : "No fulfilled hubs yet." }}
+        No hubs found.
       </div>
     } @else {
       <div style="display:flex;flex-direction:column;gap:1rem">
-        @for (hub of hubs(); track hub.id) {
+        @for (hub of paginatedHubs(); track hub.id) {
           <a [routerLink]="hubLink(hub)" class="card card-hover hub-row">
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
@@ -49,6 +63,21 @@
             </svg>
           </a>
         }
+      </div>
+
+      <!-- Pagination Controls -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <span style="font-size:0.875rem;color:var(--text-secondary)">
+          Showing {{ showingFrom() }} to {{ showingTo() }} of {{ filteredHubs().length }} hubs
+        </span>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-outline" [disabled]="page() === 1" (click)="page.set(page() - 1)" style="height:2.25rem;padding:0 0.75rem;font-size:0.875rem">
+            Previous
+          </button>
+          <button class="btn btn-outline" [disabled]="page() === totalPages()" (click)="page.set(page() + 1)" style="height:2.25rem;padding:0 0.75rem;font-size:0.875rem">
+            Next
+          </button>
+        </div>
       </div>
     }
   </div>
