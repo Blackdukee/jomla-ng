@@ -3,7 +3,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
 import { OffersService } from '../../core/services/offers.service';
-import { User, MyOfferDto } from '../../core/models';
+import { CategoriesService } from '../../core/services/categories.service';
+import { SupplierPreferencesService } from '../../core/services/supplier-preferences.service';
+import { User, MyOfferDto, CategoryDto, SupplierCategoryPreferenceDto } from '../../core/models';
 
 @Component({
   selector: 'app-profile',
@@ -33,12 +35,23 @@ export class ProfileComponent implements OnInit {
   protected buyerHubs = signal<any[]>([]);
 
   private offersService = inject(OffersService);
+  private categoriesService = inject(CategoriesService);
+  private supplierPrefsService = inject(SupplierPreferencesService);
 
   // Supplier Data Counts
   protected supplierOffersCount = signal(0);
   protected completedDealsCount = signal(0);
   protected alertsCount = signal(0);
   protected supplierOffers = signal<MyOfferDto[]>([]);
+
+  // Supplier Preferences
+  protected preferences = signal<SupplierCategoryPreferenceDto[]>([]);
+  protected categories = signal<CategoryDto[]>([]);
+  protected prefSubmitted = signal(false);
+  protected prefForm = this.fb.group({
+    categoryId: ['', Validators.required],
+    minQuantity: [1, [Validators.required, Validators.min(1)]]
+  });
 
   constructor() {
     const user = this.auth.user();
@@ -59,7 +72,56 @@ export class ProfileComponent implements OnInit {
           this.supplierOffersCount.set(items.length);
         }
       });
+
+      this.loadPreferences();
+      this.categoriesService.getCategories().subscribe(cats => {
+        this.categories.set(cats);
+      });
     }
+  }
+
+  protected loadPreferences(): void {
+    this.supplierPrefsService.getPreferences().subscribe({
+      next: (prefs) => {
+        this.preferences.set(prefs);
+        this.alertsCount.set(prefs.length);
+      },
+      error: (err) => console.error('Failed to load preferences', err)
+    });
+  }
+
+  protected addPreference(): void {
+    this.prefSubmitted.set(true);
+    if (this.prefForm.invalid) return;
+
+    const val = this.prefForm.value as { categoryId: string; minQuantity: number };
+    this.supplierPrefsService.savePreference(val.categoryId, val.minQuantity).subscribe({
+      next: (success) => {
+        if (success) {
+          this.toast.success('Preference Saved', 'Alert threshold registered successfully.');
+          this.prefForm.reset({ categoryId: '', minQuantity: 1 });
+          this.prefSubmitted.set(false);
+          this.loadPreferences();
+        }
+      },
+      error: (err) => {
+        this.toast.error('Error', 'Failed to save preference. It might already exist.');
+      }
+    });
+  }
+
+  protected deletePreference(categoryId: string): void {
+    this.supplierPrefsService.removePreference(categoryId).subscribe({
+      next: (success) => {
+        if (success) {
+          this.toast.success('Preference Removed', 'Alert threshold deleted successfully.');
+          this.loadPreferences();
+        }
+      },
+      error: (err) => {
+        this.toast.error('Error', 'Failed to remove preference.');
+      }
+    });
   }
 
   protected initials() {

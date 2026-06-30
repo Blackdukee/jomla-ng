@@ -1,5 +1,17 @@
 .controls-row { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
-.filter-select { border:1px solid var(--border); border-radius:9999px; padding:0.5rem 1rem; font-size:0.875rem; background:var(--bg-surface); color:var(--text-primary); cursor:pointer; font-family:inherit; }
+.filter-select { 
+  border:1px solid var(--border); 
+  border-radius:9999px; 
+  padding:0.5rem 2.5rem 0.5rem 1.25rem; 
+  font-size:0.875rem; 
+  background:var(--bg-surface); 
+  color:var(--text-primary); 
+  cursor:pointer; 
+  font-family:inherit; 
+}
+:host-context([dir="rtl"]) .filter-select {
+  padding:0.5rem 1.25rem 0.5rem 2.5rem;
+}
 .filter-select:focus { outline:2px solid var(--brand); }
 .offers-grid { display:grid; grid-template-columns:1fr; gap:1.25rem; }
 @media (min-width:640px) { .offers-grid { grid-template-columns:repeat(2, 1fr); } }

@@ -53,92 +53,179 @@
 
       <!-- Main content row: Table left, Form right -->
       <div class="main-content-layout">
-        <!-- Ledger Table -->
-        <div class="ledger-table-card">
-          <div class="ledger-table-header">
-            <h2 style="font-size:1.25rem;font-weight:700;margin:0">
-              {{ auth.isBuyer() ? 'My Joined Hubs' : 'My Recent Offers' }}
-            </h2>
+        <!-- Left Column Container -->
+        <div style="display:flex;flex-direction:column;gap:1.5rem">
+          <!-- Ledger Table -->
+          <div class="ledger-table-card">
+            <div class="ledger-table-header">
+              <h2 style="font-size:1.25rem;font-weight:700;margin:0">
+                {{ auth.isBuyer() ? 'My Joined Hubs' : 'My Recent Offers' }}
+              </h2>
+            </div>
+
+            @if (auth.isBuyer()) {
+              @if (buyerHubs().length === 0) {
+                <p style="color:var(--text-secondary);text-align:center;padding:2rem 0">You haven't joined any hubs yet.</p>
+              } @else {
+                <div style="overflow-x:auto">
+                  <table class="ledger-table">
+                    <thead>
+                      <tr>
+                        <th>Hub Name</th>
+                        <th>Status</th>
+                        <th>Committed</th>
+                        <th>Progress</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (hub of buyerHubs(); track hub.id) {
+                        <tr class="ledger-row">
+                          <td style="font-weight:600">{{ hub.title }}</td>
+                          <td>
+                            <span class="badge badge-brand-light" style="font-size:0.7rem;text-transform:uppercase">{{ hub.status }}</span>
+                          </td>
+                          <td><strong>{{ hub.committed_units }} units</strong></td>
+                          <td>
+                            @if (hub.fill_target && hub.fill_progress !== undefined) {
+                              <div style="display:flex;flex-direction:column;gap:0.25rem;max-width:120px">
+                                <span style="font-size:0.75rem;color:var(--text-secondary)">{{ hub.fill_progress }} / {{ hub.fill_target }} ({{ getProgressPercent(hub.fill_progress, hub.fill_target) }}%)</span>
+                                <div class="progress-track" style="height:4px;margin:0">
+                                  <div class="progress-fill" [style.width.%]="getProgressPercent(hub.fill_progress, hub.fill_target)"></div>
+                                </div>
+                              </div>
+                            } @else {
+                              -
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            } @else if (auth.isSupplier()) {
+              @if (supplierOffers().length === 0) {
+                <p style="color:var(--text-secondary);text-align:center;padding:2rem 0">You haven't created any offers yet.</p>
+              } @else {
+                <div style="overflow-x:auto">
+                  <table class="ledger-table">
+                    <thead>
+                      <tr>
+                        <th>Offer Name</th>
+                        <th>Status</th>
+                        <th>Price</th>
+                        <th>Committed Units</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (offer of supplierOffers(); track offer.id) {
+                        <tr class="ledger-row">
+                          <td style="font-weight:600">{{ offer.title }}</td>
+                          <td>
+                            <span class="badge"
+                              [class.badge-brand]="offer.status === 'Active'"
+                              [class.badge-muted]="offer.status === 'PendingReview'"
+                              [class.badge-danger]="offer.status === 'Expired' || offer.status === 'Inactive'"
+                              style="font-size:0.7rem;text-transform:uppercase">
+                              {{ offer.status }}
+                            </span>
+                          </td>
+                          <td>
+                            <strong>EGP {{ (offer.unitPrice * (1 - offer.discountPercentage / 100)).toFixed(2) }}</strong>
+                            <span style="font-size:0.75rem;color:var(--text-secondary);display:block">Orig: EGP {{ offer.unitPrice }}</span>
+                          </td>
+                          <td><strong>{{ offer.committedUnits }} / {{ offer.batchTargetQuantity }} units</strong></td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            }
           </div>
 
-          @if (auth.isBuyer()) {
-            @if (buyerHubs().length === 0) {
-              <p style="color:var(--text-secondary);text-align:center;padding:2rem 0">You haven't joined any hubs yet.</p>
-            } @else {
-              <div style="overflow-x:auto">
-                <table class="ledger-table">
-                  <thead>
-                    <tr>
-                      <th>Hub Name</th>
-                      <th>Status</th>
-                      <th>Committed</th>
-                      <th>Progress</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (hub of buyerHubs(); track hub.id) {
-                      <tr class="ledger-row">
-                        <td style="font-weight:600">{{ hub.title }}</td>
-                        <td>
-                          <span class="badge badge-brand-light" style="font-size:0.7rem;text-transform:uppercase">{{ hub.status }}</span>
-                        </td>
-                        <td><strong>{{ hub.committed_units }} units</strong></td>
-                        <td>
-                          @if (hub.fill_target && hub.fill_progress !== undefined) {
-                            <div style="display:flex;flex-direction:column;gap:0.25rem;max-width:120px">
-                              <span style="font-size:0.75rem;color:var(--text-secondary)">{{ hub.fill_progress }} / {{ hub.fill_target }} ({{ getProgressPercent(hub.fill_progress, hub.fill_target) }}%)</span>
-                              <div class="progress-track" style="height:4px;margin:0">
-                                <div class="progress-fill" [style.width.%]="getProgressPercent(hub.fill_progress, hub.fill_target)"></div>
-                              </div>
-                            </div>
-                          } @else {
-                            -
-                          }
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+          @if (auth.isSupplier()) {
+            <!-- Category Alert Preferences Card -->
+            <div id="preferences" class="ledger-table-card">
+              <div class="ledger-table-header">
+                <h2 style="font-size:1.25rem;font-weight:700;margin:0">Category Alert Preferences</h2>
               </div>
-            }
-          } @else if (auth.isSupplier()) {
-            @if (supplierOffers().length === 0) {
-              <p style="color:var(--text-secondary);text-align:center;padding:2rem 0">You haven't created any offers yet.</p>
-            } @else {
-              <div style="overflow-x:auto">
-                <table class="ledger-table">
-                  <thead>
-                    <tr>
-                      <th>Offer Name</th>
-                      <th>Status</th>
-                      <th>Price</th>
-                      <th>Committed Units</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (offer of supplierOffers(); track offer.id) {
-                      <tr class="ledger-row">
-                        <td style="font-weight:600">{{ offer.title }}</td>
-                        <td>
-                          <span class="badge"
-                            [class.badge-brand]="offer.status === 'Active'"
-                            [class.badge-muted]="offer.status === 'PendingReview'"
-                            [class.badge-danger]="offer.status === 'Expired' || offer.status === 'Inactive'"
-                            style="font-size:0.7rem;text-transform:uppercase">
-                            {{ offer.status }}
-                          </span>
-                        </td>
-                        <td>
-                          <strong>EGP {{ (offer.unitPrice * (1 - offer.discountPercentage / 100)).toFixed(2) }}</strong>
-                          <span style="font-size:0.75rem;color:var(--text-secondary);display:block">Orig: EGP {{ offer.unitPrice }}</span>
-                        </td>
-                        <td><strong>{{ offer.committedUnits }} / {{ offer.batchTargetQuantity }} units</strong></td>
+              <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:1.5rem">
+                Set minimum quantity thresholds per category. You will receive demand alerts when buyers request group deals matching these conditions.
+              </p>
+
+              @if (preferences().length === 0) {
+                <p style="color:var(--text-secondary);text-align:center;padding:2rem 0">No category alert thresholds configured.</p>
+              } @else {
+                <div style="overflow-x:auto;margin-bottom:1.5rem">
+                  <table class="ledger-table">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Min Quantity Threshold</th>
+                        <th style="text-align:right">Action</th>
                       </tr>
-                    }
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      @for (pref of preferences(); track pref.categoryId) {
+                        <tr class="ledger-row">
+                          <td style="font-weight:600">{{ pref.categoryName }}</td>
+                          <td><strong>{{ pref.minQuantity }} units</strong></td>
+                          <td style="text-align:right">
+                            <button class="btn btn-muted" 
+                                    style="padding:0.375rem 0.75rem;font-size:0.75rem;border-radius:6px;cursor:pointer" 
+                                    (click)="deletePreference(pref.categoryId)">
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+
+              <!-- Inline Add Preference Form -->
+              <div style="background:#F9FAFB;border:1px solid var(--border);border-radius:12px;padding:1.25rem">
+                <h4 style="margin:0 0 1rem;font-size:0.925rem;font-weight:700">Add Alert Preference</h4>
+                <form [formGroup]="prefForm" (ngSubmit)="addPreference()" class="form-container" style="gap:1rem">
+                  <div style="display:flex;flex-wrap:wrap;gap:1rem">
+                    <div style="flex:1;min-width:200px">
+                      <label class="form-label" style="font-size:0.75rem;margin-bottom:0.25rem" for="pref_category">Category</label>
+                      <select id="pref_category" 
+                              class="form-input" 
+                              [class.error]="prefSubmitted() && prefForm.controls['categoryId'].invalid"
+                              formControlName="categoryId">
+                        <option value="">Select a Category</option>
+                        @for (cat of categories(); track cat.id) {
+                          <option [value]="cat.id">{{ cat.displayName || cat.name }}</option>
+                        }
+                      </select>
+                      @if (prefSubmitted() && prefForm.controls['categoryId'].invalid) {
+                        <span class="form-error" style="font-size:0.7rem">Please select a category.</span>
+                      }
+                    </div>
+
+                    <div style="width:150px;flex-shrink:0">
+                      <label class="form-label" style="font-size:0.75rem;margin-bottom:0.25rem" for="pref_qty">Min Quantity</label>
+                      <input id="pref_qty" 
+                             type="number" 
+                             class="form-input" 
+                             min="1"
+                             [class.error]="prefSubmitted() && prefForm.controls['minQuantity'].invalid"
+                             formControlName="minQuantity" />
+                      @if (prefSubmitted() && prefForm.controls['minQuantity'].invalid) {
+                        <span class="form-error" style="font-size:0.7rem">Must be >= 1.</span>
+                      }
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn btn-brand" style="align-self:flex-start;padding:0.5rem 1.25rem;font-size:0.875rem;cursor:pointer">
+                    Save Preference
+                  </button>
+                </form>
               </div>
-            }
+            </div>
           }
         </div>
 
