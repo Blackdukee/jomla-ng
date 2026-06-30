@@ -31,6 +31,20 @@ export class ForgotPasswordComponent {
   protected loading = signal(false);
   protected submitted = signal(false);
   protected errorMsg = signal('');
+  protected showNewPassword = signal(false);
+  protected showConfirmPassword = signal(false);
+
+  protected get isPasswordMatch(): boolean {
+    const newPass = this.resetForm.get('newPassword')?.value;
+    const confirmPass = this.resetForm.get('confirmPassword')?.value;
+    return !!newPass && !!confirmPass && newPass === confirmPass && !!this.resetForm.get('newPassword')?.valid;
+  }
+
+  protected get isPasswordMismatch(): boolean {
+    const newPass = this.resetForm.get('newPassword')?.value;
+    const confirmPass = this.resetForm.get('confirmPassword')?.value;
+    return !!newPass && !!confirmPass && newPass !== confirmPass;
+  }
 
   // Step 1 Form: Email
   protected emailForm = this.fb.group({
