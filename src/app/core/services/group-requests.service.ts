@@ -20,6 +20,7 @@ export class GroupRequestsService {
     page?: number;
     pageSize?: number;
     sortBy?: string;
+    myRequestsOnly?: boolean;
   }): Observable<{ items: GroupRequestListItemDto[]; totalCount: number; page: number; pageSize: number }> {
     let params = new HttpParams();
     if (filters?.categoryId) params = params.set('categoryId', filters.categoryId);
@@ -28,6 +29,7 @@ export class GroupRequestsService {
     if (filters?.page) params = params.set('page', filters.page.toString());
     if (filters?.pageSize) params = params.set('pageSize', filters.pageSize.toString());
     if (filters?.sortBy) params = params.set('sortBy', filters.sortBy);
+    if (filters?.myRequestsOnly) params = params.set('myRequestsOnly', 'true');
 
     return this.http.get<{ items: GroupRequestListItemDto[]; totalCount: number; page: number; pageSize: number }>(
       this.baseUrl,

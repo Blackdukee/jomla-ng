@@ -35,7 +35,7 @@ export class WishlistComponent implements OnInit {
   }
 
   protected loadRequests() {
-    this.groupRequestsService.getGroupRequests({ status: 'Active', pageSize: 100 }).subscribe({
+    this.groupRequestsService.getGroupRequests({ status: 'Active', pageSize: 100, myRequestsOnly: true }).subscribe({
       next: (res) => {
         this.requests.set(res.items);
       },

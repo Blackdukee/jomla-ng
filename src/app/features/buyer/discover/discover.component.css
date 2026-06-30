@@ -13,9 +13,9 @@
   padding:0.5rem 1.25rem 0.5rem 2.5rem;
 }
 .filter-select:focus { outline:2px solid var(--brand); }
-.offers-grid { display:grid; grid-template-columns:1fr; gap:1.25rem; }
-@media (min-width:640px) { .offers-grid { grid-template-columns:repeat(2, 1fr); } }
-@media (min-width:1024px) { .offers-grid { grid-template-columns:repeat(3, 1fr); } }
+.offers-grid, .requests-grid { display:grid; grid-template-columns:1fr; gap:1.25rem; }
+@media (min-width:640px) { .offers-grid, .requests-grid { grid-template-columns:repeat(2, 1fr); } }
+@media (min-width:1024px) { .offers-grid, .requests-grid { grid-template-columns:repeat(3, 1fr); } }
 .offer-card { display:flex; flex-direction:column; overflow:hidden; }
 .offer-img-wrap { aspect-ratio:4/3; background:#F3F4F6; position:relative; display:flex; align-items:center; justify-content:center; border-radius:12px 12px 0 0; }
 .offer-img-placeholder { display:flex; align-items:center; justify-content:center; }

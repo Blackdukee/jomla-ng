@@ -31,7 +31,7 @@ export class DiscoverComponent implements OnInit {
   protected offers = signal<OfferDto[]>([]);
   protected requests = signal<GroupRequestListItemDto[]>([]);
 
-  // Pagination state
+  // Pagination state (Offers)
   protected pageNumber = signal(1);
   protected pageSize = signal(6);
 
@@ -48,6 +48,26 @@ export class DiscoverComponent implements OnInit {
 
   protected pagesArray = computed(() => {
     const total = this.totalPages();
+    return Array.from({ length: total }, (_, i) => i + 1);
+  });
+
+  // Pagination state (Requests)
+  protected pageNumberRequests = signal(1);
+  protected pageSizeRequests = signal(6);
+
+  protected totalPagesRequests = computed(() => {
+    const list = this.filteredRequests();
+    return Math.ceil(list.length / this.pageSizeRequests()) || 1;
+  });
+
+  protected paginatedRequests = computed(() => {
+    const list = this.filteredRequests();
+    const start = (this.pageNumberRequests() - 1) * this.pageSizeRequests();
+    return list.slice(start, start + this.pageSizeRequests());
+  });
+
+  protected pagesArrayRequests = computed(() => {
+    const total = this.totalPagesRequests();
     return Array.from({ length: total }, (_, i) => i + 1);
   });
 
@@ -92,6 +112,7 @@ export class DiscoverComponent implements OnInit {
 
   protected triggerSearch(): void {
     this.pageNumber.set(1);
+    this.pageNumberRequests.set(1);
     this.loadData();
   }
 
@@ -112,18 +133,42 @@ export class DiscoverComponent implements OnInit {
     return list;
   });
 
+  protected filteredRequests = computed(() => {
+    let list = [...this.requests()];
+    if (this.catFilter() !== 'all') {
+      list = list.filter(r => r.categoryName === this.catFilter());
+    }
+    if (this.sort() === 'most_buyers') {
+      list.sort((a, b) => b.participantsCount - a.participantsCount);
+    } else if (this.sort() === 'newest') {
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (this.sort() === 'most_filled') {
+      // Sort requests by currentQuantity descending for most volume
+      list.sort((a, b) => b.currentQuantity - a.currentQuantity);
+    }
+    return list;
+  });
+
   protected onCatChange(e: Event) {
     this.catFilter.set((e.target as HTMLSelectElement).value);
     this.pageNumber.set(1);
+    this.pageNumberRequests.set(1);
   }
   protected onSortChange(e: Event) {
     this.sort.set((e.target as HTMLSelectElement).value);
     this.pageNumber.set(1);
+    this.pageNumberRequests.set(1);
   }
 
   protected goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages()) {
       this.pageNumber.set(page);
+    }
+  }
+
+  protected goToPageRequests(page: number) {
+    if (page >= 1 && page <= this.totalPagesRequests()) {
+      this.pageNumberRequests.set(page);
     }
   }
 
