@@ -166,4 +166,12 @@ export class AuthService {
     const buffer = 2 * 60 * 1000; // 2 minutes buffer
     return Date.now() >= (expirationDate - buffer);
   }
+
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/forgot-password`, { email });
+  }
+
+  resetPassword(data: { email: string; token: string; newPassword: string; confirmPassword: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/reset-password`, data);
+  }
 }
