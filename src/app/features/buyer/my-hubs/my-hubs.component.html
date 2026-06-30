@@ -28,11 +28,11 @@
               </div>
               <h3 style="font-size:1.0625rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:0.25rem">{{ hub.title }}</h3>
               <p style="font-size:0.875rem;color:var(--text-secondary)">
-                Your commitment: <span style="font-weight:600;color:var(--text-primary)">{{ hub.committed_units }} units</span>
+                Your commitment: <span style="font-weight:600;color:var(--text-primary)">{{ hub.committedUnits }} units</span>
               </p>
             </div>
 
-            @if (hub.type === 'supplier_offer' && hub.fill_target) {
+            @if (hub.type === 'supplier_offer' && hub.fillTarget) {
               <div style="width:180px;flex-shrink:0" class="hide-mobile">
                 <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:0.375rem">
                   <span style="font-weight:500">Total fill</span>

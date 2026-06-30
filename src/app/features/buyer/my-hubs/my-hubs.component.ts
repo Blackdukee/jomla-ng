@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BuyerHub } from '../../../core/mock-data';
+import { BatchesService } from '../../../core/services/batches.service';
+import { BuyerHubDto } from '../../../core/models';
 
 @Component({
   selector: 'app-my-hubs',
@@ -10,16 +11,34 @@ import { BuyerHub } from '../../../core/mock-data';
   templateUrl: './my-hubs.component.html',
   styleUrl: './my-hubs.component.css'
 })
-export class MyHubsComponent {
-  protected tab = signal<'active' | 'fulfilled'>('active');
-  protected hubs = computed<BuyerHub[]>(() => []);
+export class MyHubsComponent implements OnInit {
+  private batchesService = inject(BatchesService);
 
-  protected hubLink(hub: BuyerHub) {
-    return hub.type === 'supplier_offer' ? ['/hubs/supplier', hub.batch_id] : ['/hubs/request', hub.request_id];
+  protected tab = signal<'active' | 'fulfilled'>('active');
+  protected allHubs = signal<BuyerHubDto[]>([]);
+
+  protected hubs = computed<BuyerHubDto[]>(() => {
+    const isFulfilled = this.tab() === 'fulfilled';
+    return this.allHubs().filter(h => {
+      const status = h.status.toLowerCase();
+      const isDone = status === 'completed' || status === 'fulfilled' || status === 'closed' || status === 'failed';
+      return isFulfilled ? isDone : !isDone;
+    });
+  });
+
+  ngOnInit(): void {
+    this.batchesService.getMyHubs().subscribe({
+      next: (data) => this.allHubs.set(data),
+      error: (err) => console.error('Failed to load my hubs', err)
+    });
   }
 
-  protected fillPct(hub: BuyerHub) {
-    if (!hub.fill_target || !hub.fill_progress) return 0;
-    return Math.round((hub.fill_progress / hub.fill_target) * 100);
+  protected hubLink(hub: BuyerHubDto) {
+    return hub.type === 'supplier_offer' ? ['/hubs/supplier', hub.batchId] : ['/hubs/request', hub.requestId];
+  }
+
+  protected fillPct(hub: BuyerHubDto) {
+    if (!hub.fillTarget || !hub.fillProgress) return 0;
+    return Math.round((hub.fillProgress / hub.fillTarget) * 100);
   }
 }

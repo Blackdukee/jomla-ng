@@ -5,7 +5,8 @@ import { ToastService } from '../../core/toast.service';
 import { OffersService } from '../../core/services/offers.service';
 import { CategoriesService } from '../../core/services/categories.service';
 import { SupplierPreferencesService } from '../../core/services/supplier-preferences.service';
-import { User, MyOfferDto, CategoryDto, SupplierCategoryPreferenceDto } from '../../core/models';
+import { BatchesService } from '../../core/services/batches.service';
+import { User, MyOfferDto, CategoryDto, SupplierCategoryPreferenceDto, BuyerHubDto } from '../../core/models';
 
 @Component({
   selector: 'app-profile',
@@ -32,9 +33,10 @@ export class ProfileComponent implements OnInit {
   protected activeHubsCount = signal(0);
   protected completedOrdersCount = signal(0);
   protected wishlistCount = signal(0);
-  protected buyerHubs = signal<any[]>([]);
+  protected buyerHubs = signal<BuyerHubDto[]>([]);
 
   private offersService = inject(OffersService);
+  private batchesService = inject(BatchesService);
   private categoriesService = inject(CategoriesService);
   private supplierPrefsService = inject(SupplierPreferencesService);
 
@@ -76,6 +78,16 @@ export class ProfileComponent implements OnInit {
       this.loadPreferences();
       this.categoriesService.getCategories().subscribe(cats => {
         this.categories.set(cats);
+      });
+    }
+
+    if (this.auth.isBuyer()) {
+      this.batchesService.getMyHubs().subscribe({
+        next: (hubs) => {
+          this.buyerHubs.set(hubs);
+          this.activeHubsCount.set(hubs.filter(h => h.status.toLowerCase() !== 'completed' && h.status.toLowerCase() !== 'closed' && h.status.toLowerCase() !== 'failed').length);
+        },
+        error: (err) => console.error('Failed to load buyer hubs', err)
       });
     }
   }

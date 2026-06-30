@@ -5,7 +5,8 @@ import {
   BatchDetailDto,
   JoinBatchResponse,
   LeaveBatchResponse,
-  JoinBatchRequest
+  JoinBatchRequest,
+  BuyerHubDto
 } from '../models';
 
 /**
@@ -64,5 +65,12 @@ export class BatchesService {
       body,
       { withCredentials: true }
     );
+  }
+
+  /** GET /api/batches/my-hubs — Retrieve active and completed hubs joined by the buyer */
+  getMyHubs(): Observable<BuyerHubDto[]> {
+    return this.http.get<BuyerHubDto[]>(`${this.baseUrl}/my-hubs`, {
+      withCredentials: true
+    });
   }
 }

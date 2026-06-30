@@ -84,17 +84,17 @@
                           <td>
                             <span class="badge badge-brand-light" style="font-size:0.7rem;text-transform:uppercase">{{ hub.status }}</span>
                           </td>
-                          <td><strong>{{ hub.committed_units }} units</strong></td>
+                          <td><strong>{{ hub.committedUnits }} units</strong></td>
                           <td>
-                            @if (hub.fill_target && hub.fill_progress !== undefined) {
+                            @if (hub.fillTarget && hub.fillProgress !== undefined) {
                               <div style="display:flex;flex-direction:column;gap:0.25rem;max-width:120px">
-                                <span style="font-size:0.75rem;color:var(--text-secondary)">{{ hub.fill_progress }} / {{ hub.fill_target }} ({{ getProgressPercent(hub.fill_progress, hub.fill_target) }}%)</span>
+                                <span style="font-size:0.75rem;color:var(--text-secondary)">{{ hub.fillProgress }} / {{ hub.fillTarget }} ({{ getProgressPercent(hub.fillProgress, hub.fillTarget) }}%)</span>
                                 <div class="progress-track" style="height:4px;margin:0">
-                                  <div class="progress-fill" [style.width.%]="getProgressPercent(hub.fill_progress, hub.fill_target)"></div>
+                                  <div class="progress-fill" [style.width.%]="getProgressPercent(hub.fillProgress, hub.fillTarget)"></div>
                                 </div>
                               </div>
                             } @else {
-                              -
+                              <span style="color:var(--text-muted);font-size:0.875rem">-</span>
                             }
                           </td>
                         </tr>

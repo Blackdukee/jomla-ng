@@ -5,11 +5,31 @@ import { GroupRequestsService } from '../../../core/services/group-requests.serv
 import { CategoriesService } from '../../../core/services/categories.service';
 import { GroupRequestListItemDto } from '../../../core/models';
 
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
+
 @Component({
   selector: 'app-wishlist',
   standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('wishlistEntrance', [
+      transition(':enter', [
+        query('.header-block', [
+          style({ opacity: 0, transform: 'translateY(12px)' }),
+          stagger('120ms', [
+            animate('1000ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+          ])
+        ], { optional: true }),
+        query('.req-row', [
+          style({ opacity: 0, transform: 'translateY(16px)' }),
+          stagger('150ms', [
+            animate('1200ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+          ])
+        ], { optional: true })
+      ])
+    ])
+  ],
   templateUrl: './wishlist.component.html',
   styleUrl: './wishlist.component.css'
 })

@@ -79,3 +79,16 @@ export interface JoinBatchRequest {
  * Backend uses JsonStringEnumConverter so these come as PascalCase strings.
  */
 export type BatchStatus = 'Open' | 'Completed' | 'Failed';
+
+/** Matches backend BuyerHubDto */
+export interface BuyerHubDto {
+  id: string;
+  type: 'supplier_offer' | 'group_request';
+  title: string;
+  status: string;
+  committedUnits: number;
+  batchId?: string;
+  requestId?: string;
+  fillProgress?: number;
+  fillTarget?: number;
+}
