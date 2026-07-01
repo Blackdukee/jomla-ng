@@ -47,28 +47,102 @@
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
                 <div style="background:#fff;padding:1rem;border-radius:16px;border:1px solid var(--border)">
                   <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:0.25rem">Current Price</div>
-                  <div style="font-size:1.5rem;font-weight:800;color:var(--brand)">EGP {{ myOffer()?.current_unit_price }}</div>
+                  <div style="font-size:1.5rem;font-weight:800;color:var(--brand)">EGP {{ myOffer()?.currentUnitPrice || myOffer()?.unitPrice }}</div>
                 </div>
                 <div style="background:#fff;padding:1rem;border-radius:16px;border:1px solid var(--border)">
-                  <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:0.25rem">Accepted By</div>
-                  <div style="font-size:1.5rem;font-weight:800">{{ myOffer()?.accepted_count }} <span style="font-size:0.875rem;font-weight:400">buyers</span></div>
+                  <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:0.25rem">Accepted Quantity</div>
+                  <div style="font-size:1.5rem;font-weight:800">{{ myOffer()?.acceptedQuantity }} <span style="font-size:0.875rem;font-weight:400">units</span></div>
+                </div>
+              </div>
+
+              <!-- Additional details of the placed offer -->
+              <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.875rem;color:var(--text-secondary)">
+                <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+                  <span>Original Price Offered</span>
+                  <span style="font-weight:600;color:var(--text-primary)">EGP {{ myOffer()?.unitPrice }}</span>
+                </div>
+                @if (myOffer()?.minUnitPrice) {
+                  <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+                    <span>Minimum Allowed Price</span>
+                    <span style="font-weight:600;color:var(--text-primary)">EGP {{ myOffer()?.minUnitPrice }}</span>
+                  </div>
+                }
+                <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+                  <span>Quantity Offered</span>
+                  <span style="font-weight:600;color:var(--text-primary)">{{ myOffer()?.quantityAvailable }} units</span>
+                </div>
+                @if (myOffer()?.variantAttributes) {
+                  <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+                    <span>Specifications / Variants</span>
+                    <span style="font-weight:600;color:var(--text-primary)">{{ myOffer()?.variantAttributes }}</span>
+                  </div>
+                }
+                <div style="display:flex;justify-content:space-between;padding:0.5rem 0">
+                  <span>Offer Expiration</span>
+                  <span style="font-weight:600;color:var(--text-primary)">{{ myOffer() ? fmtExpiry(myOffer().expiresAt) : '' }}</span>
                 </div>
               </div>
             </div>
           </div>
         } @else {
-          <!-- Place offer form (disabled) -->
-          <div class="card">
+          <!-- Place offer form -->
+          <form (ngSubmit)="submitOffer()" #offerForm="ngForm" class="card">
             <div style="padding:1.5rem;border-bottom:1px solid var(--border)">
               <h3 style="font-weight:700;font-size:1.0625rem;margin-bottom:0.25rem">Place your offer</h3>
-              <p style="font-size:0.9375rem;color:var(--text-secondary)">Compete for this buyer pool</p>
+              <p style="font-size:0.9375rem;color:var(--text-secondary)">Submit pricing and capacity terms to compete for this buyer pool</p>
             </div>
-            <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem">
-              <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:16px;padding:1rem;color:var(--danger);font-size:0.875rem;line-height:1.4">
-                Placing offers on group requests is currently disabled as the backend API does not support it.
+            <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem">
+              
+              <!-- Two column grid for pricing -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:1rem">
+                <div class="form-group">
+                  <label class="form-label" for="offer-price">Unit Price (EGP) *</label>
+                  <input id="offer-price" type="number" class="form-input" placeholder="E.g. 250" 
+                    [(ngModel)]="unitPrice" name="unitPrice" required min="0.01">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="offer-min-price">Min Negotiable Price (EGP)</label>
+                  <input id="offer-min-price" type="number" class="form-input" placeholder="Optional. E.g. 220" 
+                    [(ngModel)]="minUnitPrice" name="minUnitPrice" min="0.01">
+                </div>
+              </div>
+
+              <!-- Two column grid for quantity & fallback -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:1rem">
+                <div class="form-group">
+                  <label class="form-label" for="offer-qty">Quantity Available (Units) *</label>
+                  <input id="offer-qty" type="number" class="form-input" placeholder="E.g. 100" 
+                    [(ngModel)]="quantityAvailable" name="quantityAvailable" required min="1">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="offer-min-fallback">Min Fallback Quantity</label>
+                  <input id="offer-min-fallback" type="number" class="form-input" placeholder="Optional. E.g. 5" 
+                    [(ngModel)]="minFallbackQuantity" name="minFallbackQuantity" min="1">
+                </div>
+              </div>
+
+              <!-- Specifications & Expiry date -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:1rem">
+                <div class="form-group">
+                  <label class="form-label" for="offer-expiry">Offer Expiry Date *</label>
+                  <input id="offer-expiry" type="date" class="form-input" 
+                    [(ngModel)]="expiresAt" name="expiresAt" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="offer-variants">Specification / Variant Notes</label>
+                  <input id="offer-variants" type="text" class="form-input" placeholder="Optional. E.g. Blue, 120cm" 
+                    [(ngModel)]="variantAttributes" name="variantAttributes">
+                </div>
+              </div>
+
+              <!-- Submit button -->
+              <div style="display:flex;justify-content:flex-end;margin-top:0.5rem">
+                <button type="submit" class="btn btn-primary" [disabled]="!offerForm.form.valid">
+                  Submit Offer
+                </button>
               </div>
             </div>
-          </div>
+          </form>
         }
       </div>
     </div>

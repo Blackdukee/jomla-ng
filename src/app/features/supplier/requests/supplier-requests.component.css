@@ -24,3 +24,42 @@
 @media (min-width: 768px) {
   .container > div:first-child { flex-direction: row; align-items: center; justify-content: space-between; }
 }
+
+.search-bar-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 240px;
+}
+.search-icon-wrap {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+:host-context([dir="rtl"]) .search-icon-wrap {
+  left: auto;
+  right: 1rem;
+}
+.search-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  padding: 0.5rem 1rem 0.5rem 2.25rem;
+  font-size: 0.875rem;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  transition: all 0.15s ease-in-out;
+}
+:host-context([dir="rtl"]) .search-input {
+  padding: 0.5rem 2.25rem 0.5rem 1rem;
+}
+.search-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+

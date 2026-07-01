@@ -37,6 +37,7 @@ export class SupplierRequestsComponent implements OnInit {
 
   protected catFilter = signal('all');
   protected sort = signal('newest');
+  protected searchQuery = signal('');
   protected categories = signal<CategoryDto[]>([]);
   protected requests = signal<GroupRequestListItemDto[]>([]);
 
@@ -59,6 +60,7 @@ export class SupplierRequestsComponent implements OnInit {
     const categoryId = this.catFilter() === 'all' ? undefined : this.catFilter();
     this.groupRequestsService.getGroupRequests({
       categoryId,
+      titleSearch: this.searchQuery() || undefined,
       sortBy: this.sort(),
       page: this.pageNumber(),
       pageSize: this.pageSize,
@@ -80,6 +82,12 @@ export class SupplierRequestsComponent implements OnInit {
 
   protected onSortChange(e: Event) {
     this.sort.set((e.target as HTMLSelectElement).value);
+    this.pageNumber.set(1);
+    this.loadRequests();
+  }
+
+  protected onSearchInput(e: Event) {
+    this.searchQuery.set((e.target as HTMLInputElement).value);
     this.pageNumber.set(1);
     this.loadRequests();
   }

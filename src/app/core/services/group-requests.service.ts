@@ -89,4 +89,18 @@ export class GroupRequestsService {
       { params, withCredentials: true }
     );
   }
+
+  /** POST /api/group-requests/{requestId}/offers — Place an offer on a group request */
+  placeOffer(requestId: string, offer: {
+    unitPrice: number;
+    minUnitPrice?: number;
+    quantityAvailable: number;
+    minFallbackQuantity?: number;
+    variantAttributes?: string;
+    expiresAt: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${requestId}/offers`, offer, {
+      withCredentials: true
+    });
+  }
 }
