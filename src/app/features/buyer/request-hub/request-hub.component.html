@@ -1,88 +1,69 @@
 @if (request(); as req) {
-  <div class="container" style="max-width:1200px;padding:2rem 1rem 4rem" role="main">
-    <!-- Back -->
-    <button class="btn btn-ghost btn-sm" style="margin-bottom:1.5rem;margin-left:-0.5rem" (click)="router.navigate(['/my-hubs'])">
+  <div class="v1-page">
+    <button class="btn btn-ghost btn-sm v1-back" (click)="router.navigate(['/my-hubs'])">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
       Back
     </button>
 
-    <!-- Page header -->
-    <div style="margin-bottom:2rem">
-      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap">
-        <span class="badge badge-outline">{{ req.categoryName || 'Uncategorized' }}</span>
-        <span class="badge" [class]="req.status === 'active' || req.status === 'Active' ? 'badge-brand' : 'badge-muted'">{{ req.status }}</span>
-      </div>
-      <h1 style="font-size:1.875rem;font-weight:800;margin-bottom:0.5rem">{{ req.title || req.description }}</h1>
-      @if (req.description) {
-        <p style="color:var(--text-secondary);margin-bottom:1rem">{{ req.description }}</p>
-      }
-      <div style="display:flex;align-items:center;gap:1.5rem;color:var(--text-secondary);flex-wrap:wrap">
-        <span style="display:flex;align-items:center;gap:0.375rem;font-size:0.9375rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-          {{ req.currentQuantity }} total units
-        </span>
-        <span style="display:flex;align-items:center;gap:0.375rem;font-size:0.9375rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          {{ req.participantsCount }} buyers
-        </span>
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr;gap:2rem">
-      <!-- Participants card -->
-      <div class="card" style="padding:1.5rem">
-        <h3 style="font-size:1.0625rem;font-weight:700;display:flex;align-items:center;gap:0.5rem;margin-bottom:1.25rem">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          Demand Summary
-        </h3>
-        <div style="display:flex;flex-direction:column;gap:0.5rem">
-          <div class="participant-row" style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border)">
-            <span style="font-weight:500">Total Committed Demand</span>
-            <span style="color:var(--text-primary);font-weight:600">{{ req.currentQuantity }} units</span>
+    <div class="v1-body">
+      <!-- Sidebar: hub identity + stats + action -->
+      <aside class="v1-sidebar">
+        <div class="v1-header-info">
+          <div class="v1-badges">
+            <span class="badge badge-outline">{{ req.categoryName || 'Uncategorized' }}</span>
+            <span class="badge" [class]="req.status === 'active' || req.status === 'Active' ? 'badge-brand' : 'badge-muted'">{{ req.status }}</span>
           </div>
-          <div class="participant-row" style="display:flex;justify-content:space-between;padding:0.5rem 0">
-            <span style="font-weight:500">Active Buyers</span>
-            <span style="color:var(--text-primary);font-weight:600">{{ req.participantsCount }} buyers</span>
+          <h1 class="v1-title">{{ req.title || req.description }}</h1>
+          @if (req.description) {
+            <p class="v1-desc">{{ req.description }}</p>
+          }
+        </div>
+
+        <div class="v1-stats-block">
+          <div class="v1-stat-tile">
+            <span class="v1-stat-val">{{ req.currentQuantity }}</span>
+            <span class="v1-stat-lbl">Total Units</span>
+          </div>
+          <div class="v1-stat-tile">
+            <span class="v1-stat-val">{{ req.participantsCount }}</span>
+            <span class="v1-stat-lbl">Buyers</span>
           </div>
         </div>
-        <div style="margin-top:1.5rem;text-align:right">
-          <button class="btn btn-outline" style="color:var(--danger)" (click)="leaveRequest()">Leave Hub</button>
-        </div>
-      </div>
 
-      <!-- Seller offers -->
-      <div>
-        <h3 style="font-weight:700;font-size:1.125rem;margin-bottom:1rem">Seller Offers</h3>
+        <div class="v1-action-row">
+          @if (isJoined()) {
+            <button class="btn btn-outline" style="color:var(--danger)" (click)="leaveRequest()">Leave Hub</button>
+          } @else {
+            <button class="btn btn-primary" (click)="showJoinModal.set(true)">Join Hub</button>
+          }
+        </div>
+      </aside>
+
+      <!-- Main: seller offers -->
+      <main class="v1-main">
+        <h2 class="v1-offers-hd">Seller Offers</h2>
         @if (offers().length === 0) {
-          <div style="padding:3rem 2rem;text-align:center;background:#F9FAFB;border:1px dashed var(--border);border-radius:16px;color:var(--text-secondary)">
-            No offers from sellers yet.
-          </div>
+          <div class="v1-empty">No offers from sellers yet.</div>
         } @else {
-          <div style="display:flex;flex-direction:column;gap:1.25rem">
+          <div class="v1-offers-list">
             @for (offer of offers(); track offer.id) {
-              <div class="card" style="padding:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+              <div class="v1-offer-card">
                 <div>
-                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem">
-                    <span style="font-weight:700;font-size:1.0625rem">{{ offer.supplierName }}</span>
+                  <div class="v1-offer-supplier">
+                    {{ offer.supplierName }}
                     <span class="badge badge-outline" style="font-size:0.75rem">Round {{ offer.roundNumber }}</span>
                     <span class="badge" [class]="offer.status === 'Open' ? 'badge-brand' : 'badge-muted'" style="font-size:0.75rem">{{ offer.status }}</span>
                   </div>
-                  <div style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.75rem">
-                    Price: <span style="color:var(--brand);font-weight:700;font-size:1.125rem">EGP {{ offer.currentUnitPrice }}</span> per unit
+                  <div class="v1-offer-price">
+                    Price: <span class="v1-price-val">EGP {{ offer.currentUnitPrice }}</span> per unit
                   </div>
-                  <div style="display:flex;gap:1.5rem;color:var(--text-secondary);font-size:0.875rem">
-                    <span>Available Capacity: <strong>{{ offer.quantityAvailable }} units</strong></span>
+                  <div class="v1-offer-meta">
+                    <span>Available: <strong>{{ offer.quantityAvailable }} units</strong></span>
                     <span>Accepted: <strong>{{ offer.acceptedQuantity }} units</strong></span>
                   </div>
-                  <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem">
-                    Expires: {{ fmtExpiry(offer.expiresAt) }}
-                  </div>
+                  <div class="v1-offer-expiry">Expires: {{ fmtExpiry(offer.expiresAt) }}</div>
                 </div>
-                
-                <div style="display:flex;gap:0.5rem;align-items:center">
+                <div>
                   @if (offer.status === 'Open') {
                     <button class="btn btn-primary" (click)="accept(offer)">Accept Offer</button>
                   } @else if (offer.status === 'Accepted') {
@@ -93,9 +74,40 @@
             }
           </div>
         }
-      </div>
+      </main>
     </div>
   </div>
+
+
+  @if (showJoinModal()) {
+    <div class="dialog-backdrop" (click)="showJoinModal.set(false)" role="dialog" aria-modal="true" aria-labelledby="join-modal-title">
+      <div class="dialog" (click)="$event.stopPropagation()" style="max-width:400px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+          <h2 id="join-modal-title" style="font-size:1.25rem;font-weight:700">Join Group Request</h2>
+          <button (click)="showJoinModal.set(false)"
+            style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:1.25rem"
+            aria-label="Close dialog">✕</button>
+        </div>
+
+        <div style="margin-bottom:1.5rem">
+          <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:1rem">
+            Specify the quantity you want to commit to this group request. Joining pools your demand with other buyers.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="join-qty">Quantity (Units)</label>
+            <input id="join-qty" type="number" class="form-input" min="1" 
+              [value]="joinQuantity()" (input)="onQtyChange($event)" placeholder="e.g. 10">
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem">
+          <button class="btn btn-outline" (click)="showJoinModal.set(false)">Cancel</button>
+          <button class="btn btn-primary" (click)="joinRequest()">Join</button>
+        </div>
+      </div>
+    </div>
+  }
 } @else {
   <div style="padding:8rem 2rem;text-align:center;color:var(--text-secondary)">
     Loading request details...

@@ -71,9 +71,9 @@ export class GroupRequestsService {
     });
   }
 
-  /** DELETE /api/group-requests/{id}/leave — Leave a group request */
+  /** POST /api/group-requests/{id}/leave — Leave a group request */
   leaveGroupRequest(id: string): Observable<any> {
-    return this.http.delete<any>(`${this.baseUrl}/${id}/leave`, {
+    return this.http.post<any>(`${this.baseUrl}/${id}/leave`, {}, {
       withCredentials: true
     });
   }

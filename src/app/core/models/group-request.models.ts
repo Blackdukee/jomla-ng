@@ -39,6 +39,7 @@ export interface GroupRequestDetailDto {
   categoryName: string;
   participantsCount: number;
   offers: GroupRequestOfferDto[];
+  participantIds: string[];
 }
 
 export interface CreateGroupRequestRequest {

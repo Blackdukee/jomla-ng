@@ -54,7 +54,7 @@ export class WishlistComponent implements OnInit {
   // Filters and Pagination
   protected searchQuery = signal('');
   protected categoryId = signal('');
-  protected statusFilter = signal('Active');
+  protected statusFilter = signal('');
   protected page = signal(1);
   protected pageSize = 5;
   protected totalCount = signal(0);

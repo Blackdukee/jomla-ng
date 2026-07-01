@@ -47,9 +47,11 @@
         </div>
         <div style="width:130px">
           <select class="form-input" (change)="onStatusChange($event)" style="height:2.75rem;padding:0 0.5rem;cursor:pointer">
+            <option value="">All Statuses</option>
+            <option value="PendingReview">Pending Review</option>
             <option value="Active">Active</option>
-            <option value="Approved">Approved</option>
-            <option value="All">All Statuses</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Closed">Closed</option>
           </select>
         </div>
       </div>

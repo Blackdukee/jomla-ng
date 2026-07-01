@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToastService } from '../../../core/toast.service';
+import { AuthService } from '../../../core/auth.service';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
 import { GroupRequestOffersService } from '../../../core/services/group-request-offers.service';
 import { GroupRequestDetailDto, GroupRequestOfferDto } from '../../../core/models';
@@ -17,12 +18,22 @@ export class RequestHubComponent implements OnInit {
   protected router = inject(Router);
   private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
+  protected authService = inject(AuthService);
   private groupRequestsService = inject(GroupRequestsService);
   private groupRequestOffersService = inject(GroupRequestOffersService);
 
   protected request = signal<GroupRequestDetailDto | null>(null);
   protected offers = signal<GroupRequestOfferDto[]>([]);
+  protected joinQuantity = signal<number>(1);
+  protected showJoinModal = signal<boolean>(false);
   private requestId = '';
+
+  protected isJoined = computed(() => {
+    const req = this.request();
+    const user = this.authService.user();
+    if (!req || !user) return false;
+    return req.participantIds?.includes(user.id) || false;
+  });
 
   ngOnInit(): void {
     this.requestId = this.route.snapshot.paramMap.get('requestId') ?? '';
@@ -95,6 +106,34 @@ export class RequestHubComponent implements OnInit {
       },
       error: (err) => {
         this.toast.error('Error', err?.error?.detail || 'Failed to leave group request.');
+      }
+    });
+  }
+
+  protected onQtyChange(event: Event) {
+    const val = (event.target as HTMLInputElement).value;
+    this.joinQuantity.set(parseInt(val, 10) || 1);
+  }
+
+  protected joinRequest() {
+    const qty = this.joinQuantity();
+    if (qty <= 0) {
+      this.toast.error('Invalid Quantity', 'Please enter a quantity of 1 or more.');
+      return;
+    }
+
+    this.groupRequestsService.joinGroupRequest(this.requestId, qty).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toast.success('Joined Hub!', 'You have successfully joined this group request.');
+          this.showJoinModal.set(false);
+          this.loadRequest();
+        } else {
+          this.toast.error('Error', res.error || 'Failed to join group request.');
+        }
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.detail || 'Failed to join group request.');
       }
     });
   }
