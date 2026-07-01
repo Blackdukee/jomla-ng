@@ -1,45 +1,34 @@
-<div class="container" style="max-width:900px;padding:2rem 1rem 4rem" role="main">
-  <!-- Back button -->
-  <button class="btn btn-ghost btn-sm" style="margin-bottom:1.5rem;margin-left:-0.5rem"
-    (click)="router.navigate(['/my-hubs'])" aria-label="Back to my hubs">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <polyline points="15 18 9 12 15 6" />
-    </svg>
-    Back
-  </button>
-
+<div class="container" style="max-width:1040px;padding:2rem 1.5rem 4rem" role="main">
   <!-- Loading state -->
   @if (loading()) {
-  <div style="text-align:center;padding:4rem 0">
+  <div style="text-align:center;padding:6rem 0">
     <div class="spinner" aria-label="Loading"></div>
-    <p style="color:var(--text-secondary);margin-top:1rem">Loading batch details…</p>
+    <p style="color:var(--text-secondary);margin-top:1.25rem;font-weight:500">Loading batch details…</p>
   </div>
   }
 
   <!-- Error state -->
   @if (error()) {
-  <div class="card" style="padding:2rem;text-align:center">
+  <div class="hub-card" style="padding:3rem;text-align:center;max-width:500px;margin:4rem auto">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.5"
-      stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 1rem" aria-hidden="true">
+      stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 1.25rem" aria-hidden="true">
       <circle cx="12" cy="12" r="10" />
       <line x1="15" y1="9" x2="9" y2="15" />
       <line x1="9" y1="9" x2="15" y2="15" />
     </svg>
-    <p style="font-weight:600;font-size:1.125rem;margin-bottom:0.5rem">Could not load batch</p>
-    <p style="color:var(--text-secondary)">{{ error() }}</p>
-    <button class="btn btn-outline" style="margin-top:1rem" (click)="router.navigate(['/my-hubs'])">Back to My
-      Hubs</button>
+    <p style="font-weight:700;font-size:1.25rem;margin-bottom:0.5rem">Could not load batch</p>
+    <p style="color:var(--text-secondary);margin-bottom:1.5rem">{{ error() }}</p>
+    <button class="btn btn-outline" (click)="router.navigate(['/discover'])">Back to discover</button>
   </div>
   }
 
   @if (batch(); as b) {
   <!-- Completed banner -->
   @if (b.status === 'Completed') {
-  <div class="completed-banner" role="alert">
+  <div class="completed-banner" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:16px; padding:1.25rem 1.5rem; margin-bottom:2rem;" role="alert">
     <div style="display:flex;align-items:center;gap:0.75rem">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round" style="color:#16a34a;flex-shrink:0" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
         <polyline points="22 4 12 14.01 9 11.01" />
       </svg>
@@ -53,120 +42,200 @@
   </div>
   }
 
-  <!-- Main card -->
-  <div class="card" style="overflow:hidden;margin-bottom:2rem">
-    <!-- Header -->
-    <div style="padding:1.75rem 2rem;border-bottom:1px solid var(--border)">
-      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem">
-        <span class="badge badge-muted">{{ b.categoryName }}</span>
-        <span class="badge badge-brand">-{{ b.discountPercentage }}%</span>
-      </div>
-      <h1 style="font-size:1.75rem;font-weight:800;margin-bottom:0.375rem">{{ b.offerTitle }}</h1>
-      <p style="color:var(--text-secondary)">Supplier: <span style="font-weight:600;color:var(--text-primary)">{{
-          b.supplierName }}</span></p>
+  <!-- Back button -->
+  <button class="back-link" (click)="router.navigate(['/discover'])" aria-label="Back to discover">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+    Back to discover
+  </button>
 
-      <!-- Pricing + expiry row -->
-      <div
-        style="display:flex;flex-col sm:flex-row;gap:1.5rem;align-items:flex-end;justify-content:space-between;margin-top:1.5rem;background:#F9FAFB;border:1px solid var(--border);border-radius:16px;padding:1.25rem 1.5rem">
-        <div>
-          <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:0.25rem">Wholesale Price</div>
-          <div style="display:flex;align-items:baseline;gap:0.75rem">
-            <span style="font-size:2rem;font-weight:800">EGP {{ b.discountedPrice }}</span>
-            <span style="color:var(--text-secondary);text-decoration:line-through;font-size:1.0625rem">EGP {{
-              b.unitPrice }}</span>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.875rem;font-weight:500"
-          [style.color]="isExpiringSoon() ? 'var(--danger)' : 'var(--text-primary)'">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
+  <!-- Redesigned Two-Column Layout -->
+  <div class="hub-layout">
+    
+    <!-- Left Column (Product Image & Participants) -->
+    <div>
+      <div class="image-container">
+        @if (offer() && offer()!.images && offer()!.images.length > 0) {
+          <img [src]="offer()!.images[0]" alt="Product image">
+        } @else {
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.2" aria-hidden="true">
+            <rect x="2" y="2" width="20" height="20" rx="2.5" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
           </svg>
-          Expires {{ expiresFormatted() }}
-        </div>
-      </div>
-    </div>
-
-    <!-- Progress + participants -->
-    <div style="padding:1.75rem 2rem;background:#fff">
-      <h3 style="font-size:1.125rem;font-weight:700;margin-bottom:1rem">Hub Progress</h3>
-      <div style="display:flex;justify-content:space-between;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem">
-        <span style="color:var(--brand)">{{ b.currentQuantity }} of {{ b.targetQuantity }} units committed</span>
-        <span style="color:var(--text-secondary)">{{ progress() }}%</span>
-      </div>
-      <div class="progress-track" style="height:12px;margin-bottom:2rem">
-        <div class="progress-fill" [style.width.%]="progress()"></div>
-      </div>
-
-      <!-- Participants header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-        <h3 style="font-size:1.125rem;font-weight:700;display:flex;align-items:center;gap:0.5rem">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary)" aria-hidden="true">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-          Participants ({{ b.participants.length }})
-        </h3>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:2rem">
-        @for (p of b.participants; track p.buyerId) {
-        <div class="participant-row" [class.is-me]="isCurrentUser(p.buyerId)"
-          [attr.aria-label]="p.buyerName + (isCurrentUser(p.buyerId) ? ' (You)' : '')">
-          <span style="font-weight:500;display:flex;align-items:center;gap:0.5rem">
-            {{ p.buyerName }}
-            @if (isCurrentUser(p.buyerId)) {
-            <span
-              style="font-size:0.7rem;background:var(--brand);color:#fff;padding:0.125rem 0.5rem;border-radius:8px">You</span>
-            }
-          </span>
-          <span style="color:var(--text-secondary);display:flex;align-items:center;gap:0.375rem;font-size:0.875rem">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path
-                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-            </svg>
-            {{ p.quantity }}
-          </span>
-        </div>
         }
       </div>
 
-      <!-- Action buttons -->
-      <div
-        style="padding-top:1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.75rem">
-        @if (isParticipant()) {
-        <button class="btn btn-outline" (click)="openUpdateQtyModal()" aria-label="Update committed quantity">
-          Update Quantity
-        </button>
-        <button class="btn btn-outline" style="color:var(--danger);border-color:rgba(239,68,68,0.3)" (click)="leave()"
-          [disabled]="leaving()" aria-label="Leave this hub">
-          {{ leaving() ? 'Leaving…' : 'Leave Hub' }}
-        </button>
-        } @else {
-        <button class="btn btn-primary" (click)="joinModalOpen.set(true)" [disabled]="b.remainingSlots <= 0">
-          {{ b.remainingSlots <= 0 ? 'Hub full' : 'Join hub' }} </button>
-            }
+      <div class="hub-card">
+        <h3 class="hub-card-title">Who's in this hub ({{ b.participants.length }})</h3>
+        <div class="member-list">
+          @for (p of sortedParticipants(); track p.buyerId) {
+            <div class="member-row">
+              <div class="member-info">
+                <div class="member-avatar" [class.is-me]="isCurrentUser(p.buyerId)">
+                  {{ getParticipantInitials(p) }}
+                </div>
+                <span class="member-name">{{ getParticipantName(p) }}</span>
+              </div>
+              <span class="member-units">{{ p.quantity }} units</span>
+            </div>
+          } @empty {
+            <p style="color:var(--text-secondary);font-size:0.875rem;text-align:center;padding:1rem 0">No participants yet</p>
+          }
+        </div>
       </div>
     </div>
+
+    <!-- Right Column (Details, Progress, Actions & History) -->
+    <div>
+      <div class="category-label">{{ b.categoryName }}</div>
+      <h1 class="product-title">{{ b.offerTitle }}</h1>
+      <p class="product-description">{{ offer()?.description || 'Premium wholesale group deal. Commit now to unlock bulk pricing.' }}</p>
+
+      <div class="price-block">
+        <span class="price-discounted">EGP {{ b.discountedPrice }}</span>
+        <span class="price-original">EGP {{ b.unitPrice }}</span>
+        <span class="discount-tag">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transform: rotate(45deg); flex-shrink: 0;">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+          {{ b.discountPercentage }}% off
+        </span>
+      </div>
+
+      <!-- Batch Details & Progress Card -->
+      <div class="hub-card">
+        <div class="batch-header">
+          <div class="batch-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 2 7 12 12 22 7 12 2" />
+              <polyline points="2 17 12 22 22 17" />
+              <polyline points="2 12 12 17 22 12" />
+            </svg>
+            Batch {{ b.batchNumber }}
+          </div>
+          <div class="batch-time" [style.color]="isExpiringSoon() ? 'var(--danger)' : 'var(--text-secondary)'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            {{ timeRemainingFormatted() }}
+          </div>
+        </div>
+
+        <div class="progress-text-row">
+          <span class="progress-units">{{ b.currentQuantity }} / {{ b.targetQuantity }} units</span>
+          <span class="progress-pct">{{ progress() }}%</span>
+        </div>
+
+        <div class="custom-progress-track">
+          <div class="custom-progress-fill" [style.width.%]="progress()"></div>
+        </div>
+
+        <div class="batch-stats-row">
+          <div class="stat-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+            </svg>
+            {{ b.participants.length }} buyers committed
+          </div>
+          <div class="stat-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+              <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+            </svg>
+            Min 1 per buyer
+          </div>
+        </div>
+      </div>
+
+      <!-- Action reservation Card or Success alert box -->
+      @if (isParticipant()) {
+        <!-- Redesigned State 2: Spot Reserved success alert box -->
+        <div class="success-alert-card">
+          <div class="success-alert-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #0d9488">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            You've reserved your spot
+          </div>
+          <div class="success-alert-text">
+            You'll be charged EGP {{ b.discountedPrice }} per unit once this batch fills. We'll notify you the moment it locks in.
+          </div>
+          <button class="btn-leave-hub" (click)="leave()" [disabled]="leaving()">
+            {{ leaving() ? 'Leaving hub...' : 'Leave hub' }}
+          </button>
+          <a class="change-qty-link" (click)="openUpdateQtyModal()" role="button" tabindex="0">Change quantity</a>
+        </div>
+      } @else {
+        <!-- Redesigned State 1: Quantity and Subtotal Card -->
+        <div class="reserve-card">
+          <div class="reserve-grid">
+            <div class="quantity-selector">
+              <label for="join-qty">Quantity</label>
+              <input id="join-qty" type="number" min="1" [max]="b.remainingSlots" class="qty-input"
+                [value]="joinQty()" (input)="onJoinQtyChange($event)">
+            </div>
+            <div class="subtotal-block">
+              <div class="subtotal-label">Subtotal</div>
+              <div class="subtotal-value">EGP {{ subtotal() | number:'1.1-2' }}</div>
+              <div class="savings-value">You save EGP {{ savings() | number:'1.1-2' }}</div>
+            </div>
+          </div>
+          <button class="btn-reserve" (click)="joinModalOpen.set(true)" [disabled]="b.remainingSlots <= 0 || joining()">
+            {{ b.remainingSlots <= 0 ? 'Hub full' : 'Join hub & reserve' }}
+          </button>
+        </div>
+      }
+
+      <!-- Batch History Card -->
+      <div class="hub-card">
+        <h3 class="hub-card-title">Batch history</h3>
+        @if (offer() && offer()!.batches && offer()!.batches!.length > 0) {
+          @for (bh of offer()!.batches; track bh.id) {
+            <div class="history-card-item">
+              <div>
+                <div class="batch-num">Batch {{ bh.batchNumber }}</div>
+                <div class="batch-units">{{ bh.currentQuantity }} / {{ bh.targetQuantity }} units</div>
+              </div>
+              <span class="history-badge"
+                    [class.completed]="bh.status === 'Completed'"
+                    [class.failed]="bh.status === 'Failed'">
+                {{ bh.status }}
+              </span>
+            </div>
+          }
+        } @else {
+          <div class="history-card-item">
+            <div>
+              <div class="batch-num">Batch {{ b.batchNumber }}</div>
+              <div class="batch-units">{{ b.currentQuantity }} / {{ b.targetQuantity }} units</div>
+            </div>
+            <span class="history-badge">Open</span>
+          </div>
+        }
+      </div>
+
+    </div>
+
   </div>
 
   <!-- Join dialog -->
   @if (joinModalOpen()) {
   <div class="dialog-backdrop" (click)="closeJoinModal()" role="dialog" aria-modal="true" aria-labelledby="join-title">
-    <div class="dialog" (click)="$event.stopPropagation()" style="max-width:420px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
-        <h2 id="join-title" style="font-size:1.125rem;font-weight:700">Join hub — {{ b.offerTitle }}</h2>
+    <div class="dialog dialog-premium" (click)="$event.stopPropagation()" style="max-width:420px">
+      <div class="dialog-premium-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+        <h2 id="join-title" style="font-size:1.125rem;font-weight:700;margin:0">Join hub — {{ b.offerTitle }}</h2>
         <button (click)="closeJoinModal()"
-          style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.125rem"
+          style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.125rem;line-height:1"
           aria-label="Close dialog">✕</button>
       </div>
 
-      <div style="background:var(--bg-page);border-radius:8px;padding:1rem;margin-bottom:1.5rem;font-size:0.875rem">
+      <div class="dialog-premium-box" style="padding:1rem;margin-bottom:1.5rem;font-size:0.875rem;margin-top:1.25rem">
         <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem">
           <span style="color:var(--text-secondary)">Price per unit</span>
           <span style="font-weight:700;color:var(--brand)">EGP {{ b.discountedPrice }}</span>
@@ -178,15 +247,15 @@
       </div>
 
       <div class="form-group" style="margin-bottom:0.75rem">
-        <label class="form-label" for="join-qty">How many units do you want?</label>
-        <input id="join-qty" type="number" min="1" [max]="b.remainingSlots" class="form-input" [value]="joinQty()"
+        <label class="form-label" for="dialog-join-qty">How many units do you want?</label>
+        <input id="dialog-join-qty" type="number" min="1" [max]="b.remainingSlots" class="form-input" [value]="joinQty()"
           (input)="onJoinQtyChange($event)" [disabled]="clientSecret() !== null">
       </div>
 
-      <div style="background:var(--bg-page);border-radius:8px;padding:1rem;margin-bottom:1.5rem;font-size:0.875rem">
+      <div class="dialog-premium-box" style="padding:1rem;margin-bottom:1.5rem;font-size:0.875rem">
         <div style="display:flex;justify-content:space-between">
           <span style="color:var(--text-secondary)">Total hold amount</span>
-          <span style="font-weight:700;font-size:1rem">EGP {{ (joinQty() * b.discountedPrice).toFixed(2) }}</span>
+          <span style="font-weight:700;font-size:1rem;color:var(--brand)">EGP {{ (joinQty() * b.discountedPrice) | number:'1.1-2' }}</span>
         </div>
         <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem">
           💳 A payment hold will be placed on your card. It will only be charged when the batch reaches its target.
@@ -196,8 +265,7 @@
       <!-- Stripe Card Input -->
       <div class="form-group" style="margin-bottom:1.5rem;" [style.display]="clientSecret() ? 'block' : 'none'">
         <label class="form-label" for="card-element">Credit or Debit Card</label>
-        <div id="card-element"
-          style="padding:0.75rem;border:1px solid var(--border);border-radius:8px;background:white">
+        <div id="card-element" class="stripe-container">
           <!-- Stripe Element placeholder -->
         </div>
         <div id="card-errors" role="alert" style="color:var(--danger);font-size:0.75rem;margin-top:0.5rem"></div>
@@ -221,15 +289,15 @@
   <!-- Update Quantity dialog -->
   @if (updateQtyModalOpen()) {
   <div class="dialog-backdrop" (click)="updateQtyModalOpen.set(false)" role="dialog" aria-modal="true" aria-labelledby="update-qty-title">
-    <div class="dialog" (click)="$event.stopPropagation()" style="max-width:420px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
-        <h2 id="update-qty-title" style="font-size:1.125rem;font-weight:700">Update quantity — {{ b.offerTitle }}</h2>
+    <div class="dialog dialog-premium" (click)="$event.stopPropagation()" style="max-width:420px">
+      <div class="dialog-premium-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+        <h2 id="update-qty-title" style="font-size:1.125rem;font-weight:700;margin:0">Update quantity — {{ b.offerTitle }}</h2>
         <button (click)="updateQtyModalOpen.set(false)"
-          style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.125rem"
+          style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.125rem;line-height:1"
           aria-label="Close dialog">✕</button>
       </div>
 
-      <div style="background:var(--bg-page);border-radius:8px;padding:1rem;margin-bottom:1.5rem;font-size:0.875rem">
+      <div class="dialog-premium-box" style="padding:1rem;margin-bottom:1.5rem;font-size:0.875rem;margin-top:1.25rem">
         <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem">
           <span style="color:var(--text-secondary)">Price per unit</span>
           <span style="font-weight:700;color:var(--brand)">EGP {{ b.discountedPrice }}</span>
@@ -242,10 +310,10 @@
           (input)="onUpdateQtyChange($event)" [disabled]="updatingQty()">
       </div>
 
-      <div style="background:var(--bg-page);border-radius:8px;padding:1rem;margin-bottom:1.5rem;font-size:0.875rem">
+      <div class="dialog-premium-box" style="padding:1rem;margin-bottom:1.5rem;font-size:0.875rem">
         <div style="display:flex;justify-content:space-between">
           <span style="color:var(--text-secondary)">New total hold amount</span>
-          <span style="font-weight:700;font-size:1rem">EGP {{ (updateQty() * b.discountedPrice).toFixed(2) }}</span>
+          <span style="font-weight:700;font-size:1rem;color:var(--brand)">EGP {{ (updateQty() * b.discountedPrice) | number:'1.1-2' }}</span>
         </div>
         <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem">
           💳 The previous hold will be released and a new hold for the updated amount will be placed.

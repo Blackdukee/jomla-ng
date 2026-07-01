@@ -26,11 +26,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
         <div class="footer-brand">
           <div class="logo-container">
             <div class="footer-logo-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                <polyline points="2 17 12 22 22 17"/>
-                <polyline points="2 12 12 17 22 12"/>
-              </svg>
+              <img src="icons/jomla-icon-grouping.svg" alt="Jomla Logo" />
             </div>
             <span class="logo-text">Jomla</span>
           </div>
@@ -147,13 +143,15 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       margin-bottom: 0.375rem;
     }
     .footer-logo-icon {
-      background: var(--brand);
-      color: #fff;
-      padding: 0.35rem;
-      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+    .footer-logo-icon img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      border-radius: 6px;
     }
     .logo-text {
       font-weight: 800;

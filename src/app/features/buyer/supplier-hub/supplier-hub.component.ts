@@ -1,15 +1,18 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DecimalPipe } from '@angular/common';
 import { BatchesService } from '../../../core/services/batches.service';
+import { OffersService } from '../../../core/services/offers.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { AuthService } from '../../../core/auth.service';
 import { ToastService } from '../../../core/toast.service';
-import { BatchDetailDto, BatchUpdatedDto } from '../../../core/models';
+import { BatchDetailDto, BatchUpdatedDto, OfferDto } from '../../../core/models';
 import { differenceInHours, format } from 'date-fns';
 
 @Component({
   selector: 'app-supplier-hub',
   standalone: true,
+  imports: [DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './supplier-hub.component.html',
   styleUrl: './supplier-hub.component.css'
@@ -18,11 +21,13 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
   protected router = inject(Router);
   private route = inject(ActivatedRoute);
   private batchesService = inject(BatchesService);
+  private offersService = inject(OffersService);
   private signalRService = inject(SignalRService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
 
   protected batch = signal<BatchDetailDto | null>(null);
+  protected offer = signal<OfferDto | null>(null);
   protected loading = signal(true);
   protected error = signal<string | null>(null);
   protected leaving = signal(false);
@@ -76,6 +81,16 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
         this.loading.set(false);
         // Join SignalR group for this offer
         this.signalRService.joinOfferGroup(batch.offerId);
+
+        // Fetch offer details to get image and description
+        this.offersService.getOfferById(batch.offerId).subscribe({
+          next: (offer) => {
+            this.offer.set(offer);
+          },
+          error: (err) => {
+            console.error('Failed to load offer details:', err);
+          }
+        });
       },
       error: (err) => {
         this.error.set(err?.error?.detail || err?.error?.title || 'Failed to load batch');
@@ -105,6 +120,63 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
 
   protected isCurrentUser(buyerId: string): boolean {
     return this.authService.user()?.id === buyerId;
+  }
+
+  protected sortedParticipants = computed(() => {
+    const b = this.batch();
+    if (!b) return [];
+    const currentUserId = this.authService.user()?.id;
+    const list = [...b.participants];
+    return list.sort((a, b) => {
+      if (a.buyerId === currentUserId) return -1;
+      if (b.buyerId === currentUserId) return 1;
+      return new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime();
+    });
+  });
+
+  protected subtotal = computed(() => {
+    const b = this.batch();
+    if (!b) return 0;
+    return this.joinQty() * b.discountedPrice;
+  });
+
+  protected savings = computed(() => {
+    const b = this.batch();
+    if (!b) return 0;
+    return this.joinQty() * (b.unitPrice - b.discountedPrice);
+  });
+
+  protected getInitials(name: string): string {
+    if (!name) return '';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  protected getParticipantName(p: any): string {
+    if (this.isCurrentUser(p.buyerId)) {
+      return 'You (you)';
+    }
+    return p.buyerName;
+  }
+
+  protected getParticipantInitials(p: any): string {
+    if (this.isCurrentUser(p.buyerId)) {
+      return 'Y';
+    }
+    return this.getInitials(p.buyerName);
+  }
+
+  protected timeRemainingFormatted(): string {
+    const b = this.batch();
+    if (!b?.expiresAt) return 'No expiry set';
+    if (b.status === 'Completed') return 'Completed';
+    if (b.status === 'Failed') return 'Expired';
+    const now = new Date();
+    const expiry = new Date(b.expiresAt);
+    const diffMinutes = Math.floor((expiry.getTime() - now.getTime()) / 60000);
+    if (diffMinutes <= 0) return 'Expired';
+    const hours = Math.floor(diffMinutes / 60);
+    const mins = diffMinutes % 60;
+    return `${hours}h ${mins}m`;
   }
 
   protected isParticipant(): boolean {

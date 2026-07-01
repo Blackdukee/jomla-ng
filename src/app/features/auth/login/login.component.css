@@ -109,14 +109,20 @@
   margin-bottom: 2rem;
 }
 .logo-icon-lg {
-  background: var(--brand);
-  color: #fff;
-  padding: 0.875rem;
-  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1.25rem;
+}
+.logo-icon-lg img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+.logo-icon-lg img:hover {
+  transform: scale(1.05);
 }
 .auth-heading { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; }
 .auth-sub { font-size: 0.9375rem; color: var(--text-secondary); }

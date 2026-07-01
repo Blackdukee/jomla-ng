@@ -18,12 +18,7 @@ import { formatDistanceToNow } from 'date-fns';
         <!-- Logo -->
         <a [routerLink]="logoLink()" class="navbar-logo" aria-label="Jomla home">
           <div class="logo-icon" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-              <polyline points="2 17 12 22 22 17"/>
-              <polyline points="2 12 17 22 12"/>
-              <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
-            </svg>
+            <img src="icons/jomla-icon-grouping.svg" alt="Jomla Logo" />
           </div>
           <span class="logo-text">Jomla</span>
         </a>
@@ -179,21 +174,20 @@ import { formatDistanceToNow } from 'date-fns';
       flex-shrink: 0;
     }
     .logo-icon {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #ffffff;
-      border-radius: 50%;
-      padding: 0.35rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s ease;
     }
-    .navbar-logo:hover .logo-icon {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--brand);
-      color: var(--brand);
-      box-shadow: 0 0 15px var(--brand);
+    .logo-icon img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      border-radius: 6px;
+      transition: transform 0.3s ease, filter 0.3s ease;
+    }
+    .navbar-logo:hover .logo-icon img {
+      transform: scale(1.08) rotate(5deg);
+      filter: drop-shadow(0 0 8px rgba(13, 148, 136, 0.6));
     }
     .logo-text {
       font-weight: 800;
