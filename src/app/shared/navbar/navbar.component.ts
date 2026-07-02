@@ -95,9 +95,13 @@ import { formatDistanceToNow } from 'date-fns';
 
             <!-- Avatar dropdown -->
             <div style="position:relative">
-              <button class="avatar" (click)="avatarOpen.set(!avatarOpen())" [attr.aria-label]="'User menu for ' + userDisplayName()">
-                {{ initials() }}
-              </button>
+            <button class="avatar" (click)="avatarOpen.set(!avatarOpen())" [attr.aria-label]="'User menu for ' + userDisplayName()">
+            @if (auth.user()?.imageUrl) {
+              <img [src]="auth.user()!.imageUrl" alt="Profile" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
+            } @else {
+              {{ initials() }}
+            }
+            </button>
               @if (avatarOpen()) {
                 <div class="dropdown avatar-menu" role="menu">
                   <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--border)">
@@ -289,6 +293,7 @@ import { formatDistanceToNow } from 'date-fns';
     }
     .dropdown-item:hover { background: #f9fafb; }
     .dropdown-item.danger { color: var(--danger); }
+    
     .btn-ghost {
       color: #cbd5e1;
     }

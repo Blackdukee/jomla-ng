@@ -9,9 +9,22 @@
       <!-- Top Horizontal Header -->
       <div class="profile-header-banner">
         <div class="user-profile-meta">
-          <div class="avatar-circle">
-            {{ initials() }}
+          <!-- ⬇️ Avatar: clickable now, shows uploaded photo if present -->
+          <div class="avatar-circle" style="position:relative;cursor:pointer;overflow:hidden" (click)="fileInput.click()" title="Click to change photo">
+            @if (auth.user()?.imageUrl) {
+              <img [src]="auth.user()!.imageUrl" alt="Profile" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
+            } @else {
+              {{ initials() }}
+            }
+            @if (imageUploading()) {
+              <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:0.65rem;text-align:center;padding:0.25rem">
+                Uploading...
+              </div>
+            }
           </div>
+          <input #fileInput type="file" accept="image/png,image/jpeg,image/webp" style="display:none" (change)="onImageSelected($event)">
+          <!-- ⬆️ End avatar block -->
+
           <div>
             <h2 style="font-size:1.5rem;font-weight:700;margin:0">{{ auth.displayName }}</h2>
             <span class="badge badge-brand" style="margin-top:0.25rem;text-transform:capitalize">
@@ -233,20 +246,35 @@
         <div class="card" style="padding:1.5rem;height:fit-content">
           <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;margin-top:0">Account Settings</h3>
           <form [formGroup]="form" (ngSubmit)="save()" novalidate class="form-container">
-            <div class="form-group">
-              <label class="form-label" for="v1_full_name">Full Name</label>
-              <input
-                id="v1_full_name"
-                type="text"
-                class="form-input"
-                [class.error]="submitted() && form.controls['full_name'].invalid"
-                formControlName="full_name"
-                placeholder="Ahmed Mohamed"
-              >
-              @if (submitted() && form.controls['full_name'].invalid) {
-                <span class="form-error">Full name is required.</span>
-              }
-            </div>
+           <div class="form-group">
+            <label class="form-label" for="v1_first_name">First Name</label>
+            <input
+              id="v1_first_name"
+              type="text"
+              class="form-input"
+              [class.error]="submitted() && form.controls['first_name'].invalid"
+              formControlName="first_name"
+              placeholder="Ahmed"
+            >
+            @if (submitted() && form.controls['first_name'].invalid) {
+              <span class="form-error">First name is required.</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="v1_last_name">Last Name</label>
+            <input
+              id="v1_last_name"
+              type="text"
+              class="form-input"
+              [class.error]="submitted() && form.controls['last_name'].invalid"
+              formControlName="last_name"
+              placeholder="Mohamed"
+            >
+            @if (submitted() && form.controls['last_name'].invalid) {
+              <span class="form-error">Last name is required.</span>
+            }
+          </div>
 
             <div class="form-group">
               <label class="form-label" for="v1_email">Email Address</label>

@@ -58,33 +58,34 @@ export class AuthService {
     }
   }
 
-  private handleAuthSuccess(res: AuthResponse) {
-    // Determine role from JWT claims
-    let role: 'Buyer' | 'Supplier' = 'Buyer';
-    const decoded = this.decodeToken(res.token);
-    if (decoded) {
-      const claim = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded["role"];
-      const roleStr = Array.isArray(claim) ? claim[0] : claim;
-      if (roleStr?.toLowerCase() === 'supplier') {
-        role = 'Supplier';
-      }
+private handleAuthSuccess(res: AuthResponse) {
+  // Determine role from JWT claims
+  let role: 'Buyer' | 'Supplier' = 'Buyer';
+  const decoded = this.decodeToken(res.token);
+  if (decoded) {
+    const claim = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded["role"];
+    const roleStr = Array.isArray(claim) ? claim[0] : claim;
+    if (roleStr?.toLowerCase() === 'supplier') {
+      role = 'Supplier';
     }
-
-    const u: User = {
-      id: res.userId,
-      firstName: res.firstName,
-      lastName: res.lastName,
-      email: res.email,
-      role: role
-    };
-
-    this._user.set(u);
-    localStorage.setItem('jomla_user', JSON.stringify(u));
-    localStorage.setItem('jomla_token', res.token);
-
-    // Connect SignalR with fresh token
-    this.signalR.connect();
   }
+
+  const u: User = {
+    id: res.userId,
+    firstName: res.firstName,
+    lastName: res.lastName,
+    email: res.email,
+    role: role,
+    imageUrl: res.imageUrl   // ⬅️ جديد
+  };
+
+  this._user.set(u);
+  localStorage.setItem('jomla_user', JSON.stringify(u));
+  localStorage.setItem('jomla_token', res.token);
+
+  // Connect SignalR with fresh token
+  this.signalR.connect();
+}
 
   private clearAuthState() {
     this._user.set(null);
