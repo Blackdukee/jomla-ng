@@ -13,6 +13,8 @@ export class AuthService {
   private readonly baseUrl = `${environment.apiUrl}/auth`;
 
   private _user = signal<User | null>(null);
+  /** Handle for the proactive refresh timer so we can cancel it on logout. */
+  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._user() !== null);
@@ -85,6 +87,9 @@ private handleAuthSuccess(res: AuthResponse) {
 
   // Connect SignalR with fresh token
   this.signalR.connect();
+
+  // Schedule a silent refresh before the token expires
+  this.scheduleTokenRefresh(res.token);
 }
 
   private clearAuthState() {
@@ -92,6 +97,11 @@ private handleAuthSuccess(res: AuthResponse) {
     localStorage.removeItem('jomla_user');
     localStorage.removeItem('jomla_token');
     this.signalR.disconnect();
+    // Cancel any pending proactive refresh so it doesn't fire after logout
+    if (this.refreshTimer !== null) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
   }
 
   clearAuth() {
@@ -160,6 +170,40 @@ private handleAuthSuccess(res: AuthResponse) {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Schedules a silent token refresh 2 minutes before the JWT expires.
+   * Each call cancels the previous timer, so only one is ever pending.
+   */
+  private scheduleTokenRefresh(token: string): void {
+    const decoded = this.decodeToken(token);
+    if (!decoded?.exp) return;
+
+    const expiresAtMs = decoded.exp * 1000;
+    const refreshAtMs = expiresAtMs - 2 * 60 * 1000; // 2 min before expiry
+    const delayMs     = refreshAtMs - Date.now();
+
+    // Cancel any existing timer before scheduling a new one
+    if (this.refreshTimer !== null) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+
+    if (delayMs <= 0) {
+      // Token is already expired or within the 2-min buffer — refresh now
+      this.refreshAccessToken().subscribe({
+        error: () => this.clearAuthState()
+      });
+      return;
+    }
+
+    this.refreshTimer = setTimeout(() => {
+      this.refreshTimer = null;
+      this.refreshAccessToken().subscribe({
+        error: () => this.clearAuthState()
+      });
+    }, delayMs);
   }
 
   isTokenExpired(token: string): boolean {

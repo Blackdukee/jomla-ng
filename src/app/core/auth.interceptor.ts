@@ -61,6 +61,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             }),
             catchError((refreshError) => {
               isRefreshing = false;
+              // Emit null to unblock any requests queued in the filter() pipe;
+              // without this they hang forever waiting for a non-null token.
+              refreshTokenSubject.next(null);
               authService.clearAuth();
               router.navigate(['/login']);
               return throwError(() => refreshError);
