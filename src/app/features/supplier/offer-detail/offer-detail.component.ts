@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, HostListener } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { OffersService } from '../../../core/services/offers.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { OfferDto } from '../../../core/models';
 import { format } from 'date-fns';
 import { ToastService } from '../../../core/toast.service';
@@ -13,11 +14,12 @@ import { ToastService } from '../../../core/toast.service';
   templateUrl: './offer-detail.component.html',
   styleUrl: './offer-detail.component.css'
 })
-export class OfferDetailComponent implements OnInit {
+export class OfferDetailComponent implements OnInit, OnDestroy {
   protected router = inject(Router);
   private route = inject(ActivatedRoute);
   private offersService = inject(OffersService);
   private toast = inject(ToastService);
+  private signalRService = inject(SignalRService);
 
   protected offer = signal<OfferDto | null>(null);
   protected offerStatus = signal<'PendingReview' | 'Active' | 'Inactive' | 'Expired' | null>(null);
@@ -25,6 +27,9 @@ export class OfferDetailComponent implements OnInit {
   protected showValidationWarning = signal(false);
   protected totalAvailable = signal<number | null>(null);
   protected targetQuantity = signal<number | null>(null);
+  private unsubOfferStatusChange: (() => void) | null = null;
+  private unsubBatchUpdate: (() => void) | null = null;
+  private offerId = '';
 
   protected isLightboxOpen = signal(false);
   protected activeImageIndex = signal(0);
@@ -77,24 +82,20 @@ export class OfferDetailComponent implements OnInit {
   ngOnInit(): void {
     const offerIdStr = this.route.snapshot.paramMap.get('offerId');
     if (offerIdStr) {
-      this.offersService.getOfferById(offerIdStr).subscribe({
-        next: (off) => {
-          this.offer.set(off);
-        },
-        error: () => {
-          this.router.navigate(['/supplier/offers']);
+      this.offerId = offerIdStr;
+      this.loadOfferDetails();
+
+      this.signalRService.joinOfferGroup(this.offerId);
+
+      this.unsubBatchUpdate = this.signalRService.onBatchUpdate((update) => {
+        if (update.offerId === this.offerId) {
+          this.loadOfferDetails();
         }
       });
 
-      this.offersService.getMyOffers().subscribe({
-        next: (myOffers) => {
-          const items = myOffers.items || [];
-          const matched = items.find(o => o.id.toLowerCase() === offerIdStr.toLowerCase());
-          if (matched) {
-            this.totalAvailable.set(matched.totalQuantityAvailable);
-            this.targetQuantity.set(matched.batchTargetQuantity);
-            this.offerStatus.set(matched.status);
-          }
+      this.unsubOfferStatusChange = this.signalRService.onOfferStatusChange((updatedOffer) => {
+        if (updatedOffer.id === this.offerId) {
+          this.loadOfferDetails();
         }
       });
     }
@@ -107,6 +108,39 @@ export class OfferDetailComponent implements OnInit {
         }, 5000);
       }
     });
+  }
+
+  private loadOfferDetails(): void {
+    if (!this.offerId) return;
+
+    this.offersService.getOfferById(this.offerId).subscribe({
+      next: (off) => {
+        this.offer.set(off);
+      },
+      error: () => {
+        this.router.navigate(['/supplier/offers']);
+      }
+    });
+
+    this.offersService.getMyOffers().subscribe({
+      next: (myOffers) => {
+        const items = myOffers.items || [];
+        const matched = items.find(o => o.id.toLowerCase() === this.offerId.toLowerCase());
+        if (matched) {
+          this.totalAvailable.set(matched.totalQuantityAvailable);
+          this.targetQuantity.set(matched.batchTargetQuantity);
+          this.offerStatus.set(matched.status);
+        }
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.offerId) {
+      this.signalRService.leaveOfferGroup(this.offerId);
+    }
+    this.unsubOfferStatusChange?.();
+    this.unsubBatchUpdate?.();
   }
 
   private triggerWarning() {

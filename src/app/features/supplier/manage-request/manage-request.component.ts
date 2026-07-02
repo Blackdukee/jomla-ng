@@ -1,8 +1,9 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
 import { AuthService } from '../../../core/auth.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { GroupRequestDetailDto } from '../../../core/models';
 import { ToastService } from '../../../core/toast.service';
 import { format } from 'date-fns';
@@ -15,16 +16,19 @@ import { format } from 'date-fns';
   templateUrl: './manage-request.component.html',
   styleUrl: './manage-request.component.css'
 })
-export class ManageRequestComponent implements OnInit {
+export class ManageRequestComponent implements OnInit, OnDestroy {
   protected router = inject(Router);
   private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
   private groupRequestsService = inject(GroupRequestsService);
   protected authService = inject(AuthService);
+  private signalRService = inject(SignalRService);
 
   protected request = signal<GroupRequestDetailDto | null>(null);
   protected myOffer = signal<any | null>(null);
   protected loading = signal(false);
+  private requestId = '';
+  private unsubRequestUpdate: (() => void) | null = null;
 
   // Form signals
   protected unitPrice = signal<number | null>(null);
@@ -43,8 +47,8 @@ export class ManageRequestComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const requestId = this.route.snapshot.paramMap.get('requestId');
-    if (!requestId) {
+    this.requestId = this.route.snapshot.paramMap.get('requestId') ?? '';
+    if (!this.requestId) {
       this.toast.error('Error', 'No request ID provided.');
       this.router.navigate(['/supplier/requests']);
       return;
@@ -55,7 +59,26 @@ export class ManageRequestComponent implements OnInit {
     defaultDate.setDate(defaultDate.getDate() + 7);
     this.expiresAt.set(defaultDate.toISOString().substring(0, 10));
 
-    this.loadRequest(requestId);
+    this.loadRequest(this.requestId);
+
+    this.signalRService.joinGroupRequestGroup(this.requestId);
+    this.unsubRequestUpdate = this.signalRService.onGroupRequestUpdate((update) => {
+      if (update.id === this.requestId) {
+        this.request.set(update);
+        const currentUser = this.authService.user();
+        if (currentUser && update.offers) {
+          const found = update.offers.find(o => o.supplierId === currentUser.id);
+          this.myOffer.set(found || null);
+        }
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.requestId) {
+      this.signalRService.leaveGroupRequestGroup(this.requestId);
+    }
+    this.unsubRequestUpdate?.();
   }
 
   private loadRequest(requestId: string) {

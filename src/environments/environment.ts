@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://localhost:7081/api',
-  hubUrl: 'https://localhost:7081/hubs/jomla'
+  apiUrl: 'http://localhost:5174/api',
+  hubUrl: 'http://localhost:5174/hubs/jomla'
 };

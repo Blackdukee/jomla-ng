@@ -108,6 +108,55 @@
       </div>
     </div>
   }
+
+  @if (showAcceptModal() && selectedOffer(); as offer) {
+    <div class="dialog-backdrop" (click)="closeAcceptModal()" role="dialog" aria-modal="true" aria-labelledby="accept-modal-title">
+      <div class="dialog" (click)="$event.stopPropagation()" style="max-width:400px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+          <h2 id="accept-modal-title" style="font-size:1.25rem;font-weight:700;color:var(--text-primary)">Accept Supplier Offer</h2>
+          <button (click)="closeAcceptModal()"
+            style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:1.25rem"
+            aria-label="Close dialog">✕</button>
+        </div>
+
+        <div style="margin-bottom:1.5rem">
+          <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:1rem">
+            Supplier: <strong>{{ offer.supplierName }}</strong><br>
+            Price: <strong>EGP {{ offer.currentUnitPrice }} per unit</strong>
+          </p>
+
+          @if (!clientSecret()) {
+            <div class="form-group">
+              <label class="form-label" for="accept-qty">Quantity to Accept</label>
+              <input id="accept-qty" type="number" class="form-input" min="1" 
+                [max]="offer.quantityAvailable - offer.acceptedQuantity"
+                [value]="acceptQuantity()" (input)="onAcceptQtyChange($event)" placeholder="e.g. 5">
+            </div>
+
+            <div style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:0.75rem">
+              <button class="btn btn-outline" (click)="closeAcceptModal()">Cancel</button>
+              <button class="btn btn-primary" [disabled]="submittingHold()" (click)="submitAcceptHold()">
+                {{ submittingHold() ? 'Processing...' : 'Proceed to Payment' }}
+              </button>
+            </div>
+          } @else {
+            <div style="margin-top:1rem; margin-bottom:1rem">
+              <p style="font-size:0.875rem; font-weight:600; margin-bottom:0.75rem; color:var(--text-primary)">Enter Card Details to Authorize EGP {{ acceptQuantity() * offer.currentUnitPrice }} Hold</p>
+              <div id="accept-card-element" style="padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: #fff; min-height: 40px;"></div>
+              <div id="accept-card-errors" role="alert" style="color:var(--danger); font-size:0.75rem; margin-top:8px"></div>
+            </div>
+
+            <div style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:0.75rem">
+              <button class="btn btn-outline" (click)="closeAcceptModal()" [disabled]="authorizingPayment()">Cancel</button>
+              <button class="btn btn-primary" [disabled]="authorizingPayment()" (click)="confirmHoldPayment()">
+                {{ authorizingPayment() ? 'Authorizing Hold...' : 'Authorize Hold' }}
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
 } @else {
   <div style="padding:8rem 2rem;text-align:center;color:var(--text-secondary)">
     Loading request details...

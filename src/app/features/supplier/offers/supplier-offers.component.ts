@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OffersService } from '../../../core/services/offers.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { MyOfferDto, MyOffersPagedResponse } from '../../../core/models';
 
 @Component({
@@ -11,12 +12,14 @@ import { MyOfferDto, MyOffersPagedResponse } from '../../../core/models';
   templateUrl: './supplier-offers.component.html',
   styleUrl: './supplier-offers.component.css'
 })
-export class SupplierOffersComponent implements OnInit {
+export class SupplierOffersComponent implements OnInit, OnDestroy {
   private offersService = inject(OffersService);
+  private signalRService = inject(SignalRService);
 
   protected tab = signal<'active' | 'pending' | 'inactive' | 'expired'>('active');
   protected offers = signal<MyOfferDto[]>([]);
   protected offerImages = signal<Record<string, string[]>>({});
+  private unsubOfferStatusChange: (() => void) | null = null;
 
   protected filteredOffers = computed(() => this.offers().filter(o => {
     if (this.tab() === 'active') return o.status === 'Active';
@@ -27,6 +30,14 @@ export class SupplierOffersComponent implements OnInit {
   }));
 
   ngOnInit(): void {
+    this.loadOffers();
+
+    this.unsubOfferStatusChange = this.signalRService.onOfferStatusChange((updatedOffer) => {
+      this.loadOffers();
+    });
+  }
+
+  private loadOffers(): void {
     this.offersService.getMyOffers().subscribe(res => {
       const offs = res.items || [];
       this.offers.set(offs);
@@ -45,6 +56,10 @@ export class SupplierOffersComponent implements OnInit {
         });
       });
     });
+  }
+
+  ngOnDestroy(): void {
+    this.unsubOfferStatusChange?.();
   }
 
   protected progress(o: MyOfferDto) {
