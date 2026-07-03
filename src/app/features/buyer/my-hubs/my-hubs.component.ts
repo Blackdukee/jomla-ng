@@ -38,12 +38,14 @@ export class MyHubsComponent implements OnInit, OnDestroy {
 
   protected tab = signal<'active' | 'fulfilled'>('active');
   protected allHubs = signal<BuyerHubDto[]>([]);
+  protected isLoading = signal(true);
   private unsubUserBatchStatusChange: (() => void) | null = null;
 
   protected searchQuery = signal('');
   protected typeFilter = signal<'all' | 'supplier_offer' | 'group_request'>('all');
   protected page = signal(1);
   protected pageSize = 5;
+  protected totalItems = signal(0); // We don't necessarily need this if pages are computed from filteredHubs length
 
   protected filteredHubs = computed(() => {
     const queryStr = this.searchQuery().toLowerCase().trim();
@@ -105,9 +107,16 @@ export class MyHubsComponent implements OnInit, OnDestroy {
   }
 
   private loadHubs() {
+    this.isLoading.set(true);
     this.batchesService.getMyHubs().subscribe({
-      next: (data) => this.allHubs.set(data),
-      error: (err) => console.error('Failed to load my hubs', err)
+      next: (data) => {
+        this.allHubs.set(data);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load my hubs', err);
+        this.isLoading.set(false);
+      }
     });
   }
 

@@ -56,9 +56,6 @@
   <!-- Offers grid -->
   @if (tab() === 'offers') {
   <div id="panel-offers" role="tabpanel" aria-labelledby="tab-offers">
-    @if (filteredOffers().length === 0) {
-    <div class="empty-state" aria-live="polite">No active offers found. Check back later.</div>
-    } @else {
     @if (isLoading()) {
       <div class="offers-grid">
         @for (skeleton of [1, 2, 3, 4, 5, 6]; track skeleton) {
@@ -77,6 +74,8 @@
           </div>
         }
       </div>
+    } @else if (filteredOffers().length === 0) {
+    <div class="empty-state" aria-live="polite">No active offers found. Check back later.</div>
     } @else {
       <div class="offers-grid animated-grid">
         @for (offer of paginatedOffers(); track offer.id) {
@@ -164,14 +163,30 @@
     </div>
     }
 
-    }
   </div>
   }
 
   <!-- Requests list -->
   @if (tab() === 'requests') {
   <div id="panel-requests" role="tabpanel" aria-labelledby="tab-requests">
-    @if (filteredRequests().length === 0) {
+    @if (isLoading()) {
+      <div class="requests-grid">
+        @for (skeleton of [1, 2, 3, 4, 5, 6]; track skeleton) {
+          <article class="card request-card" style="cursor:default; padding:1.5rem; display:flex; flex-direction:column; height:260px">
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap">
+              <span class="skeleton-text shimmer" style="width:70px; height:18px; border-radius:8px"></span>
+              <span class="skeleton-text shimmer" style="width:50px; height:18px; border-radius:8px"></span>
+            </div>
+            <div class="skeleton-text shimmer" style="width:90%; height:20px; margin-bottom:1.5rem; border-radius:4px"></div>
+            <div style="display:flex; flex-direction:column; gap:0.75rem; border-top:1px solid var(--border); padding-top:1rem; margin-bottom:1.5rem; flex:1">
+              <div class="skeleton-text shimmer" style="width:60%"></div>
+              <div class="skeleton-text shimmer" style="width:40%"></div>
+            </div>
+            <div class="skeleton-rect shimmer" style="height:38px; width:100%; border-radius:var(--btn-radius)"></div>
+          </article>
+        }
+      </div>
+    } @else if (filteredRequests().length === 0) {
     <div class="empty-state" aria-live="polite">No active group requests found.</div>
     } @else {
     <div class="requests-grid animated-grid">

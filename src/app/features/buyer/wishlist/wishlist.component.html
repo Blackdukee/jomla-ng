@@ -56,7 +56,28 @@
         </div>
       </div>
 
-      @if (requests().length === 0) {
+      @if (isLoading()) {
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          @for (skeleton of [1, 2, 3]; track skeleton) {
+            <div class="card req-row" style="cursor:default">
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+                  <div class="skeleton-text shimmer" style="width:70px"></div>
+                  <div class="skeleton-text shimmer" style="width:50px"></div>
+                </div>
+                <div class="skeleton-text shimmer" style="width:250px;height:16px;margin-bottom:0.5rem"></div>
+                <div style="display:flex;gap:1rem">
+                  <div class="skeleton-text shimmer" style="width:120px"></div>
+                  <div class="skeleton-text shimmer" style="width:80px"></div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.375rem;color:var(--text-secondary);flex-shrink:0">
+                <div class="skeleton-text shimmer" style="width:70px"></div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (requests().length === 0) {
       <div class="empty-state"
         style="text-align:center;padding:6rem 2rem;background:#F9FAFB;border:1px dashed var(--border);border-radius:16px">
         <div class="icon-container" style="margin:0 auto 1.25rem;width:4rem;height:4rem" aria-hidden="true">

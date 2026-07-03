@@ -17,6 +17,7 @@ export class SupplierAlertsComponent implements OnInit, OnDestroy {
   private signalRService = inject(SignalRService);
 
   protected alerts = signal<any[]>([]);
+  protected isLoading = signal(true);
   private unsubNotification: (() => void) | null = null;
 
   ngOnInit(): void {
@@ -28,6 +29,7 @@ export class SupplierAlertsComponent implements OnInit, OnDestroy {
   }
 
   private loadAlerts(): void {
+    this.isLoading.set(true);
     this.groupRequestsService.getMatchedGroupRequests().subscribe({
       next: (res) => {
         const mapped = (res.items || []).map(req => ({
@@ -40,8 +42,12 @@ export class SupplierAlertsComponent implements OnInit, OnDestroy {
           notified_at: req.createdAt
         }));
         this.alerts.set(mapped);
+        this.isLoading.set(false);
       },
-      error: (err) => console.error('Failed to load matched requests', err)
+      error: (err) => {
+        console.error('Failed to load matched requests', err);
+        this.isLoading.set(false);
+      }
     });
   }
 

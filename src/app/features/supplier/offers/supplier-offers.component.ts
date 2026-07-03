@@ -19,6 +19,7 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
   protected tab = signal<'active' | 'pending' | 'inactive' | 'expired'>('active');
   protected offers = signal<MyOfferDto[]>([]);
   protected offerImages = signal<Record<string, string[]>>({});
+  protected isLoading = signal(true);
   private unsubOfferStatusChange: (() => void) | null = null;
 
   protected filteredOffers = computed(() => this.offers().filter(o => {
@@ -38,23 +39,31 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
   }
 
   private loadOffers(): void {
-    this.offersService.getMyOffers().subscribe(res => {
-      const offs = res.items || [];
-      this.offers.set(offs);
-      
-      // Load details for each offer to get image URLs without modifying the backend MyOfferDto
-      offs.forEach(o => {
-        this.offersService.getOfferById(o.id).subscribe({
-          next: (detail) => {
-            if (detail.images && detail.images.length > 0) {
-              this.offerImages.update(prev => ({
-                ...prev,
-                [o.id]: detail.images
-              }));
+    this.isLoading.set(true);
+    this.offersService.getMyOffers().subscribe({
+      next: (res) => {
+        const offs = res.items || [];
+        this.offers.set(offs);
+        
+        // Load details for each offer to get image URLs without modifying the backend MyOfferDto
+        offs.forEach(o => {
+          this.offersService.getOfferById(o.id).subscribe({
+            next: (detail) => {
+              if (detail.images && detail.images.length > 0) {
+                this.offerImages.update(prev => ({
+                  ...prev,
+                  [o.id]: detail.images
+                }));
+              }
             }
-          }
+          });
         });
-      });
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load offers', err);
+        this.isLoading.set(false);
+      }
     });
   }
 

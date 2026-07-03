@@ -2,13 +2,15 @@ import { Component, signal, afterNextRender } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { ToastComponent } from './shared/toast/toast.component';
+import { LoadingBarComponent } from './shared/progress-bar/loading-bar.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, ToastComponent],
+  imports: [RouterOutlet, NavbarComponent, ToastComponent, LoadingBarComponent],
   template: `
     <div class="app-shell" [class.ready]="isReady()">
+      <app-loading-bar />
       <app-navbar />
       <main class="main-content">
         <router-outlet />

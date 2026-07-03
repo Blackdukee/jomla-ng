@@ -58,6 +58,7 @@ export class WishlistComponent implements OnInit {
   protected page = signal(1);
   protected pageSize = 5;
   protected totalCount = signal(0);
+  protected isLoading = signal(true);
 
   protected totalPages = computed(() => {
     return Math.max(1, Math.ceil(this.totalCount() / this.pageSize));
@@ -85,6 +86,7 @@ export class WishlistComponent implements OnInit {
   }
 
   protected loadRequests() {
+    this.isLoading.set(true);
     const filters: any = {
       pageSize: this.pageSize,
       page: this.page(),
@@ -98,9 +100,11 @@ export class WishlistComponent implements OnInit {
       next: (res) => {
         this.requests.set(res.items);
         this.totalCount.set(res.totalCount);
+        this.isLoading.set(false);
       },
       error: (err) => {
-        this.toast.error('Error', 'Failed to load wishlist items.');
+        console.error('Failed to load my requests', err);
+        this.isLoading.set(false);
       }
     });
   }

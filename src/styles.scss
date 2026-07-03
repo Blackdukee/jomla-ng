@@ -813,3 +813,26 @@ select {
   padding-left: 2.5rem !important;
   padding-right: 1.25rem !important;
 }
+
+/* ── Skeleton / Shimmer Effect ── */
+@keyframes shimmer-sweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, var(--border) 25%, #f9fafb 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer-sweep 1.5s infinite linear;
+}
+
+.skeleton-rect {
+  border-radius: 8px;
+  background-color: var(--border);
+}
+
+.skeleton-text {
+  height: 12px;
+  background-color: var(--border);
+  border-radius: 4px;
+}

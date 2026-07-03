@@ -4,6 +4,7 @@ import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
 import { NotificationsService } from '../../core/services/notifications.service';
 import { SignalRService } from '../../core/services/signalr.service';
+import { BatchesService } from '../../core/services/batches.service';
 import { NotificationDto } from '../../core/models';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -76,7 +77,7 @@ import { formatDistanceToNow } from 'date-fns';
                       </div>
                     } @else {
                       @for (notif of notifications(); track notif.id) {
-                        <div class="notif-item" [class.unread]="!notif.isRead" (click)="markAsRead(notif)">
+                        <div class="notif-item" [class.unread]="!notif.isRead" (click)="onNotificationClick(notif)">
                           @if (!notif.isRead) {
                             <div class="notif-dot" aria-hidden="true"></div>
                           }
@@ -336,6 +337,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   private notificationsService = inject(NotificationsService);
   private signalRService = inject(SignalRService);
+  private batchesService = inject(BatchesService);
 
   protected mobileOpen = signal(false);
   protected notifOpen = signal(false);
@@ -407,6 +409,44 @@ export class NavbarComponent implements OnInit, OnDestroy {
         console.error('Failed to mark notification as read:', err);
       }
     });
+  }
+
+  protected onNotificationClick(notif: NotificationDto) {
+    if (!notif.isRead) {
+      this.markAsRead(notif);
+    }
+    this.notifOpen.set(false);
+
+    if (!notif.entityId) return;
+
+    const entityType = notif.entityType?.toLowerCase();
+    const role = this.auth.user()?.role?.toLowerCase();
+
+    if (entityType === 'supplieroffer') {
+      if (role === 'supplier') {
+        this.router.navigate(['/supplier/offers', notif.entityId]);
+      }
+    } else if (entityType === 'grouprequest') {
+      if (role === 'buyer') {
+        this.router.navigate(['/hubs/request', notif.entityId]);
+      } else if (role === 'supplier') {
+        this.router.navigate(['/manage/requests', notif.entityId]);
+      }
+    } else if (entityType === 'supplierbatch' || entityType === 'batch') {
+      if (role === 'buyer') {
+        this.router.navigate(['/hubs/supplier', notif.entityId]);
+      } else if (role === 'supplier') {
+        this.batchesService.getBatch(notif.entityId).subscribe({
+          next: (batch) => {
+            this.router.navigate(['/supplier/offers', batch.offerId]);
+          },
+          error: (err) => {
+            console.error('Failed to fetch batch for notification routing:', err);
+            this.router.navigate(['/supplier/offers']);
+          }
+        });
+      }
+    }
   }
 
   protected getRelativeTime(dateStr: string): string {

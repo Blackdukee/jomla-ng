@@ -40,6 +40,7 @@ export class SupplierRequestsComponent implements OnInit {
   protected searchQuery = signal('');
   protected categories = signal<CategoryDto[]>([]);
   protected requests = signal<GroupRequestListItemDto[]>([]);
+  protected isLoading = signal(true);
 
   // Pagination State
   protected pageNumber = signal(1);
@@ -57,6 +58,7 @@ export class SupplierRequestsComponent implements OnInit {
   }
 
   protected loadRequests(): void {
+    this.isLoading.set(true);
     const categoryId = this.catFilter() === 'all' ? undefined : this.catFilter();
     this.groupRequestsService.getGroupRequests({
       categoryId,
@@ -69,8 +71,12 @@ export class SupplierRequestsComponent implements OnInit {
       next: (res) => {
         this.requests.set(res.items);
         this.totalItems.set(res.totalCount);
+        this.isLoading.set(false);
       },
-      error: (err) => console.error('Failed to load group requests', err)
+      error: (err) => {
+        console.error('Failed to load group requests', err);
+        this.isLoading.set(false);
+      }
     });
   }
 
