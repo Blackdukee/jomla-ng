@@ -1,80 +1,132 @@
 @if (request(); as req) {
-  <div class="v1-page">
-    <button class="btn btn-ghost btn-sm v1-back" (click)="router.navigate(['/my-hubs'])">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-      Back
-    </button>
+  <div class="v2-page">
+    <div class="v2-header">
+      <div class="v2-header-top">
+        <button class="btn btn-ghost btn-sm v1-back" (click)="router.navigate(['/my-hubs'])">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+      </div>
 
-    <div class="v1-body">
-      <!-- Sidebar: hub identity + stats + action -->
-      <aside class="v1-sidebar">
-        <div class="v1-header-info">
-          <div class="v1-badges">
-            <span class="badge badge-outline">{{ req.categoryName || 'Uncategorized' }}</span>
-            <span class="badge" [class]="req.status === 'active' || req.status === 'Active' ? 'badge-brand' : 'badge-muted'">{{ req.status }}</span>
-          </div>
-          <h1 class="v1-title">{{ req.title || req.description }}</h1>
-          @if (req.description) {
-            <p class="v1-desc">{{ req.description }}</p>
-          }
+      <div class="v2-header-info">
+        <div class="v1-badges" style="margin-bottom:0.75rem">
+          <span class="badge badge-outline">{{ req.categoryName || 'Uncategorized' }}</span>
+          <span class="badge" [class]="req.status === 'active' || req.status === 'Active' ? 'badge-brand' : 'badge-muted'">{{ req.status }}</span>
         </div>
-
-        <div class="v1-stats-block">
-          <div class="v1-stat-tile">
-            <span class="v1-stat-val">{{ req.currentQuantity }}</span>
-            <span class="v1-stat-lbl">Total Units</span>
-          </div>
-          <div class="v1-stat-tile">
-            <span class="v1-stat-val">{{ req.participantsCount }}</span>
-            <span class="v1-stat-lbl">Buyers</span>
-          </div>
-        </div>
-
-        <div class="v1-action-row">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem">
+          <h1 class="v2-title" style="margin:0">{{ req.title || req.description }}</h1>
           @if (isJoined()) {
-            <button class="btn btn-outline-danger" (click)="leaveRequest()">Leave Hub</button>
+            <button class="btn btn-outline-danger btn-sm" (click)="leaveRequest()">Leave</button>
           } @else {
-            <button class="btn btn-primary" (click)="showJoinModal.set(true)">Join Hub</button>
+            <button class="btn btn-primary btn-sm" (click)="showJoinModal.set(true)">Join Hub</button>
           }
         </div>
-      </aside>
+        <div class="v2-header-meta">
+          <span class="v2-meta-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg> {{ req.currentQuantity }} total units</span>
+          <span class="v2-meta-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> {{ req.participantsCount }} buyers</span>
+          <span class="v2-meta-item" style="color:var(--text-secondary)">Created by {{ req.initiatorName }}</span>
+        </div>
+      </div>
+    </div>
 
-      <!-- Main: seller offers -->
-      <main class="v1-main">
-        <h2 class="v1-offers-hd">Seller Offers</h2>
-        @if (offers().length === 0) {
-          <div class="v1-empty">No offers from sellers yet.</div>
-        } @else {
-          <div class="v1-offers-list">
-            @for (offer of offers(); track offer.id) {
-              <div class="v1-offer-card">
-                <div>
-                  <div class="v1-offer-supplier">
-                    {{ offer.supplierName }}
-                    <span class="badge badge-outline" style="font-size:0.75rem">Round {{ offer.roundNumber }}</span>
-                    <span class="badge" [class]="offer.status === 'Open' ? 'badge-brand' : 'badge-muted'" style="font-size:0.75rem">{{ offer.status }}</span>
+    <div class="v2-grid">
+      <!-- Left Column (Participants) -->
+      <div class="v2-col v2-col-participants">
+        <div class="v2-card">
+          <div class="v2-card-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <h2 style="margin:0;font-size:1.125rem">Participants</h2>
+          </div>
+          <div class="v2-card-body">
+            @if (!req.participants || req.participants.length === 0) {
+              <div class="v2-empty-state">
+                <svg class="v2-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <div>No participants yet.</div>
+              </div>
+            } @else {
+              <div class="v2-participant-list">
+                @for (p of req.participants; track p.id) {
+                  <div class="v2-participant-row" [class.is-current]="p.id === authService.user()?.id">
+                    <div class="v2-p-name">
+                      {{ p.name }}
+                      @if (p.id === authService.user()?.id) {
+                        <span style="font-size:0.75rem; color:var(--text-secondary); margin-left:0.5rem">(You)</span>
+                      }
+                    </div>
+                    <div class="v2-p-qty">{{ p.quantity }} units</div>
                   </div>
-                  <div class="v1-offer-price">
-                    Price: <span class="v1-price-val">EGP {{ offer.currentUnitPrice }}</span> per unit
-                  </div>
-                  <div class="v1-offer-meta">
-                    <span>Available: <strong>{{ offer.quantityAvailable }} units</strong></span>
-                    <span>Accepted: <strong>{{ offer.acceptedQuantity }} units</strong></span>
-                  </div>
-                  <div class="v1-offer-expiry">Expires: {{ fmtExpiry(offer.expiresAt) }}</div>
-                </div>
-                <div>
-                  @if (offer.status === 'Open') {
-                    <button class="btn btn-primary" (click)="accept(offer)">Accept Offer</button>
-                  } @else if (offer.status === 'Accepted') {
-                    <button class="btn btn-outline-danger" (click)="cancelAccept(offer)">Leave Offer</button>
-                  }
-                </div>
+                }
               </div>
             }
           </div>
-        }
-      </main>
+        </div>
+      </div>
+
+      <!-- Right Column (Offers) -->
+      <div class="v2-col v2-col-offers">
+        <div class="v2-card">
+          <div class="v2-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0;font-size:1.125rem">Incoming Offers</h2>
+            <button class="btn btn-ghost btn-sm" style="font-size:0.75rem; padding: 0.25rem 0.5rem; height: auto;" (click)="showHistory.set(!showHistory())">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.25rem; vertical-align:-2px"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path><path d="M12 7v5l4 2"></path></svg>
+              History
+            </button>
+          </div>
+          <div class="v2-card-body" style="padding:1.5rem">
+            @if (visibleOffers().length === 0) {
+              <div class="v2-empty-state">
+                <svg class="v2-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                <div>No offers to display here.</div>
+              </div>
+            } @else {
+              <div class="v1-offers-list">
+                @for (offer of visibleOffers(); track offer.id) {
+                  <div class="v2-offer-card" [class.swipe-out-right]="offer.isAnimatingOut">
+                    <div class="v2-offer-header">
+                      <div class="v2-offer-supplier">
+                        <strong>{{ offer.supplierName }}</strong>
+                        <div class="v2-offer-meta-sub">Offers {{ offer.quantityAvailable }} units max</div>
+                      </div>
+                      <span class="badge badge-outline" style="font-size:0.75rem; white-space:nowrap">{{ offer.status }}</span>
+                    </div>
+                    <div class="v2-offer-price-row" style="margin-bottom:0.75rem">
+                      <div class="v2-offer-price">
+                        <span class="v2-currency">EGP</span>
+                        <span class="v2-price-val">{{ offer.currentUnitPrice }}</span>
+                        <span class="v2-price-unit">/unit</span>
+                      </div>
+                    </div>
+                    
+                    @if (offer.status === 'Open' || offer.isAnimatingOut) {
+                      <div class="v2-offer-progress-row">
+                        <div class="v2-offer-progress-label">
+                          <span style="font-size:0.75rem;font-weight:600">{{ offer.quantityAvailable - offer.acceptedQuantity }} remaining</span>
+                          <span class="v2-offer-expiry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Exp: {{ fmtExpiry(offer.expiresAt) }}</span>
+                        </div>
+                        <div class="v2-progress-bar">
+                          <div class="v2-progress-fill" [style.width]="(offer.acceptedQuantity / offer.quantityAvailable * 100) + '%'"></div>
+                        </div>
+                      </div>
+                    }
+                    
+                    <div class="v2-offer-actions">
+                      @if (offer.status !== 'Accepted' && offer.status !== 'Filled') {
+                        @if (hasAcceptedOffer(offer)) {
+                          <button class="btn btn-outline-danger" style="flex:1" (click)="cancelAccept(offer)">Cancel</button>
+                        } @else if (offer.status === 'Open') {
+                          <button class="btn btn-primary" style="flex:2" (click)="accept(offer)">Accept</button>
+                          <button class="btn btn-reject" style="flex:1">Reject</button>
+                        }
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+              
+            }
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

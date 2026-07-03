@@ -30,6 +30,7 @@ export class RequestHubComponent implements OnInit, OnDestroy {
   protected joinQuantity = signal<number>(1);
   protected showJoinModal = signal<boolean>(false);
   
+  protected showHistory = signal<boolean>(false);
   protected showAcceptModal = signal<boolean>(false);
   protected selectedOffer = signal<GroupRequestOfferDto | null>(null);
   protected acceptQuantity = signal<number>(1);
@@ -46,8 +47,38 @@ export class RequestHubComponent implements OnInit, OnDestroy {
     const req = this.request();
     const user = this.authService.user();
     if (!req || !user) return false;
-    return req.participantIds?.includes(user.id) || false;
+    
+    // Fallback to participantIds if participants array is missing
+    if (req.participants) {
+      return req.participants.some((p: any) => p.id === user.id);
+    }
+    return (req as any).participantIds?.includes(user.id) || false;
   });
+
+  protected visibleOffers = computed(() => {
+    const allOffers = [...this.offers()];
+    const showHist = this.showHistory();
+
+    return allOffers
+      .filter(o => {
+        if (showHist) return true;
+        // Show Open offers, or Accepted offers ONLY if they are currently animating out
+        return o.status === 'Open' || (o.status === 'Accepted' && o.isAnimatingOut);
+      })
+      .sort((a, b) => {
+        // Sort Open offers to the top
+        if (a.status === 'Open' && b.status !== 'Open') return -1;
+        if (b.status === 'Open' && a.status !== 'Open') return 1;
+        // Then sort by lowest price
+        return a.currentUnitPrice - b.currentUnitPrice;
+      });
+  });
+
+  protected hasAcceptedOffer(offer: GroupRequestOfferDto): boolean {
+    const user = this.authService.user();
+    if (!user || !offer.acceptedBuyerIds) return false;
+    return offer.acceptedBuyerIds.includes(user.id);
+  }
 
   ngOnInit(): void {
     this.requestId = this.route.snapshot.paramMap.get('requestId') ?? '';
@@ -62,7 +93,25 @@ export class RequestHubComponent implements OnInit, OnDestroy {
     this.unsubRequestUpdate = this.signalRService.onGroupRequestUpdate((update) => {
       if (update.id === this.requestId) {
         this.request.set(update);
-        this.offers.set(update.offers || []);
+        const currentOffers = this.offers();
+        const newOffers = update.offers || [];
+        
+        // Find offers that just transitioned from Open to Accepted
+        newOffers.forEach(no => {
+          const old = currentOffers.find(o => o.id === no.id);
+          if (old && old.status === 'Open' && no.status === 'Accepted') {
+            no.isAnimatingOut = true;
+            setTimeout(() => {
+              this.offers.update(offers => {
+                const off = offers.find(o => o.id === no.id);
+                if (off) off.isAnimatingOut = false;
+                return [...offers];
+              });
+            }, 400);
+          }
+        });
+        
+        this.offers.set(newOffers);
       }
     });
   }
