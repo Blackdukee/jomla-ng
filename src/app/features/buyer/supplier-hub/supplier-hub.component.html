@@ -166,7 +166,7 @@
           <div class="success-alert-text">
             You'll be charged EGP {{ b.discountedPrice }} per unit once this batch fills. We'll notify you the moment it locks in.
           </div>
-          <button class="btn-leave-hub" (click)="leave()" [disabled]="leaving()">
+          <button class="btn btn-outline-danger" style="width: 100%" (click)="leave()" [disabled]="leaving()">
             {{ leaving() ? 'Leaving hub...' : 'Leave hub' }}
           </button>
           <a class="change-qty-link" (click)="openUpdateQtyModal()" role="button" tabindex="0">Change quantity</a>

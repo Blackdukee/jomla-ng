@@ -177,6 +177,18 @@ h6 {
   }
 }
 
+.btn-outline-danger {
+  @extend .btn;
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
+
+  &:hover:not(:disabled) {
+    background: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
 .btn-ghost {
   @extend .btn;
   background: transparent;

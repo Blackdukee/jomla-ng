@@ -32,7 +32,7 @@
 
         <div class="v1-action-row">
           @if (isJoined()) {
-            <button class="btn btn-outline" style="color:var(--danger)" (click)="leaveRequest()">Leave Hub</button>
+            <button class="btn btn-outline-danger" (click)="leaveRequest()">Leave Hub</button>
           } @else {
             <button class="btn btn-primary" (click)="showJoinModal.set(true)">Join Hub</button>
           }
@@ -67,7 +67,7 @@
                   @if (offer.status === 'Open') {
                     <button class="btn btn-primary" (click)="accept(offer)">Accept Offer</button>
                   } @else if (offer.status === 'Accepted') {
-                    <button class="btn btn-outline" style="color:var(--danger)" (click)="cancelAccept(offer)">Leave Offer</button>
+                    <button class="btn btn-outline-danger" (click)="cancelAccept(offer)">Leave Offer</button>
                   }
                 </div>
               </div>
