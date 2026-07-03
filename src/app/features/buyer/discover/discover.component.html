@@ -42,7 +42,7 @@
         aria-label="Filter by category">
         <option value="all">All Categories</option>
         @for (cat of categories(); track cat.id) {
-        <option [value]="cat.name">{{ cat.displayName || cat.name }}</option>
+        <option [value]="cat.id">{{ cat.displayName || cat.name }}</option>
         }
       </select>
       <select class="filter-select" [value]="sort()" (change)="onSortChange($event)" aria-label="Sort offers">
@@ -56,7 +56,7 @@
   <!-- Offers grid -->
   @if (tab() === 'offers') {
   <div id="panel-offers" role="tabpanel" aria-labelledby="tab-offers">
-    @if (isLoading()) {
+    @if (isLoadingOffers()) {
       <div class="offers-grid">
         @for (skeleton of [1, 2, 3, 4, 5, 6]; track skeleton) {
           <div class="card skeleton-card">
@@ -74,11 +74,11 @@
           </div>
         }
       </div>
-    } @else if (filteredOffers().length === 0) {
+    } @else if (offers().length === 0) {
     <div class="empty-state" aria-live="polite">No active offers found. Check back later.</div>
     } @else {
       <div class="offers-grid animated-grid">
-        @for (offer of paginatedOffers(); track offer.id) {
+        @for (offer of offers(); track offer.id) {
         <article class="card card-hover offer-card" (click)="goToHub(offer)" style="cursor:pointer"
           [attr.aria-label]="offer.title + ' group deal'">
           <div class="offer-img-wrap">
@@ -131,10 +131,12 @@
               {{ offer.buyerCount }} buyers joined
             </div>
 
-            <button class="btn btn-primary" style="width:100%" (click)="$event.stopPropagation(); joinHub(offer)"
-              [disabled]="offer.hubTargetQuantity - offer.committedUnits <= 0 || !offer.activeBatchId">
-              {{ !offer.activeBatchId ? 'No active batch' : (offer.hubTargetQuantity - offer.committedUnits <= 0
-                ? 'Hub full' : 'Join hub' ) }} </button>
+            <button class="btn" 
+              [class]="offer.hasJoinedActiveBatch ? 'btn-outline' : 'btn-primary'"
+              style="width:100%" (click)="$event.stopPropagation(); joinHub(offer)"
+              [disabled]="(!offer.hasJoinedActiveBatch && offer.hubTargetQuantity - offer.committedUnits <= 0) || !offer.activeBatchId">
+              {{ !offer.activeBatchId ? 'No active batch' : (offer.hasJoinedActiveBatch ? 'Joined' : (offer.hubTargetQuantity - offer.committedUnits <= 0 ? 'Hub full' : 'Join hub')) }}
+            </button>
           </div>
         </article>
         }
@@ -169,7 +171,7 @@
   <!-- Requests list -->
   @if (tab() === 'requests') {
   <div id="panel-requests" role="tabpanel" aria-labelledby="tab-requests">
-    @if (isLoading()) {
+    @if (isLoadingRequests()) {
       <div class="requests-grid">
         @for (skeleton of [1, 2, 3, 4, 5, 6]; track skeleton) {
           <article class="card request-card" style="cursor:default; padding:1.5rem; display:flex; flex-direction:column; height:260px">
@@ -186,11 +188,11 @@
           </article>
         }
       </div>
-    } @else if (filteredRequests().length === 0) {
+    } @else if (requests().length === 0) {
     <div class="empty-state" aria-live="polite">No active group requests found.</div>
     } @else {
     <div class="requests-grid animated-grid">
-      @for (req of paginatedRequests(); track req.id) {
+      @for (req of requests(); track req.id) {
       <article class="card card-hover request-card" [routerLink]="['/hubs/request', req.id]" style="cursor:pointer; display:flex; flex-direction:column; padding:1.5rem"
         [attr.aria-label]="(req.description || req.title) + ', ' + req.currentQuantity + ' units'">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap">

@@ -16,6 +16,7 @@ export interface OfferDto {
   buyerCount: number;
   minFallbackQuantity?: number;
   batches?: OfferBatchDto[];
+  hasJoinedActiveBatch?: boolean;
 }
 
 export interface OfferBatchDto {

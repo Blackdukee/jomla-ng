@@ -7,6 +7,7 @@ import { GroupRequestOffersService } from '../../../core/services/group-request-
 import { SignalRService } from '../../../core/services/signalr.service';
 import { GroupRequestDetailDto, GroupRequestOfferDto } from '../../../core/models';
 import { format } from 'date-fns';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-request-hub',
@@ -148,7 +149,7 @@ export class RequestHubComponent implements OnInit, OnDestroy {
 
   private initStripe() {
     if (this.stripe) return;
-    this.stripe = (window as any).Stripe('pk_test_51Tk8ptBjYscPhZ5LBYxqyxlHzLHiL1bhZ7OUGNhdFHJbhUkPC6vA8bxbpp5Gf0HCasOkkqVvCF7KOxP1gBY7mKY100JaqmlKa4');
+    this.stripe = (window as any).Stripe(environment.stripePublishableKey);
     const elements = this.stripe.elements();
     this.cardElement = elements.create('card', {
       style: {

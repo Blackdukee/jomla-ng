@@ -6,7 +6,7 @@ import { AuthService } from './auth.service';
 
 // Global state variables for interceptor instance
 let isRefreshing = false;
-const refreshTokenSubject = new BehaviorSubject<string | null>(null);
+let refreshTokenSubject: BehaviorSubject<string | null> | null = null;
 
 /**
  * HTTP interceptor that:
@@ -45,12 +45,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       ) {
         if (!isRefreshing) {
           isRefreshing = true;
-          refreshTokenSubject.next(null);
+          refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
           return authService.refreshAccessToken().pipe(
             switchMap((res) => {
               isRefreshing = false;
-              refreshTokenSubject.next(res.token);
+              refreshTokenSubject?.next(res.token);
+              refreshTokenSubject?.complete();
               
               const retryReq = req.clone({
                 setHeaders: {
@@ -61,9 +62,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             }),
             catchError((refreshError) => {
               isRefreshing = false;
-              // Emit null to unblock any requests queued in the filter() pipe;
-              // without this they hang forever waiting for a non-null token.
-              refreshTokenSubject.next(null);
+              // Propagate the refresh error to all queued requests waiting on the BehaviorSubject
+              refreshTokenSubject?.error(refreshError);
               authService.clearAuth();
               router.navigate(['/login']);
               return throwError(() => refreshError);
@@ -71,7 +71,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           );
         } else {
           // Queue request until token is refreshed
-          return refreshTokenSubject.pipe(
+          return refreshTokenSubject!.pipe(
             filter(token => token !== null),
             take(1),
             switchMap((newToken) => {
