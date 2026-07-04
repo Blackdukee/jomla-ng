@@ -258,8 +258,7 @@
 
 .custom-progress-fill {
   height: 100%;
-  background: #fed7aa;
-  /* Warm gold/peach color as in mockup */
+  background: var(--brand);
   border-radius: 9999px;
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -521,4 +520,51 @@
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
+}
+
+/* Participants standardization styles */
+.v2-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 0.5rem 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 0.5rem;
+}
+
+.v2-participant-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.v2-participant-row {
+  padding: 0.875rem 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.v2-participant-row:last-child {
+  border-bottom: none;
+}
+
+.v2-participant-row.is-current {
+  background: #f0fdfa; /* very light primary color */
+  border-radius: 12px;
+  margin: 0.25rem 0;
+  padding: 0.75rem 0.75rem;
+}
+
+.v2-p-name {
+  display: flex;
+  align-items: center;
+}
+
+.v2-p-qty {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
