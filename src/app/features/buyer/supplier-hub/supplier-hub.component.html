@@ -58,7 +58,7 @@
     <div>
       <div class="image-container">
         @if (offer() && offer()!.images && offer()!.images.length > 0) {
-          <img [src]="offer()!.images[0]" alt="Product image">
+          <img [src]="offer()!.images[0] | cloudinary:'gallery'" alt="Product image" width="800" height="600" loading="lazy">
         } @else {
           <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.2" aria-hidden="true">
             <rect x="2" y="2" width="20" height="20" rx="2.5" />

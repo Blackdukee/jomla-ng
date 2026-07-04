@@ -142,14 +142,14 @@
         <div class="image-gallery-grid">
           @for (imgUrl of offer()?.images; track imgUrl; let idx = $index) {
             <div class="gallery-image-container" style="cursor: pointer;" (click)="openLightbox(idx)" role="button" [attr.aria-label]="'View image ' + (idx + 1)">
-              <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" [src]="imgUrl" alt="Offer image" class="gallery-image">
+              <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" [src]="imgUrl | cloudinary:'gallery'" alt="Offer image" width="800" height="600" loading="lazy" class="gallery-image">
               @if (idx === 0) {
                 <span class="cover-badge">Cover</span>
               }
             </div>
           } @empty {
             <div class="gallery-image-container">
-              <img src="chihuahua_cover.png" alt="No image available" class="gallery-image">
+              <img src="chihuahua_cover.png" alt="No image available" width="800" height="600" loading="lazy" class="gallery-image">
             </div>
           }
         </div>
@@ -196,7 +196,7 @@
             </button>
           }
 
-          <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" [src]="offer()!.images[activeImageIndex()]" alt="Offer detail image enlarged" class="lightbox-main-image">
+          <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" [src]="offer()!.images[activeImageIndex()] | cloudinary:'lightbox'" alt="Offer detail image enlarged" width="1200" height="900" class="lightbox-main-image">
 
           @if (offer()!.images.length > 1) {
             <button class="lightbox-nav lightbox-next" (click)="nextImage($event)" aria-label="Next image">
@@ -219,7 +219,7 @@
           <div class="lightbox-thumbnails">
             @for (img of offer()!.images; track img; let idx = $index) {
               <button class="lightbox-thumb-btn" [class.active]="idx === activeImageIndex()" (click)="selectImage(idx)" [attr.aria-label]="'View image ' + (idx + 1)">
-                <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" [src]="img" alt="Thumbnail" class="lightbox-thumb-img">
+                <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" [src]="img | cloudinary:'lightbox-thumb'" alt="Thumbnail" width="120" height="120" loading="lazy" class="lightbox-thumb-img">
               </button>
             }
           </div>

@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
+import { CloudinaryPipe } from '../../../shared/pipes/cloudinary.pipe';
 import { OffersService } from '../../../core/services/offers.service';
 import { CategoriesService } from '../../../core/services/categories.service';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
@@ -8,7 +9,7 @@ import { OfferDto, CategoryDto, GroupRequestListItemDto } from '../../../core/mo
 @Component({
   selector: 'app-discover',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, CloudinaryPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.css'

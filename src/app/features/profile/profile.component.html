@@ -12,7 +12,7 @@
           <!-- ⬇️ Avatar: clickable now, shows uploaded photo if present -->
           <div class="avatar-circle" style="position:relative;cursor:pointer;overflow:hidden" (click)="fileInput.click()" title="Click to change photo">
             @if (auth.user()?.imageUrl) {
-              <img [src]="auth.user()!.imageUrl" alt="Profile" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
+              <img [src]="auth.user()!.imageUrl" alt="Profile" width="40" height="40" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
             } @else {
               {{ initials() }}
             }

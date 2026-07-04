@@ -19,7 +19,7 @@ import { formatDistanceToNow } from 'date-fns';
         <!-- Logo -->
         <a [routerLink]="logoLink()" class="navbar-logo" aria-label="Jomla home">
           <div class="logo-icon" aria-hidden="true">
-            <img src="icons/jomla-icon-grouping.svg" alt="Jomla Logo" />
+            <img src="icons/jomla-icon-grouping.svg" alt="Jomla Logo" width="32" height="32" fetchpriority="high" />
           </div>
           <span class="logo-text">Jomla</span>
         </a>
@@ -98,7 +98,7 @@ import { formatDistanceToNow } from 'date-fns';
             <div style="position:relative">
             <button class="avatar" (click)="avatarOpen.set(!avatarOpen())" [attr.aria-label]="'User menu for ' + userDisplayName()">
             @if (auth.user()?.imageUrl) {
-              <img [src]="auth.user()!.imageUrl" alt="Profile" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
+              <img [src]="auth.user()!.imageUrl" alt="Profile" width="40" height="40" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
             } @else {
               {{ initials() }}
             }

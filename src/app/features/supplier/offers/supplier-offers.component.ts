@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { CloudinaryPipe } from '../../../shared/pipes/cloudinary.pipe';
 import { OffersService } from '../../../core/services/offers.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { MyOfferDto, MyOffersPagedResponse } from '../../../core/models';
@@ -7,7 +8,7 @@ import { MyOfferDto, MyOffersPagedResponse } from '../../../core/models';
 @Component({
   selector: 'app-supplier-offers',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, CloudinaryPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './supplier-offers.component.html',
   styleUrl: './supplier-offers.component.css'

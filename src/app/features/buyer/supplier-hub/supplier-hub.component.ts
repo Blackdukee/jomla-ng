@@ -9,11 +9,13 @@ import { ToastService } from '../../../core/toast.service';
 import { BatchDetailDto, BatchUpdatedDto, OfferDto } from '../../../core/models';
 import { differenceInHours, format } from 'date-fns';
 import { environment } from '../../../../environments/environment';
+import { loadStripe } from '@stripe/stripe-js';
+import { CloudinaryPipe } from '../../../shared/pipes/cloudinary.pipe';
 
 @Component({
   selector: 'app-supplier-hub',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, CloudinaryPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './supplier-hub.component.html',
   styleUrl: './supplier-hub.component.css'
@@ -217,8 +219,8 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
           if (res.clientSecret) {
             this.clientSecret.set(res.clientSecret);
             this.joining.set(false);
-            setTimeout(() => {
-              this.initStripe();
+            setTimeout(async () => {
+              await this.initStripe();
               this.cardElement.mount('#card-element');
             }, 0);
           } else {
@@ -239,9 +241,9 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     });
   }
 
-  private initStripe() {
+  private async initStripe() {
     if (this.stripe) return;
-    this.stripe = (window as any).Stripe(environment.stripePublishableKey);
+    this.stripe = await loadStripe(environment.stripePublishableKey);
     const elements = this.stripe.elements();
     this.cardElement = elements.create('card', {
       style: {

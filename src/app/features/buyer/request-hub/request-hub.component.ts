@@ -8,6 +8,7 @@ import { SignalRService } from '../../../core/services/signalr.service';
 import { GroupRequestDetailDto, GroupRequestOfferDto } from '../../../core/models';
 import { format } from 'date-fns';
 import { environment } from '../../../../environments/environment';
+import { loadStripe } from '@stripe/stripe-js';
 
 @Component({
   selector: 'app-request-hub',
@@ -187,8 +188,8 @@ export class RequestHubComponent implements OnInit, OnDestroy {
         this.submittingHold.set(false);
         if (res.clientSecret) {
           this.clientSecret.set(res.clientSecret);
-          setTimeout(() => {
-            this.initStripe();
+          setTimeout(async () => {
+            await this.initStripe();
             this.cardElement.mount('#accept-card-element');
           }, 0);
         } else {
@@ -202,9 +203,9 @@ export class RequestHubComponent implements OnInit, OnDestroy {
     });
   }
 
-  private initStripe() {
+  private async initStripe() {
     if (this.stripe) return;
-    this.stripe = (window as any).Stripe(environment.stripePublishableKey);
+    this.stripe = await loadStripe(environment.stripePublishableKey);
     const elements = this.stripe.elements();
     this.cardElement = elements.create('card', {
       style: {

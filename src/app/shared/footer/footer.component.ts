@@ -26,7 +26,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
         <div class="footer-brand">
           <div class="logo-container">
             <div class="footer-logo-icon" aria-hidden="true">
-              <img src="icons/jomla-icon-grouping.svg" alt="Jomla Logo" />
+              <img src="icons/jomla-icon-grouping.svg" alt="Jomla Logo" width="32" height="32" loading="lazy" />
             </div>
             <span class="logo-text">Jomla</span>
           </div>

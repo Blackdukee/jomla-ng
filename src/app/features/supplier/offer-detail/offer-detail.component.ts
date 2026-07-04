@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { CloudinaryPipe } from '../../../shared/pipes/cloudinary.pipe';
 import { OffersService } from '../../../core/services/offers.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { OfferDto } from '../../../core/models';
@@ -9,7 +10,7 @@ import { ToastService } from '../../../core/toast.service';
 @Component({
   selector: 'app-offer-detail',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, CloudinaryPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offer-detail.component.html',
   styleUrl: './offer-detail.component.css'
