@@ -63,4 +63,16 @@ export class OffersService {
       withCredentials: true
     });
   }
+
+  deactivateOffer(id: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${id}/deactivate`, {}, {
+      withCredentials: true
+    });
+  }
+
+  activateOffer(id: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${id}/activate`, {}, {
+      withCredentials: true
+    });
+  }
 }

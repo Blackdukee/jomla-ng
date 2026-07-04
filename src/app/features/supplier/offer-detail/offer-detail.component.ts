@@ -150,6 +150,35 @@ export class OfferDetailComponent implements OnInit, OnDestroy {
     }, 5000);
   }
 
+  protected onToggleActiveClick() {
+    const id = this.offer()?.id;
+    if (!id) return;
+
+    if (this.offerStatus() === 'Active') {
+      if (confirm('Are you sure you want to deactivate this offer? This will cancel the open batch and release all participant holds.')) {
+        this.offersService.deactivateOffer(id).subscribe({
+          next: () => {
+            this.toast.success('Offer deactivated', 'The offer has been deactivated successfully.');
+            this.loadOfferDetails();
+          },
+          error: (err) => {
+            this.toast.errorApi('Deactivation failed', err);
+          }
+        });
+      }
+    } else if (this.offerStatus() === 'Inactive') {
+      this.offersService.activateOffer(id).subscribe({
+        next: () => {
+          this.toast.success('Offer activated', 'The offer has been activated successfully.');
+          this.loadOfferDetails();
+        },
+        error: (err) => {
+          this.toast.errorApi('Activation failed', err);
+        }
+      });
+    }
+  }
+
   protected onEditClick() {
     this.router.navigate(['/manage/offers', this.offer()?.id]);
   }
