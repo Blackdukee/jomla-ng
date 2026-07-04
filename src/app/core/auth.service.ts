@@ -13,13 +13,32 @@ export class AuthService {
   private readonly baseUrl = `${environment.apiUrl}/auth`;
 
   private _user = signal<User | null>(null);
+  private _token = signal<string | null>(null);
   /** Handle for the proactive refresh timer so we can cancel it on logout. */
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._user() !== null);
-  readonly isBuyer = computed(() => this._user()?.role === 'Buyer');
-  readonly isSupplier = computed(() => this._user()?.role === 'Supplier');
+  
+  readonly isBuyer = computed(() => {
+    const token = this._token();
+    if (!token) return false;
+    const decoded = this.decodeToken(token);
+    if (!decoded) return false;
+    const claim = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded["role"];
+    const roleStr = Array.isArray(claim) ? claim[0] : claim;
+    return roleStr?.toLowerCase() === 'buyer';
+  });
+
+  readonly isSupplier = computed(() => {
+    const token = this._token();
+    if (!token) return false;
+    const decoded = this.decodeToken(token);
+    if (!decoded) return false;
+    const claim = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded["role"];
+    const roleStr = Array.isArray(claim) ? claim[0] : claim;
+    return roleStr?.toLowerCase() === 'supplier';
+  });
 
   constructor() {
     // Restore from localStorage
@@ -29,6 +48,7 @@ export class AuthService {
     if (storedUser && storedToken) {
       try {
         this._user.set(JSON.parse(storedUser));
+        this._token.set(storedToken);
         
         // If token is expired or close to expiring (within 2 minutes), refresh it.
         // Otherwise, keep the user logged in and connect SignalR.
@@ -87,6 +107,7 @@ private handleAuthSuccess(res: AuthResponse) {
   };
 
   this._user.set(u);
+  this._token.set(res.token);
   localStorage.setItem('jomla_user', JSON.stringify(u));
   localStorage.setItem('jomla_token', res.token);
 
@@ -99,6 +120,7 @@ private handleAuthSuccess(res: AuthResponse) {
 
   private clearAuthState() {
     this._user.set(null);
+    this._token.set(null);
     localStorage.removeItem('jomla_user');
     localStorage.removeItem('jomla_token');
     this.signalR.disconnect();
