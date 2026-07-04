@@ -126,10 +126,28 @@ export class AddOfferComponent implements OnInit {
     if (input.files) this.processFiles(input.files);
   }
 
+  private isValidImage(file: File): boolean {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const maxSizeBytes = 5 * 1024 * 1024; // 5 MB
+
+    if (!allowedTypes.includes(file.type)) {
+      this.toast.error('Invalid file format', `${file.name} is not a supported image format. Please upload JPEG, PNG, WEBP, or GIF.`);
+      return false;
+    }
+
+    if (file.size > maxSizeBytes) {
+      this.toast.error('File too large', `${file.name} exceeds the 5MB size limit.`);
+      return false;
+    }
+
+    return true;
+  }
+
   private processFiles(files: FileList) {
     const maxAdd = 8 - this.images().length;
     const addedFiles = Array.from(files).slice(0, maxAdd);
     addedFiles.forEach(file => {
+      if (!this.isValidImage(file)) return;
       this.selectedFiles.update(current => [...current, file]);
       const reader = new FileReader();
       reader.onload = () => this.images.update(imgs => [...imgs, reader.result as string]);

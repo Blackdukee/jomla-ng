@@ -385,10 +385,32 @@ protected save() {
   });
 }
 
+  private isValidImage(file: File): boolean {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const maxSizeBytes = 5 * 1024 * 1024; // 5 MB
+
+    if (!allowedTypes.includes(file.type)) {
+      this.toast.error('Invalid file format', `${file.name} is not a supported image format. Please upload JPEG, PNG, WEBP, or GIF.`);
+      return false;
+    }
+
+    if (file.size > maxSizeBytes) {
+      this.toast.error('File too large', `${file.name} exceeds the 5MB size limit.`);
+      return false;
+    }
+
+    return true;
+  }
+
   protected onImageSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+
+    if (!this.isValidImage(file)) {
+      input.value = '';
+      return;
+    }
 
     this.imageUploading.set(true);
     this.userService.updateProfileImage(file).subscribe({
