@@ -18,7 +18,6 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
 
   protected tab = signal<'active' | 'pending' | 'inactive' | 'expired'>('active');
   protected offers = signal<MyOfferDto[]>([]);
-  protected offerImages = signal<Record<string, string[]>>({});
   protected isLoading = signal(true);
   private unsubOfferStatusChange: (() => void) | null = null;
 
@@ -44,20 +43,6 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
       next: (res) => {
         const offs = res.items || [];
         this.offers.set(offs);
-        
-        // Load details for each offer to get image URLs without modifying the backend MyOfferDto
-        offs.forEach(o => {
-          this.offersService.getOfferById(o.id).subscribe({
-            next: (detail) => {
-              if (detail.images && detail.images.length > 0) {
-                this.offerImages.update(prev => ({
-                  ...prev,
-                  [o.id]: detail.images
-                }));
-              }
-            }
-          });
-        });
         this.isLoading.set(false);
       },
       error: (err) => {

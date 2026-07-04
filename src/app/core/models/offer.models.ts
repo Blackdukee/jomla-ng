@@ -39,6 +39,7 @@ export interface MyOfferDto {
   totalQuantityAvailable: number;
   committedUnits: number;
   batchTargetQuantity: number;
+  images: string[];
   activeBatchId?: string;
   activeBatchNumber?: number;
   createdAt: string;
