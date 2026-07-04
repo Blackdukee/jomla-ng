@@ -23,7 +23,7 @@ export class RegisterBuyerComponent {
     firstName: ['', [Validators.required, Validators.minLength(2)]],
     lastName: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
+    password: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/.*[0-9].*/)]],
     confirmPassword: ['', Validators.required],
   }, {
     validators: (group) => {
@@ -42,7 +42,7 @@ export class RegisterBuyerComponent {
   protected get passwordsMatch(): boolean {
     const pw = this.form.get('password')?.value;
     const conf = this.form.get('confirmPassword')?.value;
-    return !!pw && !!conf && pw.length >= 8 && pw === conf;
+    return !!pw && !!conf && pw.length >= 8 && /[0-9]/.test(pw) && pw === conf;
   }
 
   protected get passwordsMismatch(): boolean {

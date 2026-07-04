@@ -28,7 +28,7 @@ export class RegisterSupplierComponent {
   protected get passwordsMatch(): boolean {
     const pw = this.accountForm.get('password')?.value;
     const conf = this.accountForm.get('confirmPassword')?.value;
-    return !!pw && !!conf && pw.length >= 8 && pw === conf;
+    return !!pw && !!conf && pw.length >= 8 && /[0-9]/.test(pw) && pw === conf;
   }
 
   protected get passwordsMismatch(): boolean {
@@ -41,7 +41,7 @@ export class RegisterSupplierComponent {
     firstName: ['', [Validators.required, Validators.minLength(2)]],
     lastName: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
+    password: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/.*[0-9].*/)]],
     confirmPassword: ['', Validators.required],
   }, {
     validators: (group) => {
