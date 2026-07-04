@@ -137,7 +137,7 @@ export class RequestHubComponent implements OnInit, OnDestroy {
         this.offers.set(req.offers || []);
       },
       error: (err) => {
-        this.toast.error('Error', err?.error?.detail || 'Failed to load request details.');
+        this.toast.errorApi('Error', err);
         this.router.navigate(['/my-hubs']);
       }
     });
@@ -197,7 +197,7 @@ export class RequestHubComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.submittingHold.set(false);
-        this.toast.error('Error', err?.error?.detail || err?.error?.error || 'Failed to initialize offer acceptance.');
+        this.toast.errorApi('Error', err);
       }
     });
   }
@@ -248,7 +248,7 @@ export class RequestHubComponent implements OnInit, OnDestroy {
             },
             error: (err) => {
               this.authorizingPayment.set(false);
-              this.toast.error('Confirmation Error', err?.error?.detail || 'Failed to complete acceptance registration');
+              this.toast.errorApi('Confirmation Error', err);
             }
           });
         } else {
@@ -273,7 +273,7 @@ export class RequestHubComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.toast.error('Error', err?.error?.detail || err?.error?.error || 'Failed to leave offer');
+        this.toast.errorApi('Error', err);
       }
     });
   }
@@ -289,7 +289,7 @@ export class RequestHubComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.toast.error('Error', err?.error?.detail || err?.error?.error || 'Failed to reject offer');
+        this.toast.errorApi('Error', err);
       }
     });
   }
@@ -301,7 +301,7 @@ export class RequestHubComponent implements OnInit, OnDestroy {
         this.router.navigate(['/my-hubs']);
       },
       error: (err) => {
-        this.toast.error('Error', err?.error?.detail || 'Failed to leave group request.');
+        this.toast.errorApi('Error', err);
       }
     });
   }
@@ -329,7 +329,7 @@ export class RequestHubComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.toast.error('Error', err?.error?.detail || 'Failed to join group request.');
+        this.toast.errorApi('Error', err);
       }
     });
   }

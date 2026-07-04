@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, HostListener, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, HostListener, OnInit, OnDestroy, effect, ElementRef } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
@@ -338,6 +338,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private notificationsService = inject(NotificationsService);
   private signalRService = inject(SignalRService);
   private batchesService = inject(BatchesService);
+  private elementRef = inject(ElementRef);
 
   protected mobileOpen = signal(false);
   protected notifOpen = signal(false);
@@ -347,6 +348,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
   protected notifications = signal<NotificationDto[]>([]);
   protected unreadCount = signal<number>(0);
   private notifUnsubscribe: (() => void) | null = null;
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+
+    // Check if the click is outside the notification bell button and the notification dropdown panel
+    const bellBtn = this.elementRef.nativeElement.querySelector('[aria-label="Notifications"]');
+    const notifPanel = this.elementRef.nativeElement.querySelector('.notif-panel');
+    if (this.notifOpen() && bellBtn && !bellBtn.contains(target) && (!notifPanel || !notifPanel.contains(target))) {
+      this.notifOpen.set(false);
+    }
+
+    // Check if the click is outside the avatar button and the avatar menu dropdown
+    const avatarBtn = this.elementRef.nativeElement.querySelector('.avatar');
+    const avatarMenu = this.elementRef.nativeElement.querySelector('.avatar-menu');
+    if (this.avatarOpen() && avatarBtn && !avatarBtn.contains(target) && (!avatarMenu || !avatarMenu.contains(target))) {
+      this.avatarOpen.set(false);
+    }
+  }
 
   constructor() {
     effect(() => {

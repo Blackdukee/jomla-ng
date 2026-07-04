@@ -37,12 +37,15 @@ export class AuthService {
             next: () => {
               this.signalR.connect();
             },
-            error: () => {
-              this.clearAuthState();
+            error: (err) => {
+              if (err.status === 401 || err.status === 400) {
+                this.clearAuthState();
+              }
             }
           });
         } else {
           this.signalR.connect();
+          this.scheduleTokenRefresh(storedToken);
         }
       } catch {
         this.clearAuthState();
@@ -53,8 +56,10 @@ export class AuthService {
         next: () => {
           this.signalR.connect();
         },
-        error: () => {
-          this.clearAuthState();
+        error: (err) => {
+          if (err.status === 401 || err.status === 400) {
+            this.clearAuthState();
+          }
         }
       });
     }
@@ -193,7 +198,11 @@ private handleAuthSuccess(res: AuthResponse) {
     if (delayMs <= 0) {
       // Token is already expired or within the 2-min buffer — refresh now
       this.refreshAccessToken().subscribe({
-        error: () => this.clearAuthState()
+        error: (err) => {
+          if (err.status === 401 || err.status === 400) {
+            this.clearAuthState();
+          }
+        }
       });
       return;
     }
@@ -201,7 +210,14 @@ private handleAuthSuccess(res: AuthResponse) {
     this.refreshTimer = setTimeout(() => {
       this.refreshTimer = null;
       this.refreshAccessToken().subscribe({
-        error: () => this.clearAuthState()
+        error: (err) => {
+          if (err.status === 401 || err.status === 400) {
+            this.clearAuthState();
+          } else {
+            // Transient error (e.g. server restarting). Retry in 15 seconds.
+            this.refreshTimer = setTimeout(() => this.scheduleTokenRefresh(token), 15000);
+          }
+        }
       });
     }, delayMs);
   }

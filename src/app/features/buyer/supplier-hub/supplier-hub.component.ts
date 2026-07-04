@@ -200,7 +200,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.toast.error('Error', err?.error?.detail || 'Failed to leave batch');
+        this.toast.errorApi('Error', err);
         this.leaving.set(false);
       }
     });
@@ -234,7 +234,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.joining.set(false);
-        this.toast.error('Error', err?.error?.detail || err?.error?.title || 'Failed to join batch');
+        this.toast.errorApi('Error', err);
       }
     });
   }
@@ -285,7 +285,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
             },
             error: (err) => {
               this.joining.set(false);
-              this.toast.error('Verification Error', err?.error?.detail || 'Failed to complete registration');
+              this.toast.errorApi('Verification Error', err);
             }
           });
         } else {
@@ -331,7 +331,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.updatingQty.set(false);
-        this.toast.error('Error', err?.error?.detail || err?.error?.title || 'Failed to update quantity');
+        this.toast.errorApi('Error', err);
       }
     });
   }

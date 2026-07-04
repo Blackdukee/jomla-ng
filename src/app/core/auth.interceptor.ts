@@ -64,8 +64,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
               isRefreshing = false;
               // Propagate the refresh error to all queued requests waiting on the BehaviorSubject
               refreshTokenSubject?.error(refreshError);
-              authService.clearAuth();
-              router.navigate(['/login']);
+              
+              if (refreshError.status === 401 || refreshError.status === 400) {
+                authService.clearAuth();
+                router.navigate(['/login']);
+              }
               return throwError(() => refreshError);
             })
           );
