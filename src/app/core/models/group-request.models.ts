@@ -24,6 +24,7 @@ export interface GroupRequestOfferDto {
   expiresAt: string;
   roundNumber: number;
   acceptedBuyerIds?: string[];
+  rejectedBuyerIds?: string[];
   isAnimatingOut?: boolean;
 }
 

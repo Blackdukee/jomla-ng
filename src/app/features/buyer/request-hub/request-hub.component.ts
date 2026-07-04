@@ -80,6 +80,12 @@ export class RequestHubComponent implements OnInit, OnDestroy {
     return offer.acceptedBuyerIds.includes(user.id);
   }
 
+  protected hasRejectedOffer(offer: GroupRequestOfferDto): boolean {
+    const user = this.authService.user();
+    if (!user || !offer.rejectedBuyerIds) return false;
+    return offer.rejectedBuyerIds.includes(user.id);
+  }
+
   ngOnInit(): void {
     this.requestId = this.route.snapshot.paramMap.get('requestId') ?? '';
     if (!this.requestId) {
@@ -268,6 +274,22 @@ export class RequestHubComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.toast.error('Error', err?.error?.detail || err?.error?.error || 'Failed to leave offer');
+      }
+    });
+  }
+
+  protected reject(offer: GroupRequestOfferDto) {
+    this.groupRequestOffersService.rejectOffer(offer.id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toast.success('Rejected offer', 'You have successfully rejected this supplier offer.');
+          this.loadRequest();
+        } else {
+          this.toast.error('Error', res.error || 'Failed to reject offer');
+        }
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.detail || err?.error?.error || 'Failed to reject offer');
       }
     });
   }

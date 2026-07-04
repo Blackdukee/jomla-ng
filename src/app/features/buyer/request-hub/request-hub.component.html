@@ -115,7 +115,11 @@
                           <button class="btn btn-outline-danger" style="flex:1" (click)="cancelAccept(offer)">Cancel</button>
                         } @else if (offer.status === 'Open') {
                           <button class="btn btn-primary" style="flex:2" (click)="accept(offer)">Accept</button>
-                          <button class="btn btn-reject" style="flex:1">Reject</button>
+                          @if (hasRejectedOffer(offer)) {
+                            <button class="btn btn-reject" style="flex:1" disabled>Rejected</button>
+                          } @else {
+                            <button class="btn btn-reject" style="flex:1" (click)="reject(offer)">Reject</button>
+                          }
                         }
                       }
                     </div>
