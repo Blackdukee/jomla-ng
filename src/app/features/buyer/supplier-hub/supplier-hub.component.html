@@ -68,23 +68,41 @@
         }
       </div>
 
-      <div class="hub-card">
-        <h3 class="hub-card-title">Who's in this hub ({{ b.participants.length }})</h3>
-        <div class="member-list">
-          @for (p of sortedParticipants(); track p.buyerId) {
-            <div class="member-row">
-              <div class="member-info">
-                <div class="member-avatar" [class.is-me]="isCurrentUser(p.buyerId)">
+      <div class="hub-card" style="padding: 1.25rem 1.5rem;">
+        <div class="v2-card-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <h3 style="margin:0;font-size:0.9375rem;font-weight:700;color:var(--text-primary);">Participants ({{ b.participants.length }})</h3>
+        </div>
+
+        <div class="v2-participant-list" [style.max-height]="showAllParticipants() ? '450px' : 'none'" [style.overflow-y]="showAllParticipants() ? 'auto' : 'visible'">
+          @for (p of visibleParticipants(); track p.buyerId) {
+            <div class="v2-participant-row" [class.is-current]="isCurrentUser(p.buyerId)">
+              <div class="v2-p-name">
+                <div class="member-avatar" [class.is-me]="isCurrentUser(p.buyerId)" style="margin-right:0.75rem; display:inline-flex; flex-shrink:0;">
                   {{ getParticipantInitials(p) }}
                 </div>
-                <span class="member-name">{{ getParticipantName(p) }}</span>
+                <span>{{ p.buyerName }}</span>
+                @if (isCurrentUser(p.buyerId)) {
+                  <span style="font-size:0.75rem; color:var(--text-secondary); margin-left:0.5rem">(You)</span>
+                }
               </div>
-              <span class="member-units">{{ p.quantity }} units</span>
+              <div class="v2-p-qty">{{ p.quantity }} units</div>
             </div>
           } @empty {
-            <p style="color:var(--text-secondary);font-size:0.875rem;text-align:center;padding:1rem 0">No participants yet</p>
+            <div class="v2-empty-state" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:3rem 1.5rem; text-align:center; color:var(--text-secondary);">
+              <svg class="v2-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:48px; height:48px; margin-bottom:1rem; opacity:0.5;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <div>No participants yet.</div>
+            </div>
           }
         </div>
+
+        @if (b.participants.length > 10) {
+          <div style="text-align:center; padding-top:1rem; border-top:1px solid #f3f4f6; margin-top:0.5rem;">
+            <button class="btn btn-ghost btn-sm" style="font-size:0.875rem; font-weight:600; color:var(--brand); background:transparent; border:none; cursor:pointer;" (click)="showAllParticipants.set(!showAllParticipants())">
+              {{ showAllParticipants() ? 'See less' : 'See more' }}
+            </button>
+          </div>
+        }
       </div>
     </div>
 
@@ -155,41 +173,131 @@
 
       <!-- Action reservation Card or Success alert box -->
       @if (isParticipant()) {
-        <!-- Redesigned State 2: Spot Reserved success alert box -->
-        <div class="success-alert-card">
-          <div class="success-alert-header">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #0d9488">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-            You've reserved your spot
+        @if (b.status === 'Completed') {
+          <!-- Completed State for Participant: Order Confirmed success alert card -->
+          <div class="success-alert-card" style="background: #f0fdf4; border-color: #bbf7d0;">
+            <div class="success-alert-header" style="color: #16a34a; display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Order Confirmed
+            </div>
+            <div class="success-alert-text" style="color: #166534; font-size: 0.875rem; margin-top: 0.5rem; line-height: 1.5;">
+              You committed {{ participantQuantity() }} units. The batch has completed successfully and your order has been created.
+            </div>
           </div>
-          <div class="success-alert-text">
-            You'll be charged EGP {{ b.discountedPrice }} per unit once this batch fills. We'll notify you the moment it locks in.
+        } @else if (b.status === 'Failed') {
+          <!-- Failed/Expired State for Participant: Batch Expired card -->
+          <div class="success-alert-card" style="background: #fef2f2; border-color: #fca5a5;">
+            <div class="success-alert-header" style="color: var(--danger); display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+              Batch Expired
+            </div>
+            <div class="success-alert-text" style="color: #991b1b; font-size: 0.875rem; margin-top: 0.5rem; line-height: 1.5;">
+              This batch did not reach its target in time. Your committed units have been released and no charges were made.
+            </div>
           </div>
-          <button class="btn btn-outline-danger" style="width: 100%" (click)="leave()" [disabled]="leaving()">
-            {{ leaving() ? 'Leaving hub...' : 'Leave hub' }}
-          </button>
-          <a class="change-qty-link" (click)="openUpdateQtyModal()" role="button" tabindex="0">Change quantity</a>
-        </div>
+        } @else if (isBatchFull()) {
+          <!-- Processing/Full State for Participant: Lock actions and show finalizing message -->
+          <div class="success-alert-card" style="background: #fef9c3; border-color: #fef08a;">
+            <div class="success-alert-header" style="color: #854d0e; display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation: spin 1s linear infinite;">
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                <line x1="2" y1="12" x2="6" y2="12"></line>
+                <line x1="18" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+              </svg>
+              Finalizing Deal
+            </div>
+            <div class="success-alert-text" style="color: #713f12; font-size: 0.875rem; margin-top: 0.5rem; line-height: 1.5;">
+              You committed {{ participantQuantity() }} units. This batch is now full! We are currently processing payments and confirming the deal.
+            </div>
+          </div>
+        } @else {
+          <!-- Redesigned State 2: Spot Reserved success alert box -->
+          <div class="success-alert-card">
+            <div class="success-alert-header">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #0d9488">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              You've reserved your spot
+            </div>
+            <div class="success-alert-text">
+              You'll be charged EGP {{ b.discountedPrice }} per unit once this batch fills. We'll notify you the moment it locks in.
+            </div>
+            <button class="btn btn-outline-danger" style="width: 100%" (click)="leave()" [disabled]="leaving()">
+              {{ leaving() ? 'Leaving hub...' : 'Leave hub' }}
+            </button>
+            <a class="change-qty-link" (click)="openUpdateQtyModal()" role="button" tabindex="0">Change quantity</a>
+          </div>
+        }
       } @else {
-        <!-- Redesigned State 1: Quantity and Subtotal Card -->
-        <div class="reserve-card">
-          <div class="reserve-grid">
-            <div class="quantity-selector">
-              <label for="join-qty">Quantity</label>
-              <input id="join-qty" type="number" min="1" [max]="b.remainingSlots" class="qty-input"
-                [value]="joinQty()" (input)="onJoinQtyChange($event)">
-            </div>
-            <div class="subtotal-block">
-              <div class="subtotal-label">Subtotal</div>
-              <div class="subtotal-value">EGP {{ subtotal() | number:'1.1-2' }}</div>
-              <div class="savings-value">You save EGP {{ savings() | number:'1.1-2' }}</div>
-            </div>
+        @if (b.status === 'Completed' || b.status === 'Failed') {
+          <!-- Completed/Failed State for Non-participant: CTA for new active batch or unavailable status -->
+          <div class="reserve-card" style="padding: 1.5rem; text-align: center;">
+            @if (offer()?.activeBatchId && offer()?.activeBatchId !== b.id) {
+              <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-primary);">
+                This batch has closed
+              </div>
+              <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.25rem;">
+                A new batch is now open for this offer! Join to secure bulk pricing.
+              </p>
+              <button class="btn btn-primary" style="width: 100%; height: 3rem;" (click)="navigateToActiveBatch()">
+                Join Active Batch
+              </button>
+            } @else {
+              <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-primary);">
+                Hub Closed
+              </div>
+              <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.25rem;">
+                This offer is no longer accepting new commitments.
+              </p>
+              <button class="btn btn-outline" style="width: 100%; height: 3rem;" (click)="router.navigate(['/discover'])">
+                Browse Other Deals
+              </button>
+            }
           </div>
-          <button class="btn-reserve" (click)="joinModalOpen.set(true)" [disabled]="b.remainingSlots <= 0 || joining()">
-            {{ b.remainingSlots <= 0 ? 'Hub full' : 'Join hub & reserve' }}
-          </button>
-        </div>
+        } @else if (isBatchFull()) {
+          <!-- Open but Full State for Non-participant -->
+          <div class="reserve-card" style="padding: 1.5rem; text-align: center;">
+            <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-primary);">
+              Hub Full
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.25rem;">
+              This batch has reached its target quantity and is currently locking in.
+            </p>
+            <button class="btn btn-primary" style="width: 100%; height: 3rem;" [disabled]="true">
+              Hub Full
+            </button>
+          </div>
+        } @else {
+          <!-- Redesigned State 1: Quantity and Subtotal Card -->
+          <div class="reserve-card">
+            <div class="reserve-grid">
+              <div class="quantity-selector">
+                <label for="join-qty">Quantity</label>
+                <input id="join-qty" type="number" min="1" [max]="b.remainingSlots" class="qty-input"
+                  [value]="joinQty()" (input)="onJoinQtyChange($event)">
+              </div>
+              <div class="subtotal-block">
+                <div class="subtotal-label">Subtotal</div>
+                <div class="subtotal-value">EGP {{ subtotal() | number:'1.1-2' }}</div>
+                <div class="savings-value">You save EGP {{ savings() | number:'1.1-2' }}</div>
+              </div>
+            </div>
+            <button class="btn-reserve" (click)="joinModalOpen.set(true)" [disabled]="b.remainingSlots <= 0 || joining()">
+              {{ b.remainingSlots <= 0 ? 'Hub full' : 'Join hub & reserve' }}
+            </button>
+          </div>
+        }
       }
 
       <!-- Batch History Card -->

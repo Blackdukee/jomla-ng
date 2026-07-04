@@ -45,35 +45,90 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
 
   private batchId = '';
   private unsubBatchUpdate: (() => void) | null = null;
+  private routeSub: any = null;
   private stripe: any = null;
   private cardElement: any = null;
 
-  ngOnInit(): void {
-    this.batchId = this.route.snapshot.paramMap.get('batchId') ?? '';
-    if (!this.batchId) {
-      this.error.set('No batch ID provided');
-      this.loading.set(false);
-      return;
+  protected participantQuantity = computed(() => {
+    const userId = this.authService.user()?.id;
+    if (!userId) return 0;
+    const p = this.batch()?.participants.find(part => part.buyerId === userId && part.status === 'Active');
+    return p ? p.quantity : 0;
+  });
+
+  protected isParticipant = computed(() => {
+    return this.participantQuantity() > 0;
+  });
+
+  protected isBatchCompletedOrFailed = computed(() => {
+    const b = this.batch();
+    if (!b) return false;
+    return b.status === 'Completed' || b.status === 'Failed';
+  });
+
+  protected isBatchFull = computed(() => {
+    const b = this.batch();
+    if (!b) return false;
+    return b.currentQuantity >= b.targetQuantity;
+  });
+
+  protected shouldLockActions = computed(() => {
+    return this.isBatchCompletedOrFailed() || this.isBatchFull();
+  });
+
+  protected showAllParticipants = signal(false);
+
+  protected visibleParticipants = computed(() => {
+    const list = this.sortedParticipants();
+    if (this.showAllParticipants() || list.length <= 10) {
+      return list;
     }
+    return list.slice(0, 10);
+  });
 
-    this.loadBatch();
-
-    // Subscribe to real-time batch updates
-    this.unsubBatchUpdate = this.signalRService.onBatchUpdate((update: BatchUpdatedDto) => {
-      if (update.batchId === this.batchId) {
-        // Refresh from server to get updated participant list
-        this.loadBatch();
+  ngOnInit(): void {
+    this.routeSub = this.route.paramMap.subscribe(params => {
+      const newBatchId = params.get('batchId') ?? '';
+      if (!newBatchId) {
+        this.error.set('No batch ID provided');
+        this.loading.set(false);
+        return;
       }
-    });
 
-    // Join SignalR offer group for this batch's offer (will be set after batch loads)
+      // Cleanup prior batch subscriptions/groups
+      this.unsubBatchUpdate?.();
+      const prevBatch = this.batch();
+      if (prevBatch) {
+        this.signalRService.leaveOfferGroup(prevBatch.offerId);
+      }
+
+      this.batchId = newBatchId;
+      this.loading.set(true);
+      this.loadBatch();
+
+      // Subscribe to real-time batch updates for the new batch
+      this.unsubBatchUpdate = this.signalRService.onBatchUpdate((update: BatchUpdatedDto) => {
+        if (update.batchId === this.batchId) {
+          // Refresh from server to get updated participant list
+          this.loadBatch();
+        }
+      });
+    });
   }
 
   ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
     this.unsubBatchUpdate?.();
     const b = this.batch();
     if (b) {
       this.signalRService.leaveOfferGroup(b.offerId);
+    }
+  }
+
+  protected navigateToActiveBatch(): void {
+    const activeId = this.offer()?.activeBatchId;
+    if (activeId) {
+      this.router.navigate(['/hubs/supplier', activeId]);
     }
   }
 
@@ -180,12 +235,6 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     const hours = Math.floor(diffMinutes / 60);
     const mins = diffMinutes % 60;
     return `${hours}h ${mins}m`;
-  }
-
-  protected isParticipant(): boolean {
-    const userId = this.authService.user()?.id;
-    if (!userId) return false;
-    return this.batch()?.participants.some(p => p.buyerId === userId) ?? false;
   }
 
   protected leave(): void {
