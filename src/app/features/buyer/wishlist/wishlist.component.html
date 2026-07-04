@@ -99,11 +99,11 @@
             <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
               <span class="badge badge-muted">{{ req.categoryName || 'Uncategorized' }}</span>
               <span class="badge"
-                [class.badge-success]="req.status === 'active' || req.status === 'open' || req.status === 'completed'"
-                [class.badge-warning]="req.status === 'pendingreview' || req.status === 'pending_review'"
-                [class.badge-danger]="req.status === 'failed'"
-                [class.badge-muted]="req.status === 'inactive' || req.status === 'closed'">
-                {{ req.status === 'pendingreview' ? 'Pending Review' : req.status }}
+                [class.badge-success]="['active','open','completed'].includes(req.status.toLowerCase())"
+                [class.badge-warning]="req.status.toLowerCase() === 'pendingreview'"
+                [class.badge-danger]="req.status.toLowerCase() === 'failed'"
+                [class.badge-muted]="['inactive','closed'].includes(req.status.toLowerCase())">
+                {{ req.status.toLowerCase() === 'pendingreview' ? 'Pending Review' : req.status }}
               </span>
             </div>
             <h3 style="font-size:1.0625rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{

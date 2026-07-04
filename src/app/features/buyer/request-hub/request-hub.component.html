@@ -11,7 +11,13 @@
       <div class="v2-header-info">
         <div class="v1-badges" style="margin-bottom:0.75rem">
           <span class="badge badge-outline">{{ req.categoryName || 'Uncategorized' }}</span>
-          <span class="badge" [class]="req.status === 'active' || req.status === 'Active' ? 'badge-brand' : 'badge-muted'">{{ req.status }}</span>
+          <span class="badge"
+            [class.badge-success]="['active','open','completed'].includes(req.status.toLowerCase())"
+            [class.badge-warning]="req.status.toLowerCase() === 'pendingreview'"
+            [class.badge-danger]="req.status.toLowerCase() === 'failed'"
+            [class.badge-muted]="['inactive','closed'].includes(req.status.toLowerCase())">
+            {{ req.status.toLowerCase() === 'pendingreview' ? 'Pending Review' : req.status }}
+          </span>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem">
           <h1 class="v2-title" style="margin:0">{{ req.title || req.description }}</h1>
