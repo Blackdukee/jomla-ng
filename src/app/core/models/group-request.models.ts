@@ -23,6 +23,15 @@ export interface GroupRequestOfferDto {
   createdAt: string;
   expiresAt: string;
   roundNumber: number;
+  acceptedBuyerIds?: string[];
+  rejectedBuyerIds?: string[];
+  isAnimatingOut?: boolean;
+}
+
+export interface GroupRequestParticipantDto {
+  id: string;
+  name: string;
+  quantity: number;
 }
 
 export interface GroupRequestDetailDto {
@@ -36,9 +45,11 @@ export interface GroupRequestDetailDto {
   moderationReason: string | null;
   createdAt: string;
   initiatorId: string;
+  initiatorName: string;
   categoryName: string;
   participantsCount: number;
   offers: GroupRequestOfferDto[];
+  participants: GroupRequestParticipantDto[];
 }
 
 export interface CreateGroupRequestRequest {

@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit, HostListener } from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { CloudinaryPipe } from '../../../shared/pipes/cloudinary.pipe';
 import { OffersService } from '../../../core/services/offers.service';
 import { OfferDto } from '../../../core/models';
 import { format } from 'date-fns';
@@ -8,7 +9,7 @@ import { ToastService } from '../../../core/toast.service';
 @Component({
   selector: 'app-manage-offer',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, CloudinaryPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './manage-offer.component.html',
   styleUrl: './manage-offer.component.css'

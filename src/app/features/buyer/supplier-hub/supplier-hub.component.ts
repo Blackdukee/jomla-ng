@@ -1,15 +1,21 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DecimalPipe } from '@angular/common';
 import { BatchesService } from '../../../core/services/batches.service';
+import { OffersService } from '../../../core/services/offers.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { AuthService } from '../../../core/auth.service';
 import { ToastService } from '../../../core/toast.service';
-import { BatchDetailDto, BatchUpdatedDto } from '../../../core/models';
+import { BatchDetailDto, BatchUpdatedDto, OfferDto } from '../../../core/models';
 import { differenceInHours, format } from 'date-fns';
+import { environment } from '../../../../environments/environment';
+import { loadStripe } from '@stripe/stripe-js';
+import { CloudinaryPipe } from '../../../shared/pipes/cloudinary.pipe';
 
 @Component({
   selector: 'app-supplier-hub',
   standalone: true,
+  imports: [DecimalPipe, CloudinaryPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './supplier-hub.component.html',
   styleUrl: './supplier-hub.component.css'
@@ -18,11 +24,13 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
   protected router = inject(Router);
   private route = inject(ActivatedRoute);
   private batchesService = inject(BatchesService);
+  private offersService = inject(OffersService);
   private signalRService = inject(SignalRService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
 
   protected batch = signal<BatchDetailDto | null>(null);
+  protected offer = signal<OfferDto | null>(null);
   protected loading = signal(true);
   protected error = signal<string | null>(null);
   protected leaving = signal(false);
@@ -37,35 +45,90 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
 
   private batchId = '';
   private unsubBatchUpdate: (() => void) | null = null;
+  private routeSub: any = null;
   private stripe: any = null;
   private cardElement: any = null;
 
-  ngOnInit(): void {
-    this.batchId = this.route.snapshot.paramMap.get('batchId') ?? '';
-    if (!this.batchId) {
-      this.error.set('No batch ID provided');
-      this.loading.set(false);
-      return;
+  protected participantQuantity = computed(() => {
+    const userId = this.authService.user()?.id;
+    if (!userId) return 0;
+    const p = this.batch()?.participants.find(part => part.buyerId === userId && part.status === 'Active');
+    return p ? p.quantity : 0;
+  });
+
+  protected isParticipant = computed(() => {
+    return this.participantQuantity() > 0;
+  });
+
+  protected isBatchCompletedOrFailed = computed(() => {
+    const b = this.batch();
+    if (!b) return false;
+    return b.status === 'Completed' || b.status === 'Failed';
+  });
+
+  protected isBatchFull = computed(() => {
+    const b = this.batch();
+    if (!b) return false;
+    return b.currentQuantity >= b.targetQuantity;
+  });
+
+  protected shouldLockActions = computed(() => {
+    return this.isBatchCompletedOrFailed() || this.isBatchFull();
+  });
+
+  protected showAllParticipants = signal(false);
+
+  protected visibleParticipants = computed(() => {
+    const list = this.sortedParticipants();
+    if (this.showAllParticipants() || list.length <= 10) {
+      return list;
     }
+    return list.slice(0, 10);
+  });
 
-    this.loadBatch();
-
-    // Subscribe to real-time batch updates
-    this.unsubBatchUpdate = this.signalRService.onBatchUpdate((update: BatchUpdatedDto) => {
-      if (update.batchId === this.batchId) {
-        // Refresh from server to get updated participant list
-        this.loadBatch();
+  ngOnInit(): void {
+    this.routeSub = this.route.paramMap.subscribe(params => {
+      const newBatchId = params.get('batchId') ?? '';
+      if (!newBatchId) {
+        this.error.set('No batch ID provided');
+        this.loading.set(false);
+        return;
       }
-    });
 
-    // Join SignalR offer group for this batch's offer (will be set after batch loads)
+      // Cleanup prior batch subscriptions/groups
+      this.unsubBatchUpdate?.();
+      const prevBatch = this.batch();
+      if (prevBatch) {
+        this.signalRService.leaveOfferGroup(prevBatch.offerId);
+      }
+
+      this.batchId = newBatchId;
+      this.loading.set(true);
+      this.loadBatch();
+
+      // Subscribe to real-time batch updates for the new batch
+      this.unsubBatchUpdate = this.signalRService.onBatchUpdate((update: BatchUpdatedDto) => {
+        if (update.batchId === this.batchId) {
+          // Refresh from server to get updated participant list
+          this.loadBatch();
+        }
+      });
+    });
   }
 
   ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
     this.unsubBatchUpdate?.();
     const b = this.batch();
     if (b) {
       this.signalRService.leaveOfferGroup(b.offerId);
+    }
+  }
+
+  protected navigateToActiveBatch(): void {
+    const activeId = this.offer()?.activeBatchId;
+    if (activeId) {
+      this.router.navigate(['/hubs/supplier', activeId]);
     }
   }
 
@@ -76,6 +139,16 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
         this.loading.set(false);
         // Join SignalR group for this offer
         this.signalRService.joinOfferGroup(batch.offerId);
+
+        // Fetch offer details to get image and description
+        this.offersService.getOfferById(batch.offerId).subscribe({
+          next: (offer) => {
+            this.offer.set(offer);
+          },
+          error: (err) => {
+            console.error('Failed to load offer details:', err);
+          }
+        });
       },
       error: (err) => {
         this.error.set(err?.error?.detail || err?.error?.title || 'Failed to load batch');
@@ -107,10 +180,61 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     return this.authService.user()?.id === buyerId;
   }
 
-  protected isParticipant(): boolean {
-    const userId = this.authService.user()?.id;
-    if (!userId) return false;
-    return this.batch()?.participants.some(p => p.buyerId === userId) ?? false;
+  protected sortedParticipants = computed(() => {
+    const b = this.batch();
+    if (!b) return [];
+    const currentUserId = this.authService.user()?.id;
+    const list = [...b.participants];
+    return list.sort((a, b) => {
+      if (a.buyerId === currentUserId) return -1;
+      if (b.buyerId === currentUserId) return 1;
+      return new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime();
+    });
+  });
+
+  protected subtotal = computed(() => {
+    const b = this.batch();
+    if (!b) return 0;
+    return this.joinQty() * b.discountedPrice;
+  });
+
+  protected savings = computed(() => {
+    const b = this.batch();
+    if (!b) return 0;
+    return this.joinQty() * (b.unitPrice - b.discountedPrice);
+  });
+
+  protected getInitials(name: string): string {
+    if (!name) return '';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  protected getParticipantName(p: any): string {
+    if (this.isCurrentUser(p.buyerId)) {
+      return 'You (you)';
+    }
+    return p.buyerName;
+  }
+
+  protected getParticipantInitials(p: any): string {
+    if (this.isCurrentUser(p.buyerId)) {
+      return 'Y';
+    }
+    return this.getInitials(p.buyerName);
+  }
+
+  protected timeRemainingFormatted(): string {
+    const b = this.batch();
+    if (!b?.expiresAt) return 'No expiry set';
+    if (b.status === 'Completed') return 'Completed';
+    if (b.status === 'Failed') return 'Expired';
+    const now = new Date();
+    const expiry = new Date(b.expiresAt);
+    const diffMinutes = Math.floor((expiry.getTime() - now.getTime()) / 60000);
+    if (diffMinutes <= 0) return 'Expired';
+    const hours = Math.floor(diffMinutes / 60);
+    const mins = diffMinutes % 60;
+    return `${hours}h ${mins}m`;
   }
 
   protected leave(): void {
@@ -127,7 +251,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.toast.error('Error', err?.error?.detail || 'Failed to leave batch');
+        this.toast.errorApi('Error', err);
         this.leaving.set(false);
       }
     });
@@ -144,8 +268,8 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
           if (res.clientSecret) {
             this.clientSecret.set(res.clientSecret);
             this.joining.set(false);
-            setTimeout(() => {
-              this.initStripe();
+            setTimeout(async () => {
+              await this.initStripe();
               this.cardElement.mount('#card-element');
             }, 0);
           } else {
@@ -161,14 +285,14 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.joining.set(false);
-        this.toast.error('Error', err?.error?.detail || err?.error?.title || 'Failed to join batch');
+        this.toast.errorApi('Error', err);
       }
     });
   }
 
-  private initStripe() {
+  private async initStripe() {
     if (this.stripe) return;
-    this.stripe = (window as any).Stripe('pk_test_51Tk8ptBjYscPhZ5LBYxqyxlHzLHiL1bhZ7OUGNhdFHJbhUkPC6vA8bxbpp5Gf0HCasOkkqVvCF7KOxP1gBY7mKY100JaqmlKa4');
+    this.stripe = await loadStripe(environment.stripePublishableKey);
     const elements = this.stripe.elements();
     this.cardElement = elements.create('card', {
       style: {
@@ -212,7 +336,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
             },
             error: (err) => {
               this.joining.set(false);
-              this.toast.error('Verification Error', err?.error?.detail || 'Failed to complete registration');
+              this.toast.errorApi('Verification Error', err);
             }
           });
         } else {
@@ -258,7 +382,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.updatingQty.set(false);
-        this.toast.error('Error', err?.error?.detail || err?.error?.title || 'Failed to update quantity');
+        this.toast.errorApi('Error', err);
       }
     });
   }

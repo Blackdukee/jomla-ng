@@ -37,8 +37,10 @@ export class SupplierRequestsComponent implements OnInit {
 
   protected catFilter = signal('all');
   protected sort = signal('newest');
+  protected searchQuery = signal('');
   protected categories = signal<CategoryDto[]>([]);
   protected requests = signal<GroupRequestListItemDto[]>([]);
+  protected isLoading = signal(true);
 
   // Pagination State
   protected pageNumber = signal(1);
@@ -56,9 +58,11 @@ export class SupplierRequestsComponent implements OnInit {
   }
 
   protected loadRequests(): void {
+    this.isLoading.set(true);
     const categoryId = this.catFilter() === 'all' ? undefined : this.catFilter();
     this.groupRequestsService.getGroupRequests({
       categoryId,
+      titleSearch: this.searchQuery() || undefined,
       sortBy: this.sort(),
       page: this.pageNumber(),
       pageSize: this.pageSize,
@@ -67,8 +71,12 @@ export class SupplierRequestsComponent implements OnInit {
       next: (res) => {
         this.requests.set(res.items);
         this.totalItems.set(res.totalCount);
+        this.isLoading.set(false);
       },
-      error: (err) => console.error('Failed to load group requests', err)
+      error: (err) => {
+        console.error('Failed to load group requests', err);
+        this.isLoading.set(false);
+      }
     });
   }
 
@@ -80,6 +88,12 @@ export class SupplierRequestsComponent implements OnInit {
 
   protected onSortChange(e: Event) {
     this.sort.set((e.target as HTMLSelectElement).value);
+    this.pageNumber.set(1);
+    this.loadRequests();
+  }
+
+  protected onSearchInput(e: Event) {
+    this.searchQuery.set((e.target as HTMLInputElement).value);
     this.pageNumber.set(1);
     this.loadRequests();
   }

@@ -54,7 +54,7 @@ export class ForgotPasswordComponent {
   // Step 2 Form: Code & New Passwords
   protected resetForm = this.fb.group({
     token: ['', Validators.required],
-    newPassword: ['', [Validators.required, Validators.minLength(8)]],
+    newPassword: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/.*[0-9].*/)]],
     confirmPassword: ['', Validators.required]
   }, {
     validators: (group) => {

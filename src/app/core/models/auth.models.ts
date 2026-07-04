@@ -9,6 +9,7 @@ export interface AuthResponse {
   email: string;
   firstName: string;
   lastName: string;
+   imageUrl?: string;  
   refreshTokenExpiresOn: string;  // ISO date string
 }
 

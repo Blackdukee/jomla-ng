@@ -92,3 +92,32 @@ export interface BuyerHubDto {
   fillProgress?: number;
   fillTarget?: number;
 }
+
+/** Matches backend CompletedDealsResult */
+export interface CompletedDealsResult {
+  totalRevenue: number;
+  totalUnitsSold: number;
+  totalBatchesClosed: number;
+  totalBuyerCommitments: number;
+  avgUnitsPerBatch: number;
+  deals: CompletedDealDto[];
+}
+
+/** Matches backend CompletedDealDto */
+export interface CompletedDealDto {
+  id: string;
+  offerTitle: string;
+  batchNumber: number;
+  buyerCount: number;
+  totalUnits: number;
+  totalValue: number;
+  completedAt: string | null;
+  buyers: DealBuyerDto[];
+}
+
+/** Matches backend DealBuyerDto */
+export interface DealBuyerDto {
+  name: string;
+  quantity: number;
+}
+

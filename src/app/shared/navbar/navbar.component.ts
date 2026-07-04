@@ -1,9 +1,10 @@
-import { Component, ChangeDetectionStrategy, inject, signal, HostListener, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, HostListener, OnInit, OnDestroy, effect, ElementRef } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
 import { NotificationsService } from '../../core/services/notifications.service';
 import { SignalRService } from '../../core/services/signalr.service';
+import { BatchesService } from '../../core/services/batches.service';
 import { NotificationDto } from '../../core/models';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -18,12 +19,7 @@ import { formatDistanceToNow } from 'date-fns';
         <!-- Logo -->
         <a [routerLink]="logoLink()" class="navbar-logo" aria-label="Jomla home">
           <div class="logo-icon" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-              <polyline points="2 17 12 22 22 17"/>
-              <polyline points="2 12 17 22 12"/>
-              <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
-            </svg>
+            <img src="icons/jomla-icon-grouping.svg" alt="Jomla Logo" width="32" height="32" fetchpriority="high" />
           </div>
           <span class="logo-text">Jomla</span>
         </a>
@@ -81,7 +77,7 @@ import { formatDistanceToNow } from 'date-fns';
                       </div>
                     } @else {
                       @for (notif of notifications(); track notif.id) {
-                        <div class="notif-item" [class.unread]="!notif.isRead" (click)="markAsRead(notif)">
+                        <div class="notif-item" [class.unread]="!notif.isRead" (click)="onNotificationClick(notif)">
                           @if (!notif.isRead) {
                             <div class="notif-dot" aria-hidden="true"></div>
                           }
@@ -100,9 +96,13 @@ import { formatDistanceToNow } from 'date-fns';
 
             <!-- Avatar dropdown -->
             <div style="position:relative">
-              <button class="avatar" (click)="avatarOpen.set(!avatarOpen())" [attr.aria-label]="'User menu for ' + userDisplayName()">
-                {{ initials() }}
-              </button>
+            <button class="avatar" (click)="avatarOpen.set(!avatarOpen())" [attr.aria-label]="'User menu for ' + userDisplayName()">
+            @if (auth.user()?.imageUrl) {
+              <img [src]="auth.user()!.imageUrl" alt="Profile" width="40" height="40" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
+            } @else {
+              {{ initials() }}
+            }
+            </button>
               @if (avatarOpen()) {
                 <div class="dropdown avatar-menu" role="menu">
                   <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--border)">
@@ -179,21 +179,20 @@ import { formatDistanceToNow } from 'date-fns';
       flex-shrink: 0;
     }
     .logo-icon {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #ffffff;
-      border-radius: 50%;
-      padding: 0.35rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s ease;
     }
-    .navbar-logo:hover .logo-icon {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--brand);
-      color: var(--brand);
-      box-shadow: 0 0 15px var(--brand);
+    .logo-icon img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      border-radius: 6px;
+      transition: transform 0.3s ease, filter 0.3s ease;
+    }
+    .navbar-logo:hover .logo-icon img {
+      transform: scale(1.08) rotate(5deg);
+      filter: drop-shadow(0 0 8px rgba(13, 148, 136, 0.6));
     }
     .logo-text {
       font-weight: 800;
@@ -295,6 +294,7 @@ import { formatDistanceToNow } from 'date-fns';
     }
     .dropdown-item:hover { background: #f9fafb; }
     .dropdown-item.danger { color: var(--danger); }
+    
     .btn-ghost {
       color: #cbd5e1;
     }
@@ -337,6 +337,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   private notificationsService = inject(NotificationsService);
   private signalRService = inject(SignalRService);
+  private batchesService = inject(BatchesService);
+  private elementRef = inject(ElementRef);
 
   protected mobileOpen = signal(false);
   protected notifOpen = signal(false);
@@ -346,6 +348,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
   protected notifications = signal<NotificationDto[]>([]);
   protected unreadCount = signal<number>(0);
   private notifUnsubscribe: (() => void) | null = null;
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+
+    // Check if the click is outside the notification bell button and the notification dropdown panel
+    const bellBtn = this.elementRef.nativeElement.querySelector('[aria-label="Notifications"]');
+    const notifPanel = this.elementRef.nativeElement.querySelector('.notif-panel');
+    if (this.notifOpen() && bellBtn && !bellBtn.contains(target) && (!notifPanel || !notifPanel.contains(target))) {
+      this.notifOpen.set(false);
+    }
+
+    // Check if the click is outside the avatar button and the avatar menu dropdown
+    const avatarBtn = this.elementRef.nativeElement.querySelector('.avatar');
+    const avatarMenu = this.elementRef.nativeElement.querySelector('.avatar-menu');
+    if (this.avatarOpen() && avatarBtn && !avatarBtn.contains(target) && (!avatarMenu || !avatarMenu.contains(target))) {
+      this.avatarOpen.set(false);
+    }
+  }
 
   constructor() {
     effect(() => {
@@ -408,6 +429,44 @@ export class NavbarComponent implements OnInit, OnDestroy {
         console.error('Failed to mark notification as read:', err);
       }
     });
+  }
+
+  protected onNotificationClick(notif: NotificationDto) {
+    if (!notif.isRead) {
+      this.markAsRead(notif);
+    }
+    this.notifOpen.set(false);
+
+    if (!notif.entityId) return;
+
+    const entityType = notif.entityType?.toLowerCase();
+    const role = this.auth.user()?.role?.toLowerCase();
+
+    if (entityType === 'supplieroffer') {
+      if (role === 'supplier') {
+        this.router.navigate(['/supplier/offers', notif.entityId]);
+      }
+    } else if (entityType === 'grouprequest') {
+      if (role === 'buyer') {
+        this.router.navigate(['/hubs/request', notif.entityId]);
+      } else if (role === 'supplier') {
+        this.router.navigate(['/manage/requests', notif.entityId]);
+      }
+    } else if (entityType === 'supplierbatch' || entityType === 'batch') {
+      if (role === 'buyer') {
+        this.router.navigate(['/hubs/supplier', notif.entityId]);
+      } else if (role === 'supplier') {
+        this.batchesService.getBatch(notif.entityId).subscribe({
+          next: (batch) => {
+            this.router.navigate(['/supplier/offers', batch.offerId]);
+          },
+          error: (err) => {
+            console.error('Failed to fetch batch for notification routing:', err);
+            this.router.navigate(['/supplier/offers']);
+          }
+        });
+      }
+    }
   }
 
   protected getRelativeTime(dateStr: string): string {

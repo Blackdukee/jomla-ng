@@ -21,6 +21,15 @@ export class ToastService {
 
   success(title: string, description?: string) { this.show(title, description, 'success'); }
   error(title: string, description?: string) { this.show(title, description, 'danger'); }
+  errorApi(title: string, err: any) {
+    const description =
+      err?.error?.error ||
+      err?.error?.detail ||
+      err?.error?.title ||
+      err?.message ||
+      'An unexpected error occurred.';
+    this.error(title, description);
+  }
   warning(title: string, description?: string) { this.show(title, description, 'warning'); }
 
   remove(id: number) {

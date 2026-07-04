@@ -1,16 +1,15 @@
-import { Component, ChangeDetectionStrategy, signal, computed, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
-import { inject } from '@angular/core';
-import { MOCK_REQUESTS } from '../../../core/mock-data';
+import { CloudinaryPipe } from '../../../shared/pipes/cloudinary.pipe';
 import { OffersService } from '../../../core/services/offers.service';
 import { CategoriesService } from '../../../core/services/categories.service';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
-import { OfferDto, CategoryDto, GroupRequestListItemDto, GetAllOffersPagedResponse } from '../../../core/models';
+import { OfferDto, CategoryDto, GroupRequestListItemDto } from '../../../core/models';
 
 @Component({
   selector: 'app-discover',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, CloudinaryPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.css'
@@ -22,10 +21,12 @@ export class DiscoverComponent implements OnInit {
   private router = inject(Router);
 
   protected tab = signal<'offers' | 'requests'>('offers');
-  protected catFilter = signal('all');
-  protected sort = signal('newest');
+  protected catFilter = signal('all'); // Holds 'all' or selected CategoryId (Guid)
+  protected sort = signal('newest'); // 'newest' | 'most_buyers' | 'most_filled'
   protected searchTerm = signal('');
-  protected isLoading = signal(false);
+
+  protected isLoadingOffers = signal(true);
+  protected isLoadingRequests = signal(true);
 
   protected categories = signal<CategoryDto[]>([]);
   protected offers = signal<OfferDto[]>([]);
@@ -34,16 +35,10 @@ export class DiscoverComponent implements OnInit {
   // Pagination state (Offers)
   protected pageNumber = signal(1);
   protected pageSize = signal(6);
+  protected totalCountOffers = signal(0);
 
   protected totalPages = computed(() => {
-    const list = this.filteredOffers();
-    return Math.ceil(list.length / this.pageSize()) || 1;
-  });
-
-  protected paginatedOffers = computed(() => {
-    const list = this.filteredOffers();
-    const start = (this.pageNumber() - 1) * this.pageSize();
-    return list.slice(start, start + this.pageSize());
+    return Math.ceil(this.totalCountOffers() / this.pageSize()) || 1;
   });
 
   protected pagesArray = computed(() => {
@@ -54,16 +49,10 @@ export class DiscoverComponent implements OnInit {
   // Pagination state (Requests)
   protected pageNumberRequests = signal(1);
   protected pageSizeRequests = signal(6);
+  protected totalCountRequests = signal(0);
 
   protected totalPagesRequests = computed(() => {
-    const list = this.filteredRequests();
-    return Math.ceil(list.length / this.pageSizeRequests()) || 1;
-  });
-
-  protected paginatedRequests = computed(() => {
-    const list = this.filteredRequests();
-    const start = (this.pageNumberRequests() - 1) * this.pageSizeRequests();
-    return list.slice(start, start + this.pageSizeRequests());
+    return Math.ceil(this.totalCountRequests() / this.pageSizeRequests()) || 1;
   });
 
   protected pagesArrayRequests = computed(() => {
@@ -76,30 +65,69 @@ export class DiscoverComponent implements OnInit {
       this.categories.set(cats);
     });
 
-    this.loadData();
+    this.loadOffers();
+    this.loadRequests();
   }
 
-  protected loadData(): void {
-    const term = this.searchTerm().trim();
-    this.isLoading.set(true);
+  protected loadOffers(): void {
+    this.isLoadingOffers.set(true);
+    const categoryId = this.catFilter() === 'all' ? undefined : this.catFilter();
+    const search = this.searchTerm().trim() || undefined;
 
-    this.offersService.getAllOffers({ search: term || undefined }).subscribe({
+    this.offersService.getAllOffers({
+      pageNumber: this.pageNumber(),
+      pageSize: this.pageSize(),
+      search,
+      categoryId,
+      sortBy: this.getOffersSortBy(),
+      descending: true
+    }).subscribe({
       next: (res) => {
-        this.offers.set(res.items);
-        this.isLoading.set(false);
+        this.offers.set(res.items || []);
+        this.totalCountOffers.set(res.totalCount || 0);
+        this.isLoadingOffers.set(false);
       },
       error: (err) => {
         console.error('Failed to load offers', err);
-        this.isLoading.set(false);
+        this.isLoadingOffers.set(false);
       }
     });
+  }
 
-    this.groupRequestsService.getGroupRequests({ titleSearch: term || undefined }).subscribe({
+  protected loadRequests(): void {
+    this.isLoadingRequests.set(true);
+    const categoryId = this.catFilter() === 'all' ? undefined : this.catFilter();
+    const search = this.searchTerm().trim() || undefined;
+
+    this.groupRequestsService.getGroupRequests({
+      page: this.pageNumberRequests(),
+      pageSize: this.pageSizeRequests(),
+      titleSearch: search,
+      categoryId,
+      sortBy: this.sort()
+    }).subscribe({
       next: (res) => {
-        this.requests.set(res.items);
+        this.requests.set(res.items || []);
+        this.totalCountRequests.set(res.totalCount || 0);
+        this.isLoadingRequests.set(false);
       },
-      error: (err) => console.error('Failed to load group requests', err)
+      error: (err) => {
+        console.error('Failed to load group requests', err);
+        this.isLoadingRequests.set(false);
+      }
     });
+  }
+
+  private getOffersSortBy(): string {
+    switch (this.sort()) {
+      case 'most_buyers':
+        return 'MostBuyers';
+      case 'most_filled':
+        return 'MostFilled';
+      case 'newest':
+      default:
+        return 'CreatedAt';
+    }
   }
 
   protected onSearchInput(e: Event): void {
@@ -113,62 +141,37 @@ export class DiscoverComponent implements OnInit {
   protected triggerSearch(): void {
     this.pageNumber.set(1);
     this.pageNumberRequests.set(1);
-    this.loadData();
+    this.loadOffers();
+    this.loadRequests();
   }
-
-  protected filteredOffers = computed(() => {
-    let list = [...this.offers()];
-    if (this.catFilter() !== 'all') {
-      list = list.filter(o => o.categoryName === this.catFilter());
-    }
-    if (this.sort() === 'most_buyers') {
-      list.sort((a, b) => b.buyerCount - a.buyerCount);
-    } else if (this.sort() === 'most_filled') {
-      list.sort((a, b) => {
-        const progressA = a.hubTargetQuantity > 0 ? a.committedUnits / a.hubTargetQuantity : 0;
-        const progressB = b.hubTargetQuantity > 0 ? b.committedUnits / b.hubTargetQuantity : 0;
-        return progressB - progressA;
-      });
-    }
-    return list;
-  });
-
-  protected filteredRequests = computed(() => {
-    let list = [...this.requests()];
-    if (this.catFilter() !== 'all') {
-      list = list.filter(r => r.categoryName === this.catFilter());
-    }
-    if (this.sort() === 'most_buyers') {
-      list.sort((a, b) => b.participantsCount - a.participantsCount);
-    } else if (this.sort() === 'newest') {
-      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    } else if (this.sort() === 'most_filled') {
-      // Sort requests by currentQuantity descending for most volume
-      list.sort((a, b) => b.currentQuantity - a.currentQuantity);
-    }
-    return list;
-  });
 
   protected onCatChange(e: Event) {
     this.catFilter.set((e.target as HTMLSelectElement).value);
     this.pageNumber.set(1);
     this.pageNumberRequests.set(1);
+    this.loadOffers();
+    this.loadRequests();
   }
+
   protected onSortChange(e: Event) {
     this.sort.set((e.target as HTMLSelectElement).value);
     this.pageNumber.set(1);
     this.pageNumberRequests.set(1);
+    this.loadOffers();
+    this.loadRequests();
   }
 
   protected goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages()) {
       this.pageNumber.set(page);
+      this.loadOffers();
     }
   }
 
   protected goToPageRequests(page: number) {
     if (page >= 1 && page <= this.totalPagesRequests()) {
       this.pageNumberRequests.set(page);
+      this.loadRequests();
     }
   }
 

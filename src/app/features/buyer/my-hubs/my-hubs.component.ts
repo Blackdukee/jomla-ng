@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BatchesService } from '../../../core/services/batches.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { BuyerHubDto } from '../../../core/models';
 
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
@@ -31,16 +32,20 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
   templateUrl: './my-hubs.component.html',
   styleUrl: './my-hubs.component.css'
 })
-export class MyHubsComponent implements OnInit {
+export class MyHubsComponent implements OnInit, OnDestroy {
   private batchesService = inject(BatchesService);
+  private signalRService = inject(SignalRService);
 
   protected tab = signal<'active' | 'fulfilled'>('active');
   protected allHubs = signal<BuyerHubDto[]>([]);
+  protected isLoading = signal(true);
+  private unsubUserBatchStatusChange: (() => void) | null = null;
 
   protected searchQuery = signal('');
   protected typeFilter = signal<'all' | 'supplier_offer' | 'group_request'>('all');
   protected page = signal(1);
   protected pageSize = 5;
+  protected totalItems = signal(0); // We don't necessarily need this if pages are computed from filteredHubs length
 
   protected filteredHubs = computed(() => {
     const queryStr = this.searchQuery().toLowerCase().trim();
@@ -95,10 +100,28 @@ export class MyHubsComponent implements OnInit {
 
 
   ngOnInit(): void {
-    this.batchesService.getMyHubs().subscribe({
-      next: (data) => this.allHubs.set(data),
-      error: (err) => console.error('Failed to load my hubs', err)
+    this.loadHubs();
+    this.unsubUserBatchStatusChange = this.signalRService.onUserBatchStatusChange((b) => {
+      this.loadHubs();
     });
+  }
+
+  private loadHubs() {
+    this.isLoading.set(true);
+    this.batchesService.getMyHubs().subscribe({
+      next: (data) => {
+        this.allHubs.set(data);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load my hubs', err);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.unsubUserBatchStatusChange?.();
   }
 
   protected hubLink(hub: BuyerHubDto) {

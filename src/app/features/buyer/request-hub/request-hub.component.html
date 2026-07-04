@@ -1,101 +1,224 @@
 @if (request(); as req) {
-  <div class="container" style="max-width:1200px;padding:2rem 1rem 4rem" role="main">
-    <!-- Back -->
-    <button class="btn btn-ghost btn-sm" style="margin-bottom:1.5rem;margin-left:-0.5rem" (click)="router.navigate(['/my-hubs'])">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-      Back
-    </button>
-
-    <!-- Page header -->
-    <div style="margin-bottom:2rem">
-      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap">
-        <span class="badge badge-outline">{{ req.categoryName || 'Uncategorized' }}</span>
-        <span class="badge" [class]="req.status === 'active' || req.status === 'Active' ? 'badge-brand' : 'badge-muted'">{{ req.status }}</span>
+  <div class="v2-page">
+    <div class="v2-header">
+      <div class="v2-header-top">
+        <button class="btn btn-ghost btn-sm v1-back" (click)="router.navigate(['/my-hubs'])">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
       </div>
-      <h1 style="font-size:1.875rem;font-weight:800;margin-bottom:0.5rem">{{ req.title || req.description }}</h1>
-      @if (req.description) {
-        <p style="color:var(--text-secondary);margin-bottom:1rem">{{ req.description }}</p>
-      }
-      <div style="display:flex;align-items:center;gap:1.5rem;color:var(--text-secondary);flex-wrap:wrap">
-        <span style="display:flex;align-items:center;gap:0.375rem;font-size:0.9375rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-          {{ req.currentQuantity }} total units
-        </span>
-        <span style="display:flex;align-items:center;gap:0.375rem;font-size:0.9375rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          {{ req.participantsCount }} buyers
-        </span>
+
+      <div class="v2-header-info">
+        <div class="v1-badges" style="margin-bottom:0.75rem">
+          <span class="badge badge-outline">{{ req.categoryName || 'Uncategorized' }}</span>
+          <span class="badge"
+            [class.badge-success]="['active','open','completed'].includes(req.status.toLowerCase())"
+            [class.badge-warning]="req.status.toLowerCase() === 'pendingreview'"
+            [class.badge-danger]="req.status.toLowerCase() === 'failed'"
+            [class.badge-muted]="['inactive','closed'].includes(req.status.toLowerCase())">
+            {{ req.status.toLowerCase() === 'pendingreview' ? 'Pending Review' : req.status }}
+          </span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem">
+          <h1 class="v2-title" style="margin:0">{{ req.title || req.description }}</h1>
+          @if (isJoined()) {
+            <button class="btn btn-outline-danger btn-sm" (click)="leaveRequest()">Leave</button>
+          } @else {
+            <button class="btn btn-primary btn-sm" (click)="showJoinModal.set(true)">Join Hub</button>
+          }
+        </div>
+        <div class="v2-header-meta">
+          <span class="v2-meta-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg> {{ req.currentQuantity }} total units</span>
+          <span class="v2-meta-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> {{ req.participantsCount }} buyers</span>
+          <span class="v2-meta-item" style="color:var(--text-secondary)">Created by {{ req.initiatorName }}</span>
+        </div>
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr;gap:2rem">
-      <!-- Participants card -->
-      <div class="card" style="padding:1.5rem">
-        <h3 style="font-size:1.0625rem;font-weight:700;display:flex;align-items:center;gap:0.5rem;margin-bottom:1.25rem">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          Demand Summary
-        </h3>
-        <div style="display:flex;flex-direction:column;gap:0.5rem">
-          <div class="participant-row" style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border)">
-            <span style="font-weight:500">Total Committed Demand</span>
-            <span style="color:var(--text-primary);font-weight:600">{{ req.currentQuantity }} units</span>
+    <div class="v2-grid">
+      <!-- Left Column (Participants) -->
+      <div class="v2-col v2-col-participants">
+        <div class="v2-card">
+          <div class="v2-card-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <h2 style="margin:0;font-size:0.9375rem">Participants</h2>
           </div>
-          <div class="participant-row" style="display:flex;justify-content:space-between;padding:0.5rem 0">
-            <span style="font-weight:500">Active Buyers</span>
-            <span style="color:var(--text-primary);font-weight:600">{{ req.participantsCount }} buyers</span>
-          </div>
-        </div>
-        <div style="margin-top:1.5rem;text-align:right">
-          <button class="btn btn-outline" style="color:var(--danger)" (click)="leaveRequest()">Leave Hub</button>
-        </div>
-      </div>
-
-      <!-- Seller offers -->
-      <div>
-        <h3 style="font-weight:700;font-size:1.125rem;margin-bottom:1rem">Seller Offers</h3>
-        @if (offers().length === 0) {
-          <div style="padding:3rem 2rem;text-align:center;background:#F9FAFB;border:1px dashed var(--border);border-radius:16px;color:var(--text-secondary)">
-            No offers from sellers yet.
-          </div>
-        } @else {
-          <div style="display:flex;flex-direction:column;gap:1.25rem">
-            @for (offer of offers(); track offer.id) {
-              <div class="card" style="padding:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
-                <div>
-                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem">
-                    <span style="font-weight:700;font-size:1.0625rem">{{ offer.supplierName }}</span>
-                    <span class="badge badge-outline" style="font-size:0.75rem">Round {{ offer.roundNumber }}</span>
-                    <span class="badge" [class]="offer.status === 'Open' ? 'badge-brand' : 'badge-muted'" style="font-size:0.75rem">{{ offer.status }}</span>
+          <div class="v2-card-body">
+            @if (!req.participants || req.participants.length === 0) {
+              <div class="v2-empty-state">
+                <svg class="v2-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <div>No participants yet.</div>
+              </div>
+            } @else {
+              <div class="v2-participant-list">
+                @for (p of req.participants; track p.id) {
+                  <div class="v2-participant-row" [class.is-current]="p.id === authService.user()?.id">
+                    <div class="v2-p-name">
+                      {{ p.name }}
+                      @if (p.id === authService.user()?.id) {
+                        <span style="font-size:0.75rem; color:var(--text-secondary); margin-left:0.5rem">(You)</span>
+                      }
+                    </div>
+                    <div class="v2-p-qty">{{ p.quantity }} units</div>
                   </div>
-                  <div style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.75rem">
-                    Price: <span style="color:var(--brand);font-weight:700;font-size:1.125rem">EGP {{ offer.currentUnitPrice }}</span> per unit
-                  </div>
-                  <div style="display:flex;gap:1.5rem;color:var(--text-secondary);font-size:0.875rem">
-                    <span>Available Capacity: <strong>{{ offer.quantityAvailable }} units</strong></span>
-                    <span>Accepted: <strong>{{ offer.acceptedQuantity }} units</strong></span>
-                  </div>
-                  <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem">
-                    Expires: {{ fmtExpiry(offer.expiresAt) }}
-                  </div>
-                </div>
-                
-                <div style="display:flex;gap:0.5rem;align-items:center">
-                  @if (offer.status === 'Open') {
-                    <button class="btn btn-primary" (click)="accept(offer)">Accept Offer</button>
-                  } @else if (offer.status === 'Accepted') {
-                    <button class="btn btn-outline" style="color:var(--danger)" (click)="cancelAccept(offer)">Leave Offer</button>
-                  }
-                </div>
+                }
               </div>
             }
           </div>
-        }
+        </div>
+      </div>
+
+      <!-- Right Column (Offers) -->
+      <div class="v2-col v2-col-offers">
+        <div class="v2-card">
+          <div class="v2-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0;font-size:0.9375rem">Incoming Offers</h2>
+            <button class="btn btn-ghost btn-sm" style="font-size:0.75rem; padding: 0.25rem 0.5rem; height: auto;" (click)="showHistory.set(!showHistory())">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.25rem; vertical-align:-2px"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path><path d="M12 7v5l4 2"></path></svg>
+              History
+            </button>
+          </div>
+          <div class="v2-card-body" style="padding:1.5rem">
+            @if (visibleOffers().length === 0) {
+              <div class="v2-empty-state">
+                <svg class="v2-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                <div>No offers to display here.</div>
+              </div>
+            } @else {
+              <div class="v1-offers-list">
+                @for (offer of visibleOffers(); track offer.id) {
+                  <div class="v2-offer-card" [class.swipe-out-right]="offer.isAnimatingOut">
+                    <div class="v2-offer-header">
+                      <div class="v2-offer-supplier">
+                        <strong>{{ offer.supplierName }}</strong>
+                        <div class="v2-offer-meta-sub">Offers {{ offer.quantityAvailable }} units max</div>
+                      </div>
+                      <span class="badge badge-outline" style="font-size:0.75rem; white-space:nowrap">{{ offer.status }}</span>
+                    </div>
+                    <div class="v2-offer-price-row" style="margin-bottom:0.75rem">
+                      <div class="v2-offer-price">
+                        <span class="v2-currency">EGP</span>
+                        <span class="v2-price-val">{{ offer.currentUnitPrice }}</span>
+                        <span class="v2-price-unit">/unit</span>
+                      </div>
+                    </div>
+                    
+                    @if (offer.status === 'Open' || offer.isAnimatingOut) {
+                      <div class="v2-offer-progress-row">
+                        <div class="v2-offer-progress-label">
+                          <span style="font-size:0.75rem;font-weight:600">{{ offer.quantityAvailable - offer.acceptedQuantity }} remaining</span>
+                          <span class="v2-offer-expiry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Exp: {{ fmtExpiry(offer.expiresAt) }}</span>
+                        </div>
+                        <div class="v2-progress-bar">
+                          <div class="v2-progress-fill" [style.width]="(offer.acceptedQuantity / offer.quantityAvailable * 100) + '%'"></div>
+                        </div>
+                      </div>
+                    }
+                    
+                    <div class="v2-offer-actions">
+                      @if (offer.status !== 'Accepted' && offer.status !== 'Filled') {
+                        @if (hasAcceptedOffer(offer)) {
+                          <button class="btn btn-outline-danger" style="flex:1" (click)="cancelAccept(offer)">Cancel</button>
+                        } @else if (offer.status === 'Open') {
+                          <button class="btn btn-primary" style="flex:2" (click)="accept(offer)">Accept</button>
+                          @if (hasRejectedOffer(offer)) {
+                            <button class="btn btn-reject" style="flex:1" disabled>Rejected</button>
+                          } @else {
+                            <button class="btn btn-reject" style="flex:1" (click)="reject(offer)">Reject</button>
+                          }
+                        }
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+              
+            }
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
+
+  @if (showJoinModal()) {
+    <div class="dialog-backdrop" (click)="showJoinModal.set(false)" role="dialog" aria-modal="true" aria-labelledby="join-modal-title">
+      <div class="dialog" (click)="$event.stopPropagation()" style="max-width:400px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+          <h2 id="join-modal-title" style="font-size:1.25rem;font-weight:700">Join Group Request</h2>
+          <button (click)="showJoinModal.set(false)"
+            style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:1.25rem"
+            aria-label="Close dialog">✕</button>
+        </div>
+
+        <div style="margin-bottom:1.5rem">
+          <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:1rem">
+            Specify the quantity you want to commit to this group request. Joining pools your demand with other buyers.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="join-qty">Quantity (Units)</label>
+            <input id="join-qty" type="number" class="form-input" min="1" 
+              [value]="joinQuantity()" (input)="onQtyChange($event)" placeholder="e.g. 10">
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem">
+          <button class="btn btn-outline" (click)="showJoinModal.set(false)">Cancel</button>
+          <button class="btn btn-primary" (click)="joinRequest()">Join</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showAcceptModal() && selectedOffer(); as offer) {
+    <div class="dialog-backdrop" (click)="closeAcceptModal()" role="dialog" aria-modal="true" aria-labelledby="accept-modal-title">
+      <div class="dialog" (click)="$event.stopPropagation()" style="max-width:400px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+          <h2 id="accept-modal-title" style="font-size:1.25rem;font-weight:700;color:var(--text-primary)">Accept Supplier Offer</h2>
+          <button (click)="closeAcceptModal()"
+            style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:1.25rem"
+            aria-label="Close dialog">✕</button>
+        </div>
+
+        <div style="margin-bottom:1.5rem">
+          <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:1rem">
+            Supplier: <strong>{{ offer.supplierName }}</strong><br>
+            Price: <strong>EGP {{ offer.currentUnitPrice }} per unit</strong>
+          </p>
+
+          @if (!clientSecret()) {
+            <div class="form-group">
+              <label class="form-label" for="accept-qty">Quantity to Accept</label>
+              <input id="accept-qty" type="number" class="form-input" min="1" 
+                [max]="offer.quantityAvailable - offer.acceptedQuantity"
+                [value]="acceptQuantity()" (input)="onAcceptQtyChange($event)" placeholder="e.g. 5">
+            </div>
+
+            <div style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:0.75rem">
+              <button class="btn btn-outline" (click)="closeAcceptModal()">Cancel</button>
+              <button class="btn btn-primary" [disabled]="submittingHold()" (click)="submitAcceptHold()">
+                {{ submittingHold() ? 'Processing...' : 'Proceed to Payment' }}
+              </button>
+            </div>
+          } @else {
+            <div style="margin-top:1rem; margin-bottom:1rem">
+              <p style="font-size:0.875rem; font-weight:600; margin-bottom:0.75rem; color:var(--text-primary)">Enter Card Details to Authorize EGP {{ acceptQuantity() * offer.currentUnitPrice }} Hold</p>
+              <div id="accept-card-element" style="padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: #fff; min-height: 40px;"></div>
+              <div id="accept-card-errors" role="alert" style="color:var(--danger); font-size:0.75rem; margin-top:8px"></div>
+            </div>
+
+            <div style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:0.75rem">
+              <button class="btn btn-outline" (click)="closeAcceptModal()" [disabled]="authorizingPayment()">Cancel</button>
+              <button class="btn btn-primary" [disabled]="authorizingPayment()" (click)="confirmHoldPayment()">
+                {{ authorizingPayment() ? 'Authorizing Hold...' : 'Authorize Hold' }}
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
 } @else {
   <div style="padding:8rem 2rem;text-align:center;color:var(--text-secondary)">
     Loading request details...

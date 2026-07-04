@@ -71,9 +71,9 @@ export class GroupRequestsService {
     });
   }
 
-  /** DELETE /api/group-requests/{id}/leave — Leave a group request */
+  /** POST /api/group-requests/{id}/leave — Leave a group request */
   leaveGroupRequest(id: string): Observable<any> {
-    return this.http.delete<any>(`${this.baseUrl}/${id}/leave`, {
+    return this.http.post<any>(`${this.baseUrl}/${id}/leave`, {}, {
       withCredentials: true
     });
   }
@@ -88,5 +88,19 @@ export class GroupRequestsService {
       `${this.baseUrl}/matched`,
       { params, withCredentials: true }
     );
+  }
+
+  /** POST /api/group-requests/{requestId}/offers — Place an offer on a group request */
+  placeOffer(requestId: string, offer: {
+    unitPrice: number;
+    minUnitPrice?: number;
+    quantityAvailable: number;
+    minFallbackQuantity?: number;
+    variantAttributes?: string;
+    expiresAt: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${requestId}/offers`, offer, {
+      withCredentials: true
+    });
   }
 }

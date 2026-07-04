@@ -9,8 +9,14 @@ export class GroupRequestOffersService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/GroupRequestOffers`;
 
-  acceptOffer(offerId: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/accept`, {}, {
+  acceptOffer(offerId: string, acceptedQuantity: number): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${offerId}/accept`, { acceptedQuantity }, {
+      withCredentials: true
+    });
+  }
+
+  confirmAcceptOffer(offerId: string, paymentIntentId: string, acceptedQuantity: number): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${offerId}/confirm-accept`, { paymentIntentId, acceptedQuantity }, {
       withCredentials: true
     });
   }

@@ -7,7 +7,10 @@ export type {
   LeaveBatchResponse,
   JoinBatchRequest,
   BatchStatus,
-  BuyerHubDto
+  BuyerHubDto,
+  CompletedDealsResult,
+  CompletedDealDto,
+  DealBuyerDto
 } from './batch.models';
 export type { CategoryDto } from './category.models';
 export type { OfferDto, MyOfferDto, GetAllOffersPagedResponse, MyOffersPagedResponse } from './offer.models';

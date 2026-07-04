@@ -16,6 +16,7 @@ export interface OfferDto {
   buyerCount: number;
   minFallbackQuantity?: number;
   batches?: OfferBatchDto[];
+  hasJoinedActiveBatch?: boolean;
 }
 
 export interface OfferBatchDto {
@@ -38,6 +39,7 @@ export interface MyOfferDto {
   totalQuantityAvailable: number;
   committedUnits: number;
   batchTargetQuantity: number;
+  images: string[];
   activeBatchId?: string;
   activeBatchNumber?: number;
   createdAt: string;

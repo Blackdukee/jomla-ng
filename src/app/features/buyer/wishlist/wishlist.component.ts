@@ -54,10 +54,11 @@ export class WishlistComponent implements OnInit {
   // Filters and Pagination
   protected searchQuery = signal('');
   protected categoryId = signal('');
-  protected statusFilter = signal('Active');
+  protected statusFilter = signal('');
   protected page = signal(1);
   protected pageSize = 5;
   protected totalCount = signal(0);
+  protected isLoading = signal(true);
 
   protected totalPages = computed(() => {
     return Math.max(1, Math.ceil(this.totalCount() / this.pageSize));
@@ -85,6 +86,7 @@ export class WishlistComponent implements OnInit {
   }
 
   protected loadRequests() {
+    this.isLoading.set(true);
     const filters: any = {
       pageSize: this.pageSize,
       page: this.page(),
@@ -98,9 +100,11 @@ export class WishlistComponent implements OnInit {
       next: (res) => {
         this.requests.set(res.items);
         this.totalCount.set(res.totalCount);
+        this.isLoading.set(false);
       },
       error: (err) => {
-        this.toast.error('Error', 'Failed to load wishlist items.');
+        console.error('Failed to load my requests', err);
+        this.isLoading.set(false);
       }
     });
   }
@@ -175,10 +179,28 @@ export class WishlistComponent implements OnInit {
     if (input.files) this.processFiles(input.files);
   }
 
+  private isValidImage(file: File): boolean {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const maxSizeBytes = 5 * 1024 * 1024; // 5 MB
+
+    if (!allowedTypes.includes(file.type)) {
+      this.toast.error('Invalid file format', `${file.name} is not a supported image format. Please upload JPEG, PNG, WEBP, or GIF.`);
+      return false;
+    }
+
+    if (file.size > maxSizeBytes) {
+      this.toast.error('File too large', `${file.name} exceeds the 5MB size limit.`);
+      return false;
+    }
+
+    return true;
+  }
+
   private processFiles(files: FileList) {
     const maxAdd = 8 - this.images().length;
     const addedFiles = Array.from(files).slice(0, maxAdd);
     addedFiles.forEach(file => {
+      if (!this.isValidImage(file)) return;
       this.selectedFiles.update(current => [...current, file]);
       const reader = new FileReader();
       reader.onload = () => this.images.update(imgs => [...imgs, reader.result as string]);

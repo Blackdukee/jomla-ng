@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { formatDistanceToNow } from 'date-fns';
 
 @Component({
@@ -11,12 +12,24 @@ import { formatDistanceToNow } from 'date-fns';
   templateUrl: './supplier-alerts.component.html',
   styleUrl: './supplier-alerts.component.css'
 })
-export class SupplierAlertsComponent implements OnInit {
+export class SupplierAlertsComponent implements OnInit, OnDestroy {
   private groupRequestsService = inject(GroupRequestsService);
+  private signalRService = inject(SignalRService);
 
   protected alerts = signal<any[]>([]);
+  protected isLoading = signal(true);
+  private unsubNotification: (() => void) | null = null;
 
   ngOnInit(): void {
+    this.loadAlerts();
+
+    this.unsubNotification = this.signalRService.onNotification((notif) => {
+      this.loadAlerts();
+    });
+  }
+
+  private loadAlerts(): void {
+    this.isLoading.set(true);
     this.groupRequestsService.getMatchedGroupRequests().subscribe({
       next: (res) => {
         const mapped = (res.items || []).map(req => ({
@@ -29,9 +42,17 @@ export class SupplierAlertsComponent implements OnInit {
           notified_at: req.createdAt
         }));
         this.alerts.set(mapped);
+        this.isLoading.set(false);
       },
-      error: (err) => console.error('Failed to load matched requests', err)
+      error: (err) => {
+        console.error('Failed to load matched requests', err);
+        this.isLoading.set(false);
+      }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.unsubNotification?.();
   }
 
   protected relTime(d: string) {
