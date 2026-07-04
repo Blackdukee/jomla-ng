@@ -95,7 +95,14 @@
                         <tr class="ledger-row">
                           <td style="font-weight:600">{{ hub.title }}</td>
                           <td>
-                            <span class="badge badge-brand-light" style="font-size:0.7rem;text-transform:uppercase">{{ hub.status }}</span>
+                            <span class="badge"
+                              [class.badge-success]="hub.status === 'active' || hub.status === 'open' || hub.status === 'completed'"
+                              [class.badge-warning]="hub.status === 'pendingreview' || hub.status === 'pending_review'"
+                              [class.badge-danger]="hub.status === 'failed'"
+                              [class.badge-muted]="hub.status === 'inactive' || hub.status === 'closed'"
+                              style="font-size:0.7rem;text-transform:uppercase">
+                              {{ hub.status === 'pendingreview' ? 'Pending Review' : hub.status }}
+                            </span>
                           </td>
                           <td><strong>{{ hub.committedUnits }} units</strong></td>
                           <td>
