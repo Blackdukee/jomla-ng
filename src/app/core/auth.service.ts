@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, finalize } from 'rxjs';
+import { Observable, tap, finalize, shareReplay } from 'rxjs';
 import { AuthResponse, User, RegisterRequest } from './models/auth.models';
 import { SignalRService } from './services/signalr.service';
 
@@ -16,6 +16,7 @@ export class AuthService {
   private _token = signal<string | null>(null);
   /** Handle for the proactive refresh timer so we can cancel it on logout. */
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private refreshInProgress$: Observable<AuthResponse> | null = null;
 
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._user() !== null);
@@ -82,6 +83,23 @@ export class AuthService {
           }
         }
       });
+    }
+
+    // Listen for tab focus/visibility changes to handle cases where background tab setTimeout was throttled
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const handleVisibilityOrFocus = () => {
+        const token = this._token();
+        if (token && this.isAuthenticated()) {
+          this.checkAndRefreshIfCloseToExpiry(token);
+        }
+      };
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          handleVisibilityOrFocus();
+        }
+      });
+      window.addEventListener('focus', handleVisibilityOrFocus);
     }
   }
 
@@ -168,9 +186,34 @@ private handleAuthSuccess(res: AuthResponse) {
   }
 
   refreshAccessToken(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/refresh`, {}, { withCredentials: true }).pipe(
-      tap(res => this.handleAuthSuccess(res))
+    if (this.refreshInProgress$) {
+      return this.refreshInProgress$;
+    }
+
+    this.refreshInProgress$ = this.http.post<AuthResponse>(`${this.baseUrl}/refresh`, {}, { withCredentials: true }).pipe(
+      tap(res => this.handleAuthSuccess(res)),
+      finalize(() => {
+        this.refreshInProgress$ = null;
+      }),
+      shareReplay(1)
     );
+
+    return this.refreshInProgress$;
+  }
+
+  private checkAndRefreshIfCloseToExpiry(token: string): void {
+    if (this.isTokenExpired(token)) {
+      this.refreshAccessToken().subscribe({
+        error: (err) => {
+          if (err.status === 401 || err.status === 400) {
+            this.clearAuthState();
+          }
+        }
+      });
+    } else {
+      // Re-schedule the timer based on updated remaining time calculation
+      this.scheduleTokenRefresh(token);
+    }
   }
 
   logout(): Observable<any> {
@@ -192,7 +235,13 @@ private handleAuthSuccess(res: AuthResponse) {
     try {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
-      const decoded = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const decoded = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
       return JSON.parse(decoded);
     } catch {
       return null;
