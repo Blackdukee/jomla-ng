@@ -205,21 +205,21 @@ export class OfferDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected fmtDate(d: string | undefined): string {
-    if (!d) return '';
-    try {
-      return format(new Date(d), 'MMM d, yyyy');
-    } catch {
-      return '';
-    }
-  }
-
-  protected fmtExpiryLong(d: string | undefined): string {
-    if (!d) return '';
-    try {
-      return format(new Date(d), 'MMM d, yyyy h:mm a');
-    } catch {
-      return '';
-    }
-  }
+ private normalizeUtc(d: string): string {
+  return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
+    ? d
+    : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
+}
+protected fmtDate(d: string | undefined): string {
+  if (!d) return '';
+  try {
+    return format(new Date(this.normalizeUtc(d)), 'MMM d, yyyy');
+  } catch { return ''; }
+}
+protected fmtExpiryLong(d: string | undefined): string {
+  if (!d) return '';
+  try {
+    return format(new Date(this.normalizeUtc(d)), 'MMM d, yyyy h:mm a');
+  } catch { return ''; }
+}
 }
