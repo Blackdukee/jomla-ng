@@ -149,7 +149,11 @@ export class SignalRService implements OnDestroy {
   async joinOfferGroup(offerId: string): Promise<void> {
     await this.ensureConnected();
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      await this.connection.invoke('JoinOfferGroup', offerId);
+      try {
+        await this.connection.invoke('JoinOfferGroup', offerId);
+      } catch (err) {
+        console.error(`Failed to join offer group: ${offerId}`, err);
+      }
     }
   }
 
@@ -157,7 +161,11 @@ export class SignalRService implements OnDestroy {
   async leaveOfferGroup(offerId: string): Promise<void> {
     await this.ensureConnected();
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      await this.connection.invoke('LeaveOfferGroup', offerId);
+      try {
+        await this.connection.invoke('LeaveOfferGroup', offerId);
+      } catch (err) {
+        console.error(`Failed to leave offer group: ${offerId}`, err);
+      }
     }
   }
 
@@ -165,7 +173,11 @@ export class SignalRService implements OnDestroy {
   async joinGroupRequestGroup(groupRequestId: string): Promise<void> {
     await this.ensureConnected();
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      await this.connection.invoke('JoinGroupRequestGroup', groupRequestId);
+      try {
+        await this.connection.invoke('JoinGroupRequestGroup', groupRequestId);
+      } catch (err) {
+        console.error(`Failed to join group request group: ${groupRequestId}`, err);
+      }
     }
   }
 
@@ -173,7 +185,11 @@ export class SignalRService implements OnDestroy {
   async leaveGroupRequestGroup(groupRequestId: string): Promise<void> {
     await this.ensureConnected();
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      await this.connection.invoke('LeaveGroupRequestGroup', groupRequestId);
+      try {
+        await this.connection.invoke('LeaveGroupRequestGroup', groupRequestId);
+      } catch (err) {
+        console.error(`Failed to leave group request group: ${groupRequestId}`, err);
+      }
     }
   }
 
@@ -181,7 +197,11 @@ export class SignalRService implements OnDestroy {
   async joinAdminGroup(): Promise<void> {
     await this.ensureConnected();
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      await this.connection.invoke('JoinAdminGroup');
+      try {
+        await this.connection.invoke('JoinAdminGroup');
+      } catch (err) {
+        console.error('Failed to join admin group', err);
+      }
     }
   }
 
@@ -189,7 +209,11 @@ export class SignalRService implements OnDestroy {
   async leaveAdminGroup(): Promise<void> {
     await this.ensureConnected();
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      await this.connection.invoke('LeaveAdminGroup');
+      try {
+        await this.connection.invoke('LeaveAdminGroup');
+      } catch (err) {
+        console.error('Failed to leave admin group', err);
+      }
     }
   }
 
