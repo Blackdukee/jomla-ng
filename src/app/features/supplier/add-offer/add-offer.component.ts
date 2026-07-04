@@ -47,7 +47,7 @@ export class AddOfferComponent implements OnInit {
     discount_percent: [0, [Validators.required, Validators.min(1), Validators.max(99)]],
     hub_target_quantity: [0, [Validators.required, Validators.min(1)]],
     total_quantity_available: [0, [Validators.required, Validators.min(1)]],
-    expiry_fallback_threshold: [null],
+   expiry_fallback_threshold: [null as number | null],
     expires_at: [this.defaultExpiry],
   });
 
@@ -68,6 +68,7 @@ export class AddOfferComponent implements OnInit {
     if (id) {
       this.offerId.set(id);
       this.loading.set(true);
+
       this.offersService.getOfferById(id).subscribe({
         next: (off) => {
           this.loadedOffer.set(off);
@@ -78,11 +79,22 @@ export class AddOfferComponent implements OnInit {
             unit_price: off.unitPrice,
             discount_percent: off.discountPercentage,
             hub_target_quantity: off.hubTargetQuantity,
-            total_quantity_available: (off as any).totalQuantityAvailable || off.hubTargetQuantity,
-            expiry_fallback_threshold: (off as any).minFallbackQuantity || null,
+            expiry_fallback_threshold: off.minFallbackQuantity ?? null,
             expires_at: off.expiresAt ? new Date(off.expiresAt).toISOString().slice(0, 16) : this.defaultExpiry
           });
-          
+
+          // OfferDto doesn't include totalQuantityAvailable — fetch it from getMyOffers instead
+          this.offersService.getMyOffers().subscribe({
+            next: (myOffers) => {
+              const matched = myOffers.items?.find(o => o.id.toLowerCase() === id.toLowerCase());
+              if (matched) {
+                this.form.patchValue({
+                  total_quantity_available: matched.totalQuantityAvailable
+                });
+              }
+            }
+          });
+
           // Programmatically disable locked controls if batch is open
           const hasBatch = !!off.activeBatchId || (off.batches?.some(b => b.status === 'Open') ?? false);
           if (hasBatch) {
