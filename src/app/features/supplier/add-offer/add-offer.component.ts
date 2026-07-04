@@ -50,6 +50,18 @@ export class AddOfferComponent implements OnInit {
    expiry_fallback_threshold: [null as number | null],
     expires_at: [this.defaultExpiry],
   });
+//time problem
+private toLocalDateTimeString(utcDateStr: string): string {
+  const isoUtcString = utcDateStr.includes('Z') || /[+-]\d{2}:\d{2}$/.test(utcDateStr)
+    ? utcDateStr
+    : utcDateStr.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
+
+  const date = new Date(isoUtcString);
+
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 
   ngOnInit(): void {
     this.categoriesService.getCategories().subscribe(cats => {
@@ -80,7 +92,7 @@ export class AddOfferComponent implements OnInit {
             discount_percent: off.discountPercentage,
             hub_target_quantity: off.hubTargetQuantity,
             expiry_fallback_threshold: off.minFallbackQuantity ?? null,
-            expires_at: off.expiresAt ? new Date(off.expiresAt).toISOString().slice(0, 16) : this.defaultExpiry
+          expires_at: off.expiresAt ? this.toLocalDateTimeString(off.expiresAt) : this.defaultExpiry
           });
 
           // OfferDto doesn't include totalQuantityAvailable — fetch it from getMyOffers instead
