@@ -1,153 +1,258 @@
-<div class="container" style="max-width:1200px;padding:2rem 1rem 4rem" role="main">
-  <button class="btn btn-ghost btn-sm" style="margin-bottom:1.5rem;margin-left:-0.5rem" (click)="router.navigate(['/supplier/requests'])">
+<div class="container" role="main">
+  <!-- Top Breadcrumb -->
+  <button class="btn btn-ghost btn-sm v2-back-btn" (click)="router.navigate(['/supplier/requests'])">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
     Back
   </button>
 
   @if (request(); as req) {
-    <div style="margin-bottom:2rem">
-      <h1 style="font-size:1.875rem;font-weight:800;margin-bottom:0.5rem">{{ req.title || req.description }}</h1>
-      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-        <span class="badge badge-outline">{{ req.categoryName || 'Uncategorized' }}</span>
-        <span style="font-weight:600;color:var(--text-primary)">{{ req.currentQuantity }} units requested</span>
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr;gap:2rem">
-      <!-- Buyer demand card -->
-      <div class="card" style="padding:1.5rem">
-        <h3 style="font-size:1.0625rem;font-weight:700;display:flex;align-items:center;gap:0.5rem;margin-bottom:1.25rem">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          Buyer Demand Pool
-        </h3>
-        <div style="font-size:1.75rem;font-weight:800;margin-bottom:1.25rem">
-          {{ req.participantsCount }} <span style="font-size:1rem;font-weight:400;color:var(--text-secondary)">buyers joined</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:0.5rem">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;border-radius:8px;border:1px solid var(--border);background:#F9FAFB">
-            <span style="font-weight:500">Total Demand Volume</span>
-            <span style="color:var(--text-secondary);font-size:0.875rem">{{ req.currentQuantity }} units</span>
+    <div class="v2-bento-grid">
+      
+      <!-- Unified Header Hero Card -->
+      <div class="v2-header-card">
+        <div class="v2-header-info">
+          <h1 class="v2-header-title">{{ req.title || req.description }}</h1>
+          <div class="v2-header-meta">
+            <span class="badge badge-outline v2-header-badge">{{ req.categoryName || 'Uncategorized' }}</span>
+            <span class="v2-header-status">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand)"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              Group Request Active
+            </span>
           </div>
+        </div>
+        <div class="v2-header-stat-box">
+          <div class="v2-header-stat-label">Total Request Volume</div>
+          <div class="v2-header-stat-value">{{ req.currentQuantity }} <span style="font-size:1rem; font-weight:500; color:var(--text-secondary)">units</span></div>
         </div>
       </div>
 
-      <!-- Offer form or my offer -->
-      <div>
-        @if (myOffer()) {
-          <!-- Active offer display -->
-          <div class="card" style="border:2px solid rgba(13,148,136,0.2);background:rgba(13,148,136,0.03);overflow:hidden">
-            <div style="padding:1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
-              <h3 style="font-weight:700;font-size:1.0625rem">Your Active Offer</h3>
-              <span class="badge badge-brand">{{ myOffer()?.status }}</span>
-            </div>
-            <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-                <div style="background:#fff;padding:1rem;border-radius:16px;border:1px solid var(--border)">
-                  <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:0.25rem">Current Price</div>
-                  <div style="font-size:1.5rem;font-weight:800;color:var(--brand)">EGP {{ myOffer()?.currentUnitPrice || myOffer()?.unitPrice }}</div>
-                </div>
-                <div style="background:#fff;padding:1rem;border-radius:16px;border:1px solid var(--border)">
-                  <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:0.25rem">Accepted Quantity</div>
-                  <div style="font-size:1.5rem;font-weight:800">{{ myOffer()?.acceptedQuantity }} <span style="font-size:0.875rem;font-weight:400">units</span></div>
-                </div>
-              </div>
-
-              <!-- Additional details of the placed offer -->
-              <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.875rem;color:var(--text-secondary)">
-                <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border)">
-                  <span>Original Price Offered</span>
-                  <span style="font-weight:600;color:var(--text-primary)">EGP {{ myOffer()?.unitPrice }}</span>
-                </div>
-                @if (myOffer()?.minUnitPrice) {
-                  <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border)">
-                    <span>Minimum Allowed Price</span>
-                    <span style="font-weight:600;color:var(--text-primary)">EGP {{ myOffer()?.minUnitPrice }}</span>
-                  </div>
-                }
-                <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border)">
-                  <span>Quantity Offered</span>
-                  <span style="font-weight:600;color:var(--text-primary)">{{ myOffer()?.quantityAvailable }} units</span>
-                </div>
-                @if (myOffer()?.variantAttributes) {
-                  <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border)">
-                    <span>Specifications / Variants</span>
-                    <span style="font-weight:600;color:var(--text-primary)">{{ myOffer()?.variantAttributes }}</span>
-                  </div>
-                }
-                <div style="display:flex;justify-content:space-between;padding:0.5rem 0">
-                  <span>Offer Expiration</span>
-                  <span style="font-weight:600;color:var(--text-primary)">{{ myOffer() ? fmtExpiry(myOffer().expiresAt) : '' }}</span>
-                </div>
-              </div>
+      <!-- Left Column: Demand Pool & History -->
+      <div style="display:flex; flex-direction:column; gap:2rem">
+        <div class="v2-demand-card">
+          <h3 class="v2-demand-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--brand)">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span>Demand Pool</span>
+          </h3>
+          
+          <div>
+            <div class="v2-demand-stat-label">Buyers Committed</div>
+            <div class="v2-stat-main">
+              {{ req.participantsCount }}<span class="v2-stat-sub">partner{{ req.participantsCount === 1 ? '' : 's' }} joined</span>
             </div>
           </div>
-        } @else {
-          <!-- Place offer form -->
-          <form (ngSubmit)="submitOffer()" #offerForm="ngForm" class="card">
-            <div style="padding:1.5rem;border-bottom:1px solid var(--border)">
-              <h3 style="font-weight:700;font-size:1.0625rem;margin-bottom:0.25rem">Place your offer</h3>
-              <p style="font-size:0.9375rem;color:var(--text-secondary)">Submit pricing and capacity terms to compete for this buyer pool</p>
+
+          <div class="v2-demand-box-wrapper">
+            <div class="v2-demand-info-box">
+              <span class="v2-demand-info-label">Aggregated Demand</span>
+              <span class="v2-demand-info-value">{{ req.currentQuantity }} units</span>
             </div>
-            <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem">
-              
-              <!-- Two column grid for pricing -->
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:1rem">
-                <div class="form-group">
-                  <label class="form-label" for="offer-price">Unit Price (EGP) *</label>
-                  <input id="offer-price" type="number" class="form-input" placeholder="E.g. 250" 
-                    [(ngModel)]="unitPrice" name="unitPrice" required min="0.01">
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="offer-min-price">Min Negotiable Price (EGP)</label>
-                  <input id="offer-min-price" type="number" class="form-input" placeholder="Optional. E.g. 220" 
-                    [(ngModel)]="minUnitPrice" name="minUnitPrice" min="0.01">
-                </div>
-              </div>
+          </div>
 
-              <!-- Two column grid for quantity & fallback -->
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:1rem">
-                <div class="form-group">
-                  <label class="form-label" for="offer-qty">Quantity Available (Units) *</label>
-                  <input id="offer-qty" type="number" class="form-input" placeholder="E.g. 100" 
-                    [(ngModel)]="quantityAvailable" name="quantityAvailable" required min="1">
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="offer-min-fallback">Min Fallback Quantity</label>
-                  <input id="offer-min-fallback" type="number" class="form-input" placeholder="Optional. E.g. 5" 
-                    [(ngModel)]="minFallbackQuantity" name="minFallbackQuantity" min="1">
-                </div>
+          <!-- Signature: capacity coverage meter if activeOffer() is active -->
+          @if (activeOffer()) {
+            <div class="v2-coverage-card">
+              <div class="v2-coverage-header">
+                <span>CAPACITY COVERAGE</span>
+                <span>{{ getCapacityFillRate(req.currentQuantity) }}%</span>
               </div>
-
-              <!-- Specifications & Expiry date -->
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:1rem">
-                <div class="form-group">
-                  <label class="form-label" for="offer-expiry">Offer Expiry Date *</label>
-                  <input id="offer-expiry" type="date" class="form-input" 
-                    [(ngModel)]="expiresAt" name="expiresAt" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="offer-variants">Specification / Variant Notes</label>
-                  <input id="offer-variants" type="text" class="form-input" placeholder="Optional. E.g. Blue, 120cm" 
-                    [(ngModel)]="variantAttributes" name="variantAttributes">
-                </div>
+              <div class="v2-progress-bar-track" style="height:6px; margin:0; background:rgba(13,148,136,0.1)">
+                <div class="v2-progress-bar-fill" [style.width.%]="getCapacityFillRate(req.currentQuantity) > 100 ? 100 : getCapacityFillRate(req.currentQuantity)"></div>
               </div>
-
-              <!-- Submit button -->
-              <div style="display:flex;justify-content:flex-end;margin-top:0.5rem">
-                <button type="submit" class="btn btn-primary" [disabled]="!offerForm.form.valid">
-                  Submit Offer
-                </button>
+              <div class="v2-coverage-desc">
+                Your committed capacity ({{ activeOffer()?.quantityAvailable }} units) covers {{ getCapacityFillRate(req.currentQuantity) }}% of the active demand.
               </div>
             </div>
-          </form>
+          }
+        </div>
+
+        <!-- Offer History Card -->
+        @if (pastOffers().length > 0) {
+          <div class="v2-history-card">
+            <h3 class="v2-history-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--brand); vertical-align: middle; margin-right: 0.5rem;">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>Offer History</span>
+            </h3>
+            
+            <div class="v2-history-list">
+              @for (offer of pastOffers(); track offer.id) {
+                <div class="v2-history-item">
+                  <div class="v2-history-item-header">
+                    <div style="display:flex; align-items:center; gap:0.5rem">
+                      <span class="v2-history-price" style="font-family: monospace">EGP {{ offer.currentUnitPrice || offer.unitPrice }}</span>
+                      <span class="badge" [class.badge-success]="offer.status.toLowerCase() === 'accepted'"
+                                           [class.badge-warning]="offer.status.toLowerCase() === 'countered'"
+                                           [class.badge-danger]="offer.status.toLowerCase() === 'expired'"
+                                           [class.badge-muted]="offer.status.toLowerCase() === 'open'">
+                        {{ offer.status }}
+                      </span>
+                    </div>
+                    <span class="v2-history-date">{{ fmtExpiry(offer.createdAt) }}</span>
+                  </div>
+                  
+                  <div class="v2-history-details">
+                    <div class="v2-history-detail-row">
+                      <span class="v2-detail-label">Committed Capacity</span>
+                      <span class="v2-detail-value">{{ offer.quantityAvailable }} units</span>
+                    </div>
+                    <div class="v2-history-detail-row">
+                      <span class="v2-detail-label">Accepted Demand</span>
+                      <span class="v2-detail-value">{{ offer.acceptedQuantity }} units</span>
+                    </div>
+                    @if (offer.minUnitPrice) {
+                      <div class="v2-history-detail-row">
+                        <span class="v2-detail-label">Minimum Floor</span>
+                        <span class="v2-detail-value" style="font-family: monospace">EGP {{ offer.minUnitPrice }}</span>
+                      </div>
+                    }
+                    @if (offer.variantAttributes) {
+                      <div class="v2-history-detail-row" style="grid-column: 1 / -1; border-top: 1px dashed var(--border); padding-top: 0.5rem; margin-top: 0.25rem;">
+                        <span class="v2-detail-label">Specifications</span>
+                        <span class="v2-detail-value">{{ offer.variantAttributes }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
         }
+      </div>
+
+      <!-- Right Column: Active Bid Console & Control Panel -->
+      <div class="v2-offer-card" [class.v2-accent-card]="activeOffer()">
+          
+          <!-- Active Offer View -->
+          <div class="v2-active-offer">
+            <div class="v2-dashboard-header">
+              <h3 class="v2-dashboard-title">Active Offer Dashboard</h3>
+              <div class="v2-badge-container">
+                <span class="v2-pulse-dot"></span>
+                <span>{{ activeOffer()?.status }}</span>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:1.5rem">
+              <!-- Metrics Grid -->
+              <div class="v2-metrics-grid">
+                <div class="v2-metric-box price-box">
+                  <div class="v2-metric-label">Wholesale Price</div>
+                  <div class="v2-metric-value brand-color" style="font-family: monospace">EGP {{ activeOffer()?.currentUnitPrice || activeOffer()?.unitPrice }}</div>
+                </div>
+                <div class="v2-metric-box">
+                  <div class="v2-metric-label">Units Demanded</div>
+                  <div class="v2-metric-value">{{ activeOffer()?.acceptedQuantity }} <span style="font-size:1rem; font-weight:500; color:var(--text-secondary)">/ {{ activeOffer()?.quantityAvailable }} units</span></div>
+                </div>
+              </div>
+
+              <!-- Interactive Progress Gauge -->
+              <div class="v2-progress-section">
+                <div class="v2-progress-header">
+                  <span>OFFER DEMAND FILL RATE</span>
+                  <span style="color:var(--brand)">{{ getCapacityFillRate(activeOffer()?.acceptedQuantity) }}%</span>
+                </div>
+                <div class="v2-progress-bar-track">
+                  <div class="v2-progress-bar-fill" [style.width.%]="getCapacityFillRate(activeOffer()?.acceptedQuantity)"></div>
+                </div>
+                <div class="v2-progress-footer">
+                  <span>{{ activeOffer()?.acceptedQuantity || 0 }} units accepted</span>
+                  <span>Total committed: {{ activeOffer()?.quantityAvailable }} units</span>
+                </div>
+              </div>
+
+              <!-- Ledger settings table -->
+              <div class="v2-ledger-box">
+                <div class="v2-ledger-row">
+                  <span class="v2-ledger-label">Original Price Offered</span>
+                  <span class="v2-ledger-value" style="font-family: monospace">EGP {{ activeOffer()?.unitPrice }}</span>
+                </div>
+                @if (activeOffer()?.minUnitPrice) {
+                  <div class="v2-ledger-row">
+                    <span class="v2-ledger-label">Minimum Allowed Floor</span>
+                    <span class="v2-ledger-value" style="font-family: monospace">EGP {{ activeOffer()?.minUnitPrice }}</span>
+                  </div>
+                }
+                <div class="v2-ledger-row">
+                  <span class="v2-ledger-label">Committed Capacity</span>
+                  <span class="v2-ledger-value">{{ activeOffer()?.quantityAvailable }} units</span>
+                </div>
+                @if (activeOffer()?.variantAttributes) {
+                  <div class="v2-ledger-row">
+                    <span class="v2-ledger-label">Item Specifications</span>
+                    <span class="v2-ledger-value">{{ activeOffer()?.variantAttributes }}</span>
+                  </div>
+                }
+                <div class="v2-ledger-row" style="border-bottom:none !important">
+                  <span class="v2-ledger-label">Offer Expiration</span>
+                  <span class="v2-ledger-value">{{ fmtExpiry(activeOffer()?.expiresAt) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <!-- Form View -->
+        <form class="v2-form" (ngSubmit)="submitOffer()" #offerForm2="ngForm">
+          <div class="v2-form-header">
+            <h3 class="v2-form-title">Place Wholesale Offer</h3>
+            <p class="v2-form-subtitle">Submit pricing and capacity terms to compete for this buyer pool</p>
+          </div>
+          
+          <div style="display:flex; flex-direction:column; gap:1.5rem">
+            <div class="v2-form-grid">
+              <div class="v2-form-group">
+                <label class="v2-input-label" for="offer-price">Unit Price (EGP) *</label>
+                <input id="offer-price" type="number" class="v2-input-field" placeholder="E.g. 250" 
+                  [(ngModel)]="unitPrice" name="unitPrice" required min="0.01">
+              </div>
+              <div class="v2-form-group">
+                <label class="v2-input-label" for="offer-min-price">Min Negotiable Price (EGP)</label>
+                <input id="offer-min-price" type="number" class="v2-input-field" placeholder="Optional" 
+                  [(ngModel)]="minUnitPrice" name="minUnitPrice" min="0.01">
+              </div>
+            </div>
+            
+            <div class="v2-form-grid">
+              <div class="v2-form-group">
+                <label class="v2-input-label" for="offer-qty">Quantity Available *</label>
+                <input id="offer-qty" type="number" class="v2-input-field" placeholder="E.g. 100" 
+                  [(ngModel)]="quantityAvailable" name="quantityAvailable" required min="1">
+              </div>
+              <div class="v2-form-group">
+                <label class="v2-input-label" for="offer-min-fallback">Min Fallback Qty</label>
+                <input id="offer-min-fallback" type="number" class="v2-input-field" placeholder="Optional" 
+                  [(ngModel)]="minFallbackQuantity" name="minFallbackQuantity" min="1">
+              </div>
+            </div>
+            
+            <div class="v2-form-grid">
+              <div class="v2-form-group">
+                <label class="v2-input-label" for="offer-expiry">Expiry Date *</label>
+                <input id="offer-expiry" type="date" class="v2-input-field" 
+                  [(ngModel)]="expiresAt" name="expiresAt" required>
+              </div>
+              <div class="v2-form-group">
+                <label class="v2-input-label" for="offer-variants">Specifications</label>
+                <input id="offer-variants" type="text" class="v2-input-field" placeholder="E.g. Blue, XL" 
+                  [(ngModel)]="variantAttributes" name="variantAttributes">
+              </div>
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end; padding-top:1.5rem; border-top:1px solid var(--border)">
+              <button type="submit" class="btn btn-primary v2-submit-btn" [disabled]="!offerForm2.form.valid">
+                Submit Wholesale Offer
+              </button>
+            </div>
+          </div>
+        </form>
+        
       </div>
     </div>
   } @else if (loading()) {
-    <div style="text-align:center;padding:5rem">
+    <div style="text-align:center; padding:5rem">
       <p style="color:var(--text-secondary)">Loading request details...</p>
     </div>
   }

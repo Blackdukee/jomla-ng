@@ -26,6 +26,7 @@ export interface GroupRequestOfferDto {
   acceptedBuyerIds?: string[];
   rejectedBuyerIds?: string[];
   isAnimatingOut?: boolean;
+  variantAttributes?: string;
 }
 
 export interface GroupRequestParticipantDto {
