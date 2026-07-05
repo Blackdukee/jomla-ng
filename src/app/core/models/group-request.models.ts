@@ -29,6 +29,18 @@ export interface GroupRequestOfferDto {
   variantAttributes?: string;
 }
 
+export interface SupplierGroupRequestOfferDto {
+  id: string;
+  groupRequestId: string;
+  groupRequestTitle: string;
+  unitPrice: number;
+  quantityAvailable: number;
+  status: string;
+  createdAt: string;
+  expiresAt: string;
+  variantAttributes?: string;
+}
+
 export interface GroupRequestParticipantDto {
   id: string;
   name: string;

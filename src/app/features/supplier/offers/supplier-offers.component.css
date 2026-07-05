@@ -1,2 +1,40 @@
 .offer-row { display:flex; align-items:center; gap:1rem; padding:1.25rem; text-decoration:none; color:inherit; cursor:pointer; }
 .offer-thumb { width:4rem; height:4rem; border-radius:8px; background:#F3F4F6; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ledger-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  z-index: 10;
+}
+
+.ledger-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.ledger-row:hover {
+  background: rgba(13, 148, 136, 0.02);
+}
+
+.ledger-title {
+  transition: color var(--transition);
+}
+
+.ledger-row:hover .ledger-title {
+  color: var(--brand);
+}

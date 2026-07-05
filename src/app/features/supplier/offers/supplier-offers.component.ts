@@ -2,8 +2,9 @@ import { Component, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy
 import { RouterLink } from '@angular/router';
 import { CloudinaryPipe } from '../../../shared/pipes/cloudinary.pipe';
 import { OffersService } from '../../../core/services/offers.service';
+import { GroupRequestsService } from '../../../core/services/group-requests.service';
 import { SignalRService } from '../../../core/services/signalr.service';
-import { MyOfferDto, MyOffersPagedResponse } from '../../../core/models';
+import { MyOfferDto, SupplierGroupRequestOfferDto } from '../../../core/models';
 
 @Component({
   selector: 'app-supplier-offers',
@@ -15,10 +16,13 @@ import { MyOfferDto, MyOffersPagedResponse } from '../../../core/models';
 })
 export class SupplierOffersComponent implements OnInit, OnDestroy {
   private offersService = inject(OffersService);
+  private groupRequestsService = inject(GroupRequestsService);
   private signalRService = inject(SignalRService);
 
+  protected offerType = signal<'deals' | 'bids'>('deals');
   protected tab = signal<'active' | 'pending' | 'inactive' | 'expired'>('active');
   protected offers = signal<MyOfferDto[]>([]);
+  protected groupRequestBids = signal<SupplierGroupRequestOfferDto[]>([]);
   protected isLoading = signal(true);
   private unsubOfferStatusChange: (() => void) | null = null;
 
@@ -32,9 +36,11 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadOffers();
+    this.loadGroupRequestBids();
 
     this.unsubOfferStatusChange = this.signalRService.onOfferStatusChange((updatedOffer) => {
       this.loadOffers();
+      this.loadGroupRequestBids();
     });
   }
 
@@ -53,11 +59,34 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadGroupRequestBids(): void {
+    this.isLoading.set(true);
+    this.groupRequestsService.getMyPlacedOffers().subscribe({
+      next: (res) => {
+        this.groupRequestBids.set(res.items || []);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load group request bids', err);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
   ngOnDestroy(): void {
     this.unsubOfferStatusChange?.();
   }
 
   protected progress(o: MyOfferDto) {
     return o.batchTargetQuantity > 0 ? Math.round((o.committedUnits / o.batchTargetQuantity) * 100) : 0;
+  }
+
+  protected fmtDate(d: string): string {
+    if (!d) return '-';
+    return new Date(d).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   }
 }

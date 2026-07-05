@@ -18,7 +18,8 @@ export type {
   GroupRequestListItemDto,
   GroupRequestOfferDto,
   GroupRequestDetailDto,
-  CreateGroupRequestRequest
+  CreateGroupRequestRequest,
+  SupplierGroupRequestOfferDto
 } from './group-request.models';
 export type {
   SupplierCategoryPreferenceDto,

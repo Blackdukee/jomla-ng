@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import {
   GroupRequestListItemDto,
   GroupRequestDetailDto,
-  CreateGroupRequestRequest
+  CreateGroupRequestRequest,
+  SupplierGroupRequestOfferDto
 } from '../models';
 
 import { environment } from '../../../environments/environment';
@@ -102,5 +103,17 @@ export class GroupRequestsService {
     return this.http.post<any>(`${this.baseUrl}/${requestId}/offers`, offer, {
       withCredentials: true
     });
+  }
+
+  /** GET /api/GroupRequestOffers/my-offers — Get group request offers placed by the supplier */
+  getMyPlacedOffers(page = 1, pageSize = 10): Observable<{ items: SupplierGroupRequestOfferDto[]; totalCount: number; page: number; pageSize: number }> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+
+    return this.http.get<{ items: SupplierGroupRequestOfferDto[]; totalCount: number; page: number; pageSize: number }>(
+      `${environment.apiUrl}/GroupRequestOffers/my-offers`,
+      { params, withCredentials: true }
+    );
   }
 }
