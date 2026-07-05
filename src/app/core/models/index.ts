@@ -30,3 +30,9 @@ export type {
   GetNotificationsResult
 } from './notification.models';
 
+export type {
+  FlaggedOfferDto,
+  FlaggedGroupRequestDto,
+  PagedResult
+} from './admin.models';
+

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, buyerGuard, supplierGuard, guestGuard } from './core/guards';
+import { authGuard, buyerGuard, supplierGuard, guestGuard, adminGuard } from './core/guards';
 
 export const routes: Routes = [
   {
@@ -109,6 +109,12 @@ export const routes: Routes = [
     path: 'manage/requests/:requestId',
     loadComponent: () => import('./features/supplier/manage-request/manage-request.component').then(m => m.ManageRequestComponent),
     canActivate: [supplierGuard],
+  },
+
+  {
+    path: 'admin',
+    loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent),
+    canActivate: [adminGuard],
   },
 
   { path: '**', redirectTo: '' },

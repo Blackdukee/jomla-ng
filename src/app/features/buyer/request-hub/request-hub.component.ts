@@ -227,7 +227,7 @@ export class RequestHubComponent implements OnInit, OnDestroy {
 
   protected confirmHoldPayment(): void {
     const offer = this.selectedOffer();
-    if (!this.stripe || !this.cardElement || !this.clientSecret() || !offer) return;
+    if (!this.stripe || !this.cardElement || !this.clientSecret() || !offer || this.authorizingPayment()) return;
     this.authorizingPayment.set(true);
 
     this.stripe.confirmCardPayment(this.clientSecret(), {

@@ -41,6 +41,16 @@ export class AuthService {
     return roleStr?.toLowerCase() === 'supplier';
   });
 
+  readonly isAdmin = computed(() => {
+    const token = this._token();
+    if (!token) return false;
+    const decoded = this.decodeToken(token);
+    if (!decoded) return false;
+    const claim = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded["role"];
+    const roleStr = Array.isArray(claim) ? claim[0] : claim;
+    return roleStr?.toLowerCase() === 'admin';
+  });
+
   constructor() {
     // Restore from localStorage
     const storedUser = localStorage.getItem('jomla_user');
@@ -105,13 +115,15 @@ export class AuthService {
 
 private handleAuthSuccess(res: AuthResponse) {
   // Determine role from JWT claims
-  let role: 'Buyer' | 'Supplier' = 'Buyer';
+  let role: 'Buyer' | 'Supplier' | 'Admin' = 'Buyer';
   const decoded = this.decodeToken(res.token);
   if (decoded) {
     const claim = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded["role"];
     const roleStr = Array.isArray(claim) ? claim[0] : claim;
     if (roleStr?.toLowerCase() === 'supplier') {
       role = 'Supplier';
+    } else if (roleStr?.toLowerCase() === 'admin') {
+      role = 'Admin';
     }
   }
 

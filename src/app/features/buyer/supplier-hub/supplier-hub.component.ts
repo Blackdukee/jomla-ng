@@ -313,7 +313,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
   }
 
   protected confirmPayment(): void {
-    if (!this.stripe || !this.cardElement || !this.clientSecret()) return;
+    if (!this.stripe || !this.cardElement || !this.clientSecret() || this.joining()) return;
     this.joining.set(true);
 
     this.stripe.confirmCardPayment(this.clientSecret(), {

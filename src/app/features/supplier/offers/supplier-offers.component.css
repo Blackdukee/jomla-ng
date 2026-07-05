@@ -38,3 +38,52 @@
 .ledger-row:hover .ledger-title {
   color: var(--brand);
 }
+
+.bid-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.bid-icon-thumb {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: var(--brand-light);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--transition), color var(--transition);
+}
+
+.bid-row:hover .bid-icon-thumb {
+  background: var(--brand);
+  color: var(--bg-surface);
+}
+
+.bid-title {
+  transition: color var(--transition);
+}
+
+.bid-row:hover .bid-title {
+  color: var(--brand);
+}
+
+.show-mobile {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  .show-mobile {
+    display: flex !important;
+  }
+  .hide-mobile {
+    display: none !important;
+  }
+}

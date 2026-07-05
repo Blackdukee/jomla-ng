@@ -28,6 +28,14 @@ export const supplierGuard = () => {
   return true;
 };
 
+export const adminGuard = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (!auth.isAuthenticated()) { router.navigate(['/login']); return false; }
+  if (!auth.isAdmin()) { router.navigate(['/']); return false; }
+  return true;
+};
+
 export const guestGuard = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

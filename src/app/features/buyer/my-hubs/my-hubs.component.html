@@ -51,7 +51,7 @@
         No hubs found.
       </div>
     } @else {
-      <div class="scroll-list" style="max-height: calc(100vh - 240px)">
+      <div>
         <div style="display:flex;flex-direction:column;gap:1rem">
           @for (hub of paginatedHubs(); track hub.id) {
             <a [routerLink]="hubLink(hub)" class="card card-hover hub-row">
