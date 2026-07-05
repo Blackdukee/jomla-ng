@@ -50,18 +50,20 @@
                 <div>No participants yet.</div>
               </div>
             } @else {
-              <div class="v2-participant-list">
-                @for (p of req.participants; track p.id) {
-                  <div class="v2-participant-row" [class.is-current]="p.id === authService.user()?.id">
-                    <div class="v2-p-name">
-                      {{ p.name }}
-                      @if (p.id === authService.user()?.id) {
-                        <span style="font-size:0.75rem; color:var(--text-secondary); margin-left:0.5rem">(You)</span>
-                      }
+              <div class="scroll-list" style="max-height: 240px">
+                <div class="v2-participant-list">
+                  @for (p of req.participants; track p.id) {
+                    <div class="v2-participant-row" [class.is-current]="p.id === authService.user()?.id">
+                      <div class="v2-p-name">
+                        {{ p.name }}
+                        @if (p.id === authService.user()?.id) {
+                          <span style="font-size:0.75rem; color:var(--text-secondary); margin-left:0.5rem">(You)</span>
+                        }
+                      </div>
+                      <div class="v2-p-qty">{{ p.quantity }} units</div>
                     </div>
-                    <div class="v2-p-qty">{{ p.quantity }} units</div>
-                  </div>
-                }
+                  }
+                </div>
               </div>
             }
           </div>
@@ -85,55 +87,56 @@
                 <div>No offers to display here.</div>
               </div>
             } @else {
-              <div class="v1-offers-list">
-                @for (offer of visibleOffers(); track offer.id) {
-                  <div class="v2-offer-card" [class.swipe-out-right]="offer.isAnimatingOut">
-                    <div class="v2-offer-header">
-                      <div class="v2-offer-supplier">
-                        <strong>{{ offer.supplierName }}</strong>
-                        <div class="v2-offer-meta-sub">Offers {{ offer.quantityAvailable }} units max</div>
-                      </div>
-                      <span class="badge badge-outline" style="font-size:0.75rem; white-space:nowrap">{{ offer.status }}</span>
-                    </div>
-                    <div class="v2-offer-price-row" style="margin-bottom:0.75rem">
-                      <div class="v2-offer-price">
-                        <span class="v2-currency">EGP</span>
-                        <span class="v2-price-val">{{ offer.currentUnitPrice }}</span>
-                        <span class="v2-price-unit">/unit</span>
-                      </div>
-                    </div>
-                    
-                    @if (offer.status === 'Open' || offer.isAnimatingOut) {
-                      <div class="v2-offer-progress-row">
-                        <div class="v2-offer-progress-label">
-                          <span style="font-size:0.75rem;font-weight:600">{{ offer.quantityAvailable - offer.acceptedQuantity }} remaining</span>
-                          <span class="v2-offer-expiry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Exp: {{ fmtExpiry(offer.expiresAt) }}</span>
+              <div class="scroll-list" style="max-height: 520px">
+                <div class="v1-offers-list">
+                  @for (offer of visibleOffers(); track offer.id) {
+                    <div class="v2-offer-card" [class.swipe-out-right]="offer.isAnimatingOut">
+                      <div class="v2-offer-header">
+                        <div class="v2-offer-supplier">
+                          <strong>{{ offer.supplierName }}</strong>
+                          <div class="v2-offer-meta-sub">Offers {{ offer.quantityAvailable }} units max</div>
                         </div>
-                        <div class="v2-progress-bar">
-                          <div class="v2-progress-fill" [style.width]="(offer.acceptedQuantity / offer.quantityAvailable * 100) + '%'"></div>
+                        <span class="badge badge-outline" style="font-size:0.75rem; white-space:nowrap">{{ offer.status }}</span>
+                      </div>
+                      <div class="v2-offer-price-row" style="margin-bottom:0.75rem">
+                        <div class="v2-offer-price">
+                          <span class="v2-currency">EGP</span>
+                          <span class="v2-price-val">{{ offer.currentUnitPrice }}</span>
+                          <span class="v2-price-unit">/unit</span>
                         </div>
                       </div>
-                    }
-                    
-                    <div class="v2-offer-actions">
-                      @if (offer.status !== 'Accepted' && offer.status !== 'Filled') {
-                        @if (hasAcceptedOffer(offer)) {
-                          <button class="btn btn-outline-danger" style="flex:1" (click)="cancelAccept(offer)">Cancel</button>
-                        } @else if (offer.status === 'Open') {
-                          <button class="btn btn-primary" style="flex:2" (click)="accept(offer)">Accept</button>
-                          @if (hasRejectedOffer(offer)) {
-                            <button class="btn btn-reject" style="flex:1" disabled>Rejected</button>
-                          } @else {
-                            <button class="btn btn-reject" style="flex:1" (click)="reject(offer)">Reject</button>
+                      
+                      @if (offer.status === 'Open' || offer.isAnimatingOut) {
+                        <div class="v2-offer-progress-row">
+                          <div class="v2-offer-progress-label">
+                            <span style="font-size:0.75rem;font-weight:600">{{ offer.quantityAvailable - offer.acceptedQuantity }} remaining</span>
+                            <span class="v2-offer-expiry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Exp: {{ fmtExpiry(offer.expiresAt) }}</span>
+                          </div>
+                          <div class="v2-progress-bar">
+                            <div class="v2-progress-fill" [style.width]="(offer.acceptedQuantity / offer.quantityAvailable * 100) + '%'"></div>
+                          </div>
+                        </div>
+                      }
+                      
+                      <div class="v2-offer-actions">
+                        @if (offer.status !== 'Accepted' && offer.status !== 'Filled') {
+                          @if (hasAcceptedOffer(offer)) {
+                            <button class="btn btn-outline-danger" style="flex:1" (click)="cancelAccept(offer)">Cancel</button>
+                          } @else if (offer.status === 'Open') {
+                            <button class="btn btn-primary" style="flex:2" (click)="accept(offer)">Accept</button>
+                            @if (hasRejectedOffer(offer)) {
+                              <button class="btn btn-reject" style="flex:1" disabled>Rejected</button>
+                            } @else {
+                              <button class="btn btn-reject" style="flex:1" (click)="reject(offer)">Reject</button>
+                            }
                           }
                         }
-                      }
+                      </div>
                     </div>
-                  </div>
-                }
+                  }
+                </div>
               </div>
-              
-            }
+            }  
           </div>
         </div>
       </div>

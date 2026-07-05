@@ -533,6 +533,15 @@
   gap: 1rem;
 }
 
+/* Custom scrollbar override for offer history list to tint it brand teal */
+.v2-history-list.scroll-list::-webkit-scrollbar-thumb {
+  background-color: rgba(13, 148, 136, 0.2);
+  border-radius: 9999px;
+}
+.v2-history-list.scroll-list.scroll-list:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(13, 148, 136, 0.4);
+}
+
 .v2-history-item {
   border: 1px solid var(--border);
   border-radius: 12px;
