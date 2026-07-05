@@ -104,8 +104,23 @@
   vertical-align: middle;
 }
 
+.ledger-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  z-index: 10;
+}
+
 .ledger-row:hover {
   background: rgba(13, 148, 136, 0.02);
+}
+
+.ledger-title {
+  transition: color var(--transition);
+}
+
+.ledger-row:hover .ledger-title {
+  color: var(--brand);
 }
 
 .form-container {

@@ -80,7 +80,7 @@
               @if (buyerHubs().length === 0) {
                 <p style="color:var(--text-secondary);text-align:center;padding:2rem 0">You haven't joined any hubs yet.</p>
               } @else {
-                <div style="overflow-x:auto">
+                <div class="scroll-list" style="max-height: 300px; overflow-x: auto;">
                   <table class="ledger-table">
                     <thead>
                       <tr>
@@ -92,8 +92,8 @@
                     </thead>
                     <tbody>
                       @for (hub of buyerHubs(); track hub.id) {
-                        <tr class="ledger-row">
-                          <td style="font-weight:600">{{ hub.title }}</td>
+                        <tr class="ledger-row" [routerLink]="hubLink(hub)" style="cursor:pointer">
+                          <td style="font-weight:600" class="ledger-title">{{ hub.title }}</td>
                           <td>
                             <span class="badge"
                               [class.badge-success]="['active','open','completed'].includes(hub.status.toLowerCase())"
@@ -127,7 +127,7 @@
               @if (supplierOffers().length === 0) {
                 <p style="color:var(--text-secondary);text-align:center;padding:2rem 0">You haven't created any offers yet.</p>
               } @else {
-                <div style="overflow-x:auto">
+                <div class="scroll-list" style="max-height: 300px; overflow-x: auto;">
                   <table class="ledger-table">
                     <thead>
                       <tr>
@@ -139,8 +139,8 @@
                     </thead>
                     <tbody>
                       @for (offer of supplierOffers(); track offer.id) {
-                        <tr class="ledger-row">
-                          <td style="font-weight:600">{{ offer.title }}</td>
+                        <tr class="ledger-row" [routerLink]="['/supplier/offers', offer.id]" style="cursor:pointer">
+                          <td style="font-weight:600" class="ledger-title">{{ offer.title }}</td>
                           <td>
                             <span class="badge"
                               [class.badge-brand]="offer.status === 'Active'"
