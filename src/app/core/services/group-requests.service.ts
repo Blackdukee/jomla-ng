@@ -55,6 +55,9 @@ export class GroupRequestsService {
     if (request.description) {
       formData.append('description', request.description);
     }
+    if (request.categoryId) {
+      formData.append('categoryId', request.categoryId);
+    }
     if (request.images) {
       request.images.forEach(file => {
         formData.append('images', file, file.name);

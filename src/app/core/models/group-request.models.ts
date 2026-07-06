@@ -70,5 +70,6 @@ export interface CreateGroupRequestRequest {
   quantity: number;
   description: string | null;
   images: File[] | null;
+  categoryId?: string | null;
 }
 
