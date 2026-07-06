@@ -133,8 +133,19 @@ private toLocalDateTimeString(utcDateStr: string): string {
   }
 
   protected removeImage(i: number) {
+    const imgToRemove = this.images()[i];
+    
+    if (imgToRemove.startsWith('data:')) {
+      let newFileIndex = 0;
+      for (let idx = 0; idx < i; idx++) {
+        if (this.images()[idx].startsWith('data:')) {
+          newFileIndex++;
+        }
+      }
+      this.selectedFiles.update(files => files.filter((_, idx) => idx !== newFileIndex));
+    }
+    
     this.images.update(imgs => imgs.filter((_, idx) => idx !== i));
-    this.selectedFiles.update(files => files.filter((_, idx) => idx !== i));
   }
 
   protected onDragOver(e: DragEvent) { e.preventDefault(); this.isDragging.set(true); }
@@ -209,6 +220,13 @@ private toLocalDateTimeString(utcDateStr: string): string {
     if (this.isEditMode()) {
       const id = this.offerId()!;
       formData.append('id', id);
+
+      this.images().forEach(img => {
+        if (img.startsWith('http')) {
+          formData.append('retainedImages', img);
+        }
+      });
+
       this.offersService.updateOffer(id, formData).subscribe({
         next: () => {
           this.loading.set(false);
