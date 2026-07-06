@@ -24,6 +24,24 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
   protected offers = signal<MyOfferDto[]>([]);
   protected groupRequestBids = signal<SupplierGroupRequestOfferDto[]>([]);
   protected isLoading = signal(true);
+
+  // Pagination for bids
+  protected bidsPage = signal(1);
+  protected bidsPageSize = 5;
+  protected bidsTotalCount = signal(0);
+
+  protected bidsTotalPages = computed(() => {
+    return Math.max(1, Math.ceil(this.bidsTotalCount() / this.bidsPageSize));
+  });
+
+  protected bidsShowingFrom = computed(() => {
+    if (this.bidsTotalCount() === 0) return 0;
+    return (this.bidsPage() - 1) * this.bidsPageSize + 1;
+  });
+
+  protected bidsShowingTo = computed(() => {
+    return Math.min(this.bidsPage() * this.bidsPageSize, this.bidsTotalCount());
+  });
   private unsubOfferStatusChange: (() => void) | null = null;
 
   protected filteredOffers = computed(() => this.offers().filter(o => {
@@ -61,9 +79,10 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
 
   private loadGroupRequestBids(): void {
     this.isLoading.set(true);
-    this.groupRequestsService.getMyPlacedOffers().subscribe({
+    this.groupRequestsService.getMyPlacedOffers(this.bidsPage(), this.bidsPageSize).subscribe({
       next: (res) => {
         this.groupRequestBids.set(res.items || []);
+        this.bidsTotalCount.set(res.totalCount || 0);
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -88,5 +107,28 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
       month: 'short',
       day: 'numeric'
     });
+  }
+
+  protected changeBidsPage(p: number) {
+    this.bidsPage.set(p);
+    this.loadGroupRequestBids();
+  }
+
+  protected parseAttributes(attributesJson: string | null | undefined): { key: string; value: string }[] {
+    if (!attributesJson) return [];
+    try {
+      const parsed = JSON.parse(attributesJson);
+      return Object.entries(parsed).map(([key, value]) => ({
+        key: this.capitalize(key),
+        value: String(value)
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  private capitalize(s: string): string {
+    if (!s) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
   }
 }
