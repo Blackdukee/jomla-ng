@@ -2,7 +2,7 @@
   <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:2rem">
     <div>
       <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.25rem">My Offers</h1>
-      <p style="color:var(--text-secondary)">Manage your posted deals.</p>
+      <p style="color:var(--text-secondary)">Manage your posted deals and group request bids.</p>
     </div>
     <a routerLink="/supplier/offers/new" class="btn btn-primary" style="display:flex;align-items:center;gap:0.5rem">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -10,83 +10,274 @@
     </a>
   </div>
 
-  <div class="seg-control" style="margin-bottom:1.5rem" role="tablist" aria-label="Offer status">
-    <button role="tab" [class]="tab() === 'active' ? 'active' : ''" [attr.aria-selected]="tab() === 'active'" (click)="tab.set('active')">Active</button>
-    <button role="tab" [class]="tab() === 'pending' ? 'active' : ''" [attr.aria-selected]="tab() === 'pending'" (click)="tab.set('pending')">Pending Review</button>
-    <button role="tab" [class]="tab() === 'inactive' ? 'active' : ''" [attr.aria-selected]="tab() === 'inactive'" (click)="tab.set('inactive')">Inactive</button>
-    <button role="tab" [class]="tab() === 'expired' ? 'active' : ''" [attr.aria-selected]="tab() === 'expired'" (click)="tab.set('expired')">Expired</button>
+  <!-- Primary Tab Selector -->
+  <div class="seg-control" style="margin-bottom:2rem" role="tablist" aria-label="Offer categories">
+    <button role="tab" [class]="offerType() === 'deals' ? 'active' : ''" [attr.aria-selected]="offerType() === 'deals'" (click)="offerType.set('deals')">
+      Posted Group Deals
+    </button>
+    <button role="tab" [class]="offerType() === 'bids' ? 'active' : ''" [attr.aria-selected]="offerType() === 'bids'" (click)="offerType.set('bids')">
+      Group Request Bids
+    </button>
   </div>
 
-  @if (isLoading()) {
-    <div style="display:flex;flex-direction:column;gap:1rem">
-      @for (skeleton of [1, 2, 3]; track skeleton) {
-        <div class="card offer-row" style="cursor:default">
-          <div class="offer-thumb skeleton-rect shimmer" style="width:64px;height:64px;border-radius:8px"></div>
-          <div style="flex:1">
-            <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
-              <div class="skeleton-text shimmer" style="width:40px"></div>
+  @if (offerType() === 'deals') {
+    <div class="seg-control" style="margin-bottom:1.5rem" role="tablist" aria-label="Offer status">
+      <button role="tab" [class]="tab() === 'active' ? 'active' : ''" [attr.aria-selected]="tab() === 'active'" (click)="onTabChange('active')">Active</button>
+      <button role="tab" [class]="tab() === 'pending' ? 'active' : ''" [attr.aria-selected]="tab() === 'pending'" (click)="onTabChange('pending')">Pending Review</button>
+      <button role="tab" [class]="tab() === 'inactive' ? 'active' : ''" [attr.aria-selected]="tab() === 'inactive'" (click)="onTabChange('inactive')">Inactive</button>
+      <button role="tab" [class]="tab() === 'expired' ? 'active' : ''" [attr.aria-selected]="tab() === 'expired'" (click)="onTabChange('expired')">Expired</button>
+    </div>
+
+    <!-- Filters block for Deals -->
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1.5rem">
+      <div class="search-bar-container">
+        <span class="search-icon-wrap" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input type="text"
+               class="search-input"
+               placeholder="Search requests..."
+               [value]="offersSearch()"
+               (input)="onOffersSearchChange($event)"
+               aria-label="Search deals" />
+      </div>
+      <select class="filter-select" (change)="onOffersCategoryChange($event)" aria-label="Filter by category">
+        <option value="">All Categories</option>
+        @for (cat of categories(); track cat.id) {
+          <option [value]="cat.id">{{ cat.displayName || cat.name }}</option>
+        }
+      </select>
+    </div>
+
+    @if (isLoading()) {
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        @for (skeleton of [1, 2, 3]; track skeleton) {
+          <div class="card offer-row" style="cursor:default">
+            <div class="offer-thumb skeleton-rect shimmer" style="width:64px;height:64px;border-radius:8px"></div>
+            <div style="flex:1">
+              <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
+                <div class="skeleton-text shimmer" style="width:40px"></div>
+                <div class="skeleton-text shimmer" style="width:60px"></div>
+              </div>
+              <div class="skeleton-text shimmer" style="width:200px;height:16px;margin-bottom:0.5rem"></div>
+              <div class="skeleton-text shimmer" style="width:120px"></div>
+            </div>
+            <div style="width:180px;flex-shrink:0" class="hide-mobile">
+              <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem">
+                <div class="skeleton-text shimmer" style="width:80px"></div>
+                <div class="skeleton-text shimmer" style="width:30px"></div>
+              </div>
+              <div class="skeleton-rect shimmer" style="height:6px;width:100%"></div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (filteredOffers().length === 0) {
+      <div style="padding:5rem 2rem;text-align:center;background:#F9FAFB;border:1px dashed var(--border);border-radius:16px;color:var(--text-secondary)" aria-live="polite">
+        No {{ tab() }} offers found.
+      </div>
+    } @else {
+      <div class="scroll-list" style="max-height: calc(100vh - 300px)">
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          @for (offer of filteredOffers(); track offer.id) {
+            <a [routerLink]="['/supplier/offers', offer.id]" class="card card-hover offer-row">
+              <!-- Image thumb -->
+              <div class="offer-thumb" aria-hidden="true">
+                @if (offer.images && offer.images.length > 0) {
+                  <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" [src]="offer.images[0] | cloudinary:'thumb'" alt="Offer thumbnail" width="80" height="80" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                } @else {
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#D1D5DB">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                }
+              </div>
+
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem">
+                  <span class="badge badge-brand-light" style="color:var(--brand)">-{{ offer.discountPercentage }}%</span>
+                  @if (offer.activeBatchNumber) {
+                    <span style="font-size:0.8125rem;color:var(--text-secondary);font-weight:500">Batch #{{ offer.activeBatchNumber }}</span>
+                  }
+                </div>
+                <h3 style="font-size:1.0625rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:0.25rem">{{ offer.title }}</h3>
+                <div style="font-size:0.875rem;color:var(--text-secondary)">{{ offer.totalQuantityAvailable - offer.committedUnits }} units remaining</div>
+              </div>
+
+              @if (tab() === 'active') {
+                <div style="width:180px;flex-shrink:0" class="hide-mobile">
+                  <div style="display:flex;justify-content:space-between;font-size:0.75rem;font-weight:500;margin-bottom:0.375rem">
+                    <span style="color:var(--brand)">{{ offer.committedUnits }} committed</span>
+                    <span style="color:var(--text-secondary)">{{ progress(offer) }}%</span>
+                  </div>
+                  <div class="progress-track" style="height:6px">
+                    <div class="progress-fill" [style.width.%]="progress(offer)"></div>
+                  </div>
+                </div>
+              }
+
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);flex-shrink:0" class="hide-mobile" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </a>
+          }
+        </div>
+      </div>
+      
+      <!-- Pagination Controls for Deals -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <span style="font-size:0.875rem;color:var(--text-secondary)">
+          Showing {{ offersShowingFrom() }} to {{ offersShowingTo() }} of {{ offersTotalCount() }} deals
+        </span>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-outline" [disabled]="offersPage() === 1" (click)="changeOffersPage(offersPage() - 1)" style="height:2.25rem;padding:0 0.75rem;font-size:0.875rem;cursor:pointer">
+            Previous
+          </button>
+          <button class="btn btn-outline" [disabled]="offersPage() === offersTotalPages()" (click)="changeOffersPage(offersPage() + 1)" style="height:2.25rem;padding:0 0.75rem;font-size:0.875rem;cursor:pointer">
+            Next
+          </button>
+        </div>
+      </div>
+    }
+  }
+
+  @if (offerType() === 'bids') {
+    <!-- Filters block for Bids -->
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1.5rem">
+      <div class="search-bar-container">
+        <span class="search-icon-wrap" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input type="text"
+               class="search-input"
+               placeholder="Search requests..."
+               [value]="bidsSearch()"
+               (input)="onBidsSearchChange($event)"
+               aria-label="Search bids" />
+      </div>
+      <select class="filter-select" (change)="onBidsStatusChange($event)" aria-label="Filter by status">
+        <option value="All">All Statuses</option>
+        <option value="Open">Open</option>
+        <option value="Accepted">Accepted</option>
+        <option value="Countered">Countered</option>
+        <option value="Expired">Expired</option>
+      </select>
+    </div>
+
+    @if (isLoading()) {
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        @for (skeleton of [1, 2, 3]; track skeleton) {
+          <div class="card bid-row" style="cursor:default">
+            <div class="skeleton-rect shimmer" style="width:4rem;height:4rem;border-radius:50%;flex-shrink:0"></div>
+            <div style="flex:1">
+              <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
+                <div class="skeleton-text shimmer" style="width:60px"></div>
+                <div class="skeleton-text shimmer" style="width:100px"></div>
+              </div>
+              <div class="skeleton-text shimmer" style="width:200px;height:16px;margin-bottom:0.5rem"></div>
+              <div class="skeleton-text shimmer" style="width:150px"></div>
+            </div>
+            <div style="width:100px;display:flex;flex-direction:column;align-items:flex-end;gap:0.375rem" class="hide-mobile">
+              <div class="skeleton-text shimmer" style="width:80px;height:16px"></div>
               <div class="skeleton-text shimmer" style="width:60px"></div>
             </div>
-            <div class="skeleton-text shimmer" style="width:200px;height:16px;margin-bottom:0.5rem"></div>
-            <div class="skeleton-text shimmer" style="width:120px"></div>
           </div>
-          <div style="width:180px;flex-shrink:0" class="hide-mobile">
-            <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem">
-              <div class="skeleton-text shimmer" style="width:80px"></div>
-              <div class="skeleton-text shimmer" style="width:30px"></div>
+        }
+      </div>
+    } @else if (groupRequestBids().length === 0) {
+      <div style="padding:5rem 2rem;text-align:center;background:#F9FAFB;border:1px dashed var(--border);border-radius:16px;color:var(--text-secondary)" aria-live="polite">
+        You haven't placed any group request bids yet.
+      </div>
+    } @else {
+      <div style="display:flex;flex-direction:column;gap:1.25rem;margin-bottom:2rem">
+        @for (bid of groupRequestBids(); track bid.id) {
+          <a [routerLink]="['/manage/requests', bid.groupRequestId]" class="card card-hover bid-row" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;transition:all 0.2s ease-in-out">
+            <div class="bid-icon-thumb" aria-hidden="true" style="font-weight:700;font-size:1.5rem;background:var(--brand-light);color:var(--brand)">
+              {{ bid.groupRequestTitle.charAt(0).toUpperCase() }}
             </div>
-            <div class="skeleton-rect shimmer" style="height:6px;width:100%"></div>
-          </div>
-        </div>
-      }
-    </div>
-  } @else if (filteredOffers().length === 0) {
-    <div style="padding:5rem 2rem;text-align:center;background:#F9FAFB;border:1px dashed var(--border);border-radius:16px;color:var(--text-secondary)" aria-live="polite">
-      No {{ tab() }} offers found.
-    </div>
-  } @else {
-    <div style="display:flex;flex-direction:column;gap:1rem">
-      @for (offer of filteredOffers(); track offer.id) {
-        <a [routerLink]="['/supplier/offers', offer.id]" class="card card-hover offer-row">
-          <!-- Image thumb -->
-          <div class="offer-thumb" aria-hidden="true">
-            @if (offer.images && offer.images.length > 0) {
-              <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" [src]="offer.images[0] | cloudinary:'thumb'" alt="Offer thumbnail" width="80" height="80" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
-            } @else {
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#D1D5DB">
-                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-              </svg>
-            }
-          </div>
 
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem">
-              <span class="badge badge-brand-light" style="color:var(--brand)">-{{ offer.discountPercentage }}%</span>
-              @if (offer.activeBatchNumber) {
-                <span style="font-size:0.8125rem;color:var(--text-secondary);font-weight:500">Batch #{{ offer.activeBatchNumber }}</span>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem;flex-wrap:wrap">
+                <span class="badge" 
+                  [class.badge-success]="bid.status.toLowerCase() === 'accepted'"
+                  [class.badge-brand]="bid.status.toLowerCase() === 'open'"
+                  [class.badge-danger]="bid.status.toLowerCase() === 'rejected' || bid.status.toLowerCase() === 'cancelled'"
+                  [class.badge-warning]="bid.status.toLowerCase() === 'countered'"
+                  [class.badge-muted]="bid.status.toLowerCase() === 'expired' || bid.status.toLowerCase() === 'completed'">
+                  {{ bid.status }}
+                </span>
+                <span style="font-size:0.8125rem;color:var(--text-secondary);font-weight:500">
+                  Placed on {{ fmtDate(bid.createdAt) }}
+                </span>
+              </div>
+              <h3 style="font-size:1.0625rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:0.25rem" class="bid-title">
+                {{ bid.groupRequestTitle }}
+              </h3>
+              @if (bid.variantAttributes) {
+                <div style="font-size:0.8125rem;color:var(--text-secondary);margin-top:0.375rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);flex-shrink:0" aria-hidden="true">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                  </svg>
+                  <div style="display:flex;gap:0.375rem;flex-wrap:wrap">
+                    @for (attr of parseAttributes(bid.variantAttributes); track attr.key) {
+                      <span class="spec-tag">
+                        <span style="color:var(--text-secondary);font-weight:400">{{ attr.key }}:</span>
+                        <span style="font-weight:600;color:var(--text-primary)">{{ attr.value }}</span>
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+
+              <div class="show-mobile" style="margin-top:0.5rem;font-size:0.875rem;gap:0.5rem;align-items:center;flex-wrap:wrap">
+                <strong style="color:var(--brand)">EGP {{ bid.unitPrice.toFixed(2) }}</strong>
+                <span style="color:var(--text-muted)">•</span>
+                <span style="color:var(--text-secondary)">{{ bid.quantityAvailable }} units</span>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.25rem;text-align:right" class="hide-mobile">
+              <div style="font-size:1.125rem;font-weight:700;color:var(--brand)">
+                EGP {{ bid.unitPrice.toFixed(2) }}
+              </div>
+              <div style="font-size:0.875rem;color:var(--text-secondary)">
+                {{ bid.quantityAvailable }} units offered
+              </div>
+              @if (bid.expiresAt) {
+                <div style="font-size:0.75rem;color:var(--text-muted)">
+                  Expires: {{ fmtDate(bid.expiresAt) }}
+                </div>
               }
             </div>
-            <h3 style="font-size:1.0625rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:0.25rem">{{ offer.title }}</h3>
-            <div style="font-size:0.875rem;color:var(--text-secondary)">{{ offer.totalQuantityAvailable - offer.committedUnits }} units remaining</div>
-          </div>
 
-          @if (tab() === 'active') {
-            <div style="width:180px;flex-shrink:0" class="hide-mobile">
-              <div style="display:flex;justify-content:space-between;font-size:0.75rem;font-weight:500;margin-bottom:0.375rem">
-                <span style="color:var(--brand)">{{ offer.committedUnits }} committed</span>
-                <span style="color:var(--text-secondary)">{{ progress(offer) }}%</span>
-              </div>
-              <div class="progress-track" style="height:6px">
-                <div class="progress-fill" [style.width.%]="progress(offer)"></div>
-              </div>
-            </div>
-          }
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);flex-shrink:0" class="hide-mobile" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </a>
+        }
+      </div>
 
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);flex-shrink:0" class="hide-mobile" aria-hidden="true">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </a>
-      }
-    </div>
+      <!-- Pagination Controls -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <span style="font-size:0.875rem;color:var(--text-secondary)">
+          Showing {{ bidsShowingFrom() }} to {{ bidsShowingTo() }} of {{ bidsTotalCount() }} bids
+        </span>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-outline" [disabled]="bidsPage() === 1" (click)="changeBidsPage(bidsPage() - 1)" style="height:2.25rem;padding:0 0.75rem;font-size:0.875rem;cursor:pointer">
+            Previous
+          </button>
+          <button class="btn btn-outline" [disabled]="bidsPage() === bidsTotalPages()" (click)="changeBidsPage(bidsPage() + 1)" style="height:2.25rem;padding:0 0.75rem;font-size:0.875rem;cursor:pointer">
+            Next
+          </button>
+        </div>
+      </div>
+    }
   }
 </div>

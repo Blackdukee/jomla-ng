@@ -26,6 +26,19 @@ export interface GroupRequestOfferDto {
   acceptedBuyerIds?: string[];
   rejectedBuyerIds?: string[];
   isAnimatingOut?: boolean;
+  variantAttributes?: string;
+}
+
+export interface SupplierGroupRequestOfferDto {
+  id: string;
+  groupRequestId: string;
+  groupRequestTitle: string;
+  unitPrice: number;
+  quantityAvailable: number;
+  status: string;
+  createdAt: string;
+  expiresAt: string;
+  variantAttributes?: string;
 }
 
 export interface GroupRequestParticipantDto {
@@ -57,5 +70,6 @@ export interface CreateGroupRequestRequest {
   quantity: number;
   description: string | null;
   images: File[] | null;
+  categoryId?: string | null;
 }
 

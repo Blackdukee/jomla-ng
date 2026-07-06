@@ -58,7 +58,25 @@
     <div>
       <div class="image-container">
         @if (offer() && offer()!.images && offer()!.images.length > 0) {
-          <img [src]="offer()!.images[0] | cloudinary:'gallery'" alt="Product image" width="800" height="600" loading="lazy">
+          <img [src]="offer()!.images[activeImgIndex()] | cloudinary:'gallery'" alt="Product image" width="800" height="600" loading="lazy">
+          
+          @if (offer()!.images.length > 1) {
+            <button type="button" class="slider-btn prev" (click)="prevImage($event)" aria-label="Previous image">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+            <button type="button" class="slider-btn next" (click)="nextImage($event)" aria-label="Next image">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+            <div class="slider-dots">
+              @for (img of offer()!.images; track $index; let i = $index) {
+                <span class="slider-dot" [class.active]="activeImgIndex() === i" (click)="setImgIndex(i)"></span>
+              }
+            </div>
+          }
         } @else {
           <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.2" aria-hidden="true">
             <rect x="2" y="2" width="20" height="20" rx="2.5" />
@@ -113,8 +131,8 @@
       <p class="product-description">{{ offer()?.description || 'Premium wholesale group deal. Commit now to unlock bulk pricing.' }}</p>
 
       <div class="price-block">
-        <span class="price-discounted">EGP {{ b.discountedPrice }}</span>
-        <span class="price-original">EGP {{ b.unitPrice }}</span>
+        <span class="price-discounted">EGP {{ b.discountedPrice | number:'1.2-2' }}</span>
+        <span class="price-original">EGP {{ b.unitPrice | number:'1.2-2' }}</span>
         <span class="discount-tag">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transform: rotate(45deg); flex-shrink: 0;">
             <line x1="5" y1="12" x2="19" y2="12"></line>

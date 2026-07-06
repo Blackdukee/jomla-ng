@@ -18,7 +18,8 @@ export type {
   GroupRequestListItemDto,
   GroupRequestOfferDto,
   GroupRequestDetailDto,
-  CreateGroupRequestRequest
+  CreateGroupRequestRequest,
+  SupplierGroupRequestOfferDto
 } from './group-request.models';
 export type {
   SupplierCategoryPreferenceDto,
@@ -28,4 +29,10 @@ export type {
   NotificationDto,
   GetNotificationsResult
 } from './notification.models';
+
+export type {
+  FlaggedOfferDto,
+  FlaggedGroupRequestDto,
+  PagedResult
+} from './admin.models';
 

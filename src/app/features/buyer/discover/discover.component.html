@@ -192,36 +192,36 @@
     } @else if (requests().length === 0) {
     <div class="empty-state" aria-live="polite">No active group requests found.</div>
     } @else {
-    <div class="requests-grid animated-grid">
-      @for (req of requests(); track req.id) {
-      <article class="card card-hover request-card" [routerLink]="['/hubs/request', req.id]" style="cursor:pointer; display:flex; flex-direction:column; padding:1.5rem"
-        [attr.aria-label]="(req.description || req.title) + ', ' + req.currentQuantity + ' units'">
-        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap">
-          <span class="badge badge-muted">{{ req.categoryName || 'Uncategorized' }}</span>
-          <span class="badge badge-brand-light" style="color:var(--brand)">Active</span>
-        </div>
-
-        <h3 style="font-size:1.125rem; font-weight:700; line-height:1.4; margin-bottom:1rem; flex:1; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical">
-          {{ req.description || req.title }}
-        </h3>
-
-        <div style="display:flex; flex-direction:column; gap:0.75rem; border-top:1px solid var(--border); padding-top:1rem; margin-bottom:1.5rem">
-          <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; color:var(--text-secondary)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--brand)"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-            <span style="font-weight:600; color:var(--text-primary)">{{ req.currentQuantity }} units</span> demanded
+      <div class="requests-grid animated-grid">
+        @for (req of requests(); track req.id) {
+        <article class="card card-hover request-card" [routerLink]="['/hubs/request', req.id]" style="cursor:pointer; display:flex; flex-direction:column; padding:1.5rem"
+          [attr.aria-label]="(req.description || req.title) + ', ' + req.currentQuantity + ' units'">
+          <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap">
+            <span class="badge badge-muted">{{ req.categoryName || 'Uncategorized' }}</span>
+            <span class="badge badge-brand-light" style="color:var(--brand)">Active</span>
           </div>
-          <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; color:var(--text-secondary)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--text-muted)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            <span>{{ req.participantsCount }} buyers</span> joined
-          </div>
-        </div>
 
-        <button class="btn btn-outline" style="width:100%">
-          Join hub
-        </button>
-      </article>
-      }
-    </div>
+          <h3 style="font-size:1.125rem; font-weight:700; line-height:1.4; margin-bottom:1rem; flex:1; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical">
+            {{ req.description || req.title }}
+          </h3>
+
+          <div style="display:flex; flex-direction:column; gap:0.75rem; border-top:1px solid var(--border); padding-top:1rem; margin-bottom:1.5rem">
+            <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; color:var(--text-secondary)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--brand)"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              <span style="font-weight:600; color:var(--text-primary)">{{ req.currentQuantity }} units</span> demanded
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; color:var(--text-secondary)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--text-muted)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              <span>{{ req.participantsCount }} buyers</span> joined
+            </div>
+          </div>
+
+          <button class="btn btn-outline" style="width:100%">
+            Join hub
+          </button>
+        </article>
+        }
+      </div>
 
     @if (totalPagesRequests() > 1) {
     <div class="pagination-row" style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-top:2.5rem" role="navigation" aria-label="Pagination">

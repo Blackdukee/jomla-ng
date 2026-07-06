@@ -111,6 +111,9 @@ import { formatDistanceToNow } from 'date-fns';
                   </div>
                   <a routerLink="/profile" class="dropdown-item" role="menuitem" (click)="avatarOpen.set(false)">Profile</a>
                   <a routerLink="/settings" class="dropdown-item" role="menuitem" (click)="avatarOpen.set(false)">Settings</a>
+                  @if (auth.isAdmin()) {
+                    <a routerLink="/admin" class="dropdown-item" role="menuitem" (click)="avatarOpen.set(false)">Moderation Queue</a>
+                  }
                   <div style="height:1px;background:var(--border);margin:0.25rem 0"></div>
                   <button class="dropdown-item danger" role="menuitem" (click)="logout()">Log out</button>
                 </div>
@@ -484,6 +487,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   protected logoLink() {
     if (!this.auth.isAuthenticated()) return '/';
+    if (this.auth.isAdmin()) return '/admin';
     return this.auth.isBuyer() ? '/discover' : '/supplier/requests';
   }
 
@@ -501,6 +505,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
         { href: '/supplier/offers', label: 'My Offers' },
         { href: '/supplier/deals', label: 'Deals' },
         { href: '/supplier/alerts', label: 'Alerts' },
+      ];
+    }
+    if (this.auth.isAdmin()) {
+      return [
+        { href: '/admin', label: 'Moderation Queue' }
       ];
     }
     return [];

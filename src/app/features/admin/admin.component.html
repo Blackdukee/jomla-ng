@@ -1,0 +1,199 @@
+<div class="container admin-container" role="main">
+  <!-- Header -->
+  <div class="admin-header">
+    <div style="display:flex; align-items:center; gap:0.75rem">
+      <div class="admin-badge-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+      </div>
+      <div>
+        <h1>Moderation Queue</h1>
+        <p>Review, approve, or reject flagged listings to maintain community quality.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs Selector -->
+  <div class="tabs-wrapper" role="tablist" aria-label="Moderation tabs">
+    <button role="tab" 
+            [class.active]="activeTab() === 'offers'" 
+            [attr.aria-selected]="activeTab() === 'offers'"
+            (click)="setTab('offers')">
+      Flagged Offers
+      @if (totalOffers() > 0) {
+        <span class="tab-count-badge">{{ totalOffers() }}</span>
+      }
+    </button>
+    <button role="tab" 
+            [class.active]="activeTab() === 'requests'" 
+            [attr.aria-selected]="activeTab() === 'requests'"
+            (click)="setTab('requests')">
+      Flagged Requests
+      @if (totalRequests() > 0) {
+        <span class="tab-count-badge">{{ totalRequests() }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner" aria-label="Loading flagged items"></div>
+      <p>Fetching queue items...</p>
+    </div>
+  } @else {
+    <!-- Main Content Area -->
+    <div class="queue-grid">
+      <!-- Offers Tab Content -->
+      @if (activeTab() === 'offers') {
+        @if (flaggedOffers().length === 0) {
+          <div class="empty-state-card">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <h3>All Clear!</h3>
+            <p>There are no flagged offers awaiting review right now.</p>
+          </div>
+        } @else {
+          <div class="queue-list">
+            @for (offer of flaggedOffers(); track offer.id) {
+              <div class="flagged-card">
+                <div class="card-body">
+                  <div class="card-meta">
+                    <span class="meta-label">Offer ID: {{ offer.id.slice(0, 8) }}</span>
+                    <span class="meta-date">Flagged {{ offer.createdAt | date:'mediumDate' }}</span>
+                  </div>
+                  <h3 class="card-title">{{ offer.title }}</h3>
+                  
+                  @if (offer.description) {
+                    <p class="card-description">{{ offer.description }}</p>
+                  } @else {
+                    <p class="card-description empty-desc">No description provided.</p>
+                  }
+
+                  <!-- Moderation Reason Callout -->
+                  <div class="flag-callout">
+                    <div class="flag-callout-header">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                      <span>Reason for Flag</span>
+                    </div>
+                    <p class="flag-callout-text">{{ offer.moderationReason }}</p>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  <button class="btn btn-outline-danger" 
+                          [disabled]="actionInProgress()" 
+                          (click)="openRejectModal(offer.id, 'offer')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Reject
+                  </button>
+                  <button class="btn btn-success" 
+                          [disabled]="actionInProgress()" 
+                          (click)="approve(offer.id, 'offer')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Approve
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- Requests Tab Content -->
+      @if (activeTab() === 'requests') {
+        @if (flaggedRequests().length === 0) {
+          <div class="empty-state-card">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <h3>All Clear!</h3>
+            <p>There are no flagged group requests awaiting review right now.</p>
+          </div>
+        } @else {
+          <div class="queue-list">
+            @for (req of flaggedRequests(); track req.id) {
+              <div class="flagged-card">
+                <div class="card-body">
+                  <div class="card-meta">
+                    <span class="meta-label">Request ID: {{ req.id.slice(0, 8) }}</span>
+                    <span class="meta-date">Flagged {{ req.createdAt | date:'mediumDate' }}</span>
+                  </div>
+                  <h3 class="card-title">{{ req.title }}</h3>
+
+                  <!-- Moderation Reason Callout -->
+                  <div class="flag-callout">
+                    <div class="flag-callout-header">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                      <span>Reason for Flag</span>
+                    </div>
+                    <p class="flag-callout-text">{{ req.moderationReason }}</p>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  <button class="btn btn-outline-danger" 
+                          [disabled]="actionInProgress()" 
+                          (click)="openRejectModal(req.id, 'request')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Reject
+                  </button>
+                  <button class="btn btn-success" 
+                          [disabled]="actionInProgress()" 
+                          (click)="approve(req.id, 'request')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Approve
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Pagination Footer -->
+    @if (totalPages > 1) {
+      <div class="pagination-footer">
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <div style="display:flex; gap:0.5rem">
+          <button class="btn btn-outline" 
+                  [disabled]="currentPage === 1" 
+                  (click)="changePage(-1)">
+            Previous
+          </button>
+          <button class="btn btn-outline" 
+                  [disabled]="currentPage === totalPages" 
+                  (click)="changePage(1)">
+            Next
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>
+
+<!-- Rejection Modal Dialog -->
+@if (rejectModalOpen()) {
+  <div class="modal-backdrop" (click)="closeRejectModal()" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modal-title">Reject Flagged {{ currentRejectType() === 'offer' ? 'Offer' : 'Group Request' }}</h2>
+        <button class="btn-close" (click)="closeRejectModal()" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-subtitle">Provide a clear reason for the rejection. This message will be shared with the publisher to help them understand what needs to be fixed.</p>
+        <div class="form-group">
+          <label class="form-label" for="reject-reason-input">Rejection Reason</label>
+          <textarea id="reject-reason-input"
+                    class="form-input text-area"
+                    placeholder="Describe why this listing is being rejected (e.g., inappropriate content, misleading prices, missing documents)..."
+                    [(ngModel)]="rejectReason"
+                    rows="4"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeRejectModal()" [disabled]="actionInProgress()">Cancel</button>
+        <button class="btn btn-danger" (click)="submitReject()" [disabled]="actionInProgress() || !rejectReason().trim()">
+          {{ actionInProgress() ? 'Rejecting...' : 'Confirm Rejection' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

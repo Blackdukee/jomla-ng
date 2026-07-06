@@ -197,13 +197,14 @@ import { SupplierPreferencesService } from '../../core/services/supplier-prefere
 import { BatchesService } from '../../core/services/batches.service';
 import { User, MyOfferDto, CategoryDto, SupplierCategoryPreferenceDto, BuyerHubDto } from '../../core/models';
 import { UserService } from '../../core/services/user.service';
+import { RouterLink } from '@angular/router';
 
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('profileEntrance', [
@@ -351,7 +352,12 @@ constructor() {
   protected getProgressPercent(progress: number, target: number): number {
     return target > 0 ? Math.min(Math.round((progress / target) * 100), 100) : 0;
   }
-protected save() {
+
+  protected hubLink(hub: BuyerHubDto) {
+    return hub.type === 'supplier_offer' ? ['/hubs/supplier', hub.batchId] : ['/hubs/request', hub.requestId];
+  }
+
+  protected save() {
   this.submitted.set(true);
   if (this.form.invalid) return;
 

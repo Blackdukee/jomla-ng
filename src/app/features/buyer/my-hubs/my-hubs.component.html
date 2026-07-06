@@ -51,46 +51,48 @@
         No hubs found.
       </div>
     } @else {
-      <div style="display:flex;flex-direction:column;gap:1rem">
-        @for (hub of paginatedHubs(); track hub.id) {
-          <a [routerLink]="hubLink(hub)" class="card card-hover hub-row">
-            <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
-                <span class="badge" [class]="hub.type === 'supplier_offer' ? 'badge-brand-light' : 'badge-muted'"
-                  style="color: var(--brand)">
-                  {{ hub.type === 'supplier_offer' ? 'Supplier Offer' : 'Group Request' }}
-                </span>
-                <span class="badge"
-                  [class.badge-success]="['active','open','completed'].includes(hub.status.toLowerCase())"
-                  [class.badge-warning]="hub.status.toLowerCase() === 'pendingreview'"
-                  [class.badge-danger]="hub.status.toLowerCase() === 'failed'"
-                  [class.badge-muted]="['inactive','closed'].includes(hub.status.toLowerCase())">
-                  {{ hub.status.toLowerCase() === 'pendingreview' ? 'Pending Review' : hub.status }}
-                </span>
-              </div>
-              <h3 style="font-size:1.0625rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:0.25rem">{{ hub.title }}</h3>
-              <p style="font-size:0.875rem;color:var(--text-secondary)">
-                Your commitment: <span style="font-weight:600;color:var(--text-primary)">{{ hub.committedUnits }} units</span>
-              </p>
-            </div>
-
-            @if (hub.type === 'supplier_offer' && hub.fillTarget) {
-              <div style="width:180px;flex-shrink:0" class="hide-mobile">
-                <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:0.375rem">
-                  <span style="font-weight:500">Total fill</span>
-                  <span style="color:var(--text-secondary)">{{ fillPct(hub) }}%</span>
+      <div>
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          @for (hub of paginatedHubs(); track hub.id) {
+            <a [routerLink]="hubLink(hub)" class="card card-hover hub-row">
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
+                  <span class="badge" [class]="hub.type === 'supplier_offer' ? 'badge-brand-light' : 'badge-muted'"
+                    style="color: var(--brand)">
+                    {{ hub.type === 'supplier_offer' ? 'Supplier Offer' : 'Group Request' }}
+                  </span>
+                  <span class="badge"
+                    [class.badge-success]="['active','open','completed'].includes(hub.status.toLowerCase())"
+                    [class.badge-warning]="hub.status.toLowerCase() === 'pendingreview'"
+                    [class.badge-danger]="hub.status.toLowerCase() === 'failed'"
+                    [class.badge-muted]="['inactive','closed'].includes(hub.status.toLowerCase())">
+                    {{ hub.status.toLowerCase() === 'pendingreview' ? 'Pending Review' : hub.status }}
+                  </span>
                 </div>
-                <div class="progress-track" style="height:6px">
-                  <div class="progress-fill" [style.width.%]="fillPct(hub)"></div>
-                </div>
+                <h3 style="font-size:1.0625rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:0.25rem">{{ hub.title }}</h3>
+                <p style="font-size:0.875rem;color:var(--text-secondary)">
+                  Your commitment: <span style="font-weight:600;color:var(--text-primary)">{{ hub.committedUnits }} units</span>
+                </p>
               </div>
-            }
 
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);flex-shrink:0" class="hide-mobile" aria-hidden="true">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </a>
-        }
+              @if (hub.type === 'supplier_offer' && hub.fillTarget) {
+                <div style="width:180px;flex-shrink:0" class="hide-mobile">
+                  <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:0.375rem">
+                    <span style="font-weight:500">Total fill</span>
+                    <span style="color:var(--text-secondary)">{{ fillPct(hub) }}%</span>
+                  </div>
+                  <div class="progress-track" style="height:6px">
+                    <div class="progress-fill" [style.width.%]="fillPct(hub)"></div>
+                  </div>
+                </div>
+              }
+
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);flex-shrink:0" class="hide-mobile" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </a>
+          }
+        </div>
       </div>
 
       <!-- Pagination Controls -->

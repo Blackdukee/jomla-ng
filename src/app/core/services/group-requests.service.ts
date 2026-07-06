@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import {
   GroupRequestListItemDto,
   GroupRequestDetailDto,
-  CreateGroupRequestRequest
+  CreateGroupRequestRequest,
+  SupplierGroupRequestOfferDto
 } from '../models';
 
 import { environment } from '../../../environments/environment';
@@ -54,6 +55,9 @@ export class GroupRequestsService {
     if (request.description) {
       formData.append('description', request.description);
     }
+    if (request.categoryId) {
+      formData.append('categoryId', request.categoryId);
+    }
     if (request.images) {
       request.images.forEach(file => {
         formData.append('images', file, file.name);
@@ -79,10 +83,20 @@ export class GroupRequestsService {
   }
 
   /** GET /api/group-requests/matched — Get supplier's matched group requests */
-  getMatchedGroupRequests(page = 1, pageSize = 10): Observable<{ items: any[]; totalCount: number; page: number; pageSize: number }> {
+  getMatchedGroupRequests(page = 1, pageSize = 10, search?: string, categoryId?: string, status?: string): Observable<{ items: any[]; totalCount: number; page: number; pageSize: number }> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('pageSize', pageSize.toString());
+
+    if (search?.trim()) {
+      params = params.set('search', search.trim());
+    }
+    if (categoryId) {
+      params = params.set('categoryId', categoryId);
+    }
+    if (status && status !== 'All') {
+      params = params.set('status', status);
+    }
 
     return this.http.get<{ items: any[]; totalCount: number; page: number; pageSize: number }>(
       `${this.baseUrl}/matched`,
@@ -102,5 +116,24 @@ export class GroupRequestsService {
     return this.http.post<any>(`${this.baseUrl}/${requestId}/offers`, offer, {
       withCredentials: true
     });
+  }
+
+  /** GET /api/GroupRequestOffers/my-offers — Get group request offers placed by the supplier */
+  getMyPlacedOffers(page = 1, pageSize = 10, search?: string, status?: string): Observable<{ items: SupplierGroupRequestOfferDto[]; totalCount: number; page: number; pageSize: number }> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+
+    if (search?.trim()) {
+      params = params.set('search', search.trim());
+    }
+    if (status && status !== 'All') {
+      params = params.set('status', status);
+    }
+
+    return this.http.get<{ items: SupplierGroupRequestOfferDto[]; totalCount: number; page: number; pageSize: number }>(
+      `${environment.apiUrl}/GroupRequestOffers/my-offers`,
+      { params, withCredentials: true }
+    );
   }
 }

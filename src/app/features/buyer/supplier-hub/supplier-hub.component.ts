@@ -76,7 +76,28 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     return this.isBatchCompletedOrFailed() || this.isBatchFull();
   });
 
+  protected activeImgIndex = signal(0);
   protected showAllParticipants = signal(false);
+
+  protected prevImage(e: Event): void {
+    e.stopPropagation();
+    const imgs = this.offer()?.images;
+    if (imgs && imgs.length > 0) {
+      this.activeImgIndex.update(idx => (idx - 1 + imgs.length) % imgs.length);
+    }
+  }
+
+  protected nextImage(e: Event): void {
+    e.stopPropagation();
+    const imgs = this.offer()?.images;
+    if (imgs && imgs.length > 0) {
+      this.activeImgIndex.update(idx => (idx + 1) % imgs.length);
+    }
+  }
+
+  protected setImgIndex(i: number): void {
+    this.activeImgIndex.set(i);
+  }
 
   protected visibleParticipants = computed(() => {
     const list = this.sortedParticipants();
@@ -313,7 +334,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
   }
 
   protected confirmPayment(): void {
-    if (!this.stripe || !this.cardElement || !this.clientSecret()) return;
+    if (!this.stripe || !this.cardElement || !this.clientSecret() || this.joining()) return;
     this.joining.set(true);
 
     this.stripe.confirmCardPayment(this.clientSecret(), {

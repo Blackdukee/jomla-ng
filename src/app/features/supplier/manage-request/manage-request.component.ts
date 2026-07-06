@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
 import { AuthService } from '../../../core/auth.service';
 import { SignalRService } from '../../../core/services/signalr.service';
-import { GroupRequestDetailDto } from '../../../core/models';
+import { GroupRequestDetailDto, GroupRequestOfferDto } from '../../../core/models';
 import { ToastService } from '../../../core/toast.service';
 import { format } from 'date-fns';
 
@@ -25,25 +25,34 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
   private signalRService = inject(SignalRService);
 
   protected request = signal<GroupRequestDetailDto | null>(null);
-  protected myOffer = signal<any | null>(null);
+  protected activeOffer = signal<GroupRequestOfferDto | null>(null);
+  protected pastOffers = signal<GroupRequestOfferDto[]>([]);
   protected loading = signal(false);
   private requestId = '';
   private unsubRequestUpdate: (() => void) | null = null;
 
-  // Form signals
-  protected unitPrice = signal<number | null>(null);
-  protected minUnitPrice = signal<number | null>(null);
-  protected quantityAvailable = signal<number | null>(null);
-  protected minFallbackQuantity = signal<number | null>(null);
-  protected variantAttributes = signal<string>('');
-  protected expiresAt = signal<string>('');
+  // Form fields
+  protected unitPrice: number | null = null;
+  protected minUnitPrice: number | null = null;
+  protected quantityAvailable: number | null = null;
+  protected minFallbackQuantity: number | null = null;
+  protected variantAttributes: string = '';
+  protected expiresAt: string = '';
 
-  protected fmtExpiry(d: string) {
+  protected fmtExpiry(d: string | null | undefined) {
+    if (!d) return '';
     try {
       return format(new Date(d), 'MMM d, ha');
     } catch {
       return '';
     }
+  }
+
+  protected getCapacityFillRate(demand: number | null | undefined): number {
+    if (!demand) return 0;
+    const offer = this.activeOffer();
+    if (!offer || !offer.quantityAvailable) return 0;
+    return Math.round((demand / offer.quantityAvailable) * 100);
   }
 
   ngOnInit(): void {
@@ -57,7 +66,7 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
     // Default expiry date to 7 days from now (YYYY-MM-DD)
     const defaultDate = new Date();
     defaultDate.setDate(defaultDate.getDate() + 7);
-    this.expiresAt.set(defaultDate.toISOString().substring(0, 10));
+    this.expiresAt = defaultDate.toISOString().substring(0, 10);
 
     this.loadRequest(this.requestId);
 
@@ -67,8 +76,12 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
         this.request.set(update);
         const currentUser = this.authService.user();
         if (currentUser && update.offers) {
-          const found = update.offers.find(o => o.supplierId === currentUser.id);
-          this.myOffer.set(found || null);
+          const supplierOffers = update.offers.filter(o => o.supplierId === currentUser.id);
+          const active = supplierOffers.find(o => o.status === 'Open');
+          this.activeOffer.set(active || null);
+          const past = supplierOffers.filter(o => o.status !== 'Open')
+                                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          this.pastOffers.set(past);
         }
       }
     });
@@ -90,8 +103,12 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
         // Find if this supplier already placed an offer
         const currentUser = this.authService.user();
         if (currentUser && req.offers) {
-          const found = req.offers.find(o => o.supplierId === currentUser.id);
-          this.myOffer.set(found || null);
+          const supplierOffers = req.offers.filter(o => o.supplierId === currentUser.id);
+          const active = supplierOffers.find(o => o.status === 'Open');
+          this.activeOffer.set(active || null);
+          const past = supplierOffers.filter(o => o.status !== 'Open')
+                                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          this.pastOffers.set(past);
         }
 
         this.loading.set(false);
@@ -108,9 +125,9 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
     const req = this.request();
     if (!req) return;
 
-    const price = this.unitPrice();
-    const qty = this.quantityAvailable();
-    const expiry = this.expiresAt();
+    const price = this.unitPrice;
+    const qty = this.quantityAvailable;
+    const expiry = this.expiresAt;
 
     if (!price || price <= 0) {
       this.toast.error('Invalid Price', 'Please enter a valid unit price.');
@@ -127,10 +144,10 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
 
     const offerData = {
       unitPrice: price,
-      minUnitPrice: this.minUnitPrice() || undefined,
+      minUnitPrice: this.minUnitPrice || undefined,
       quantityAvailable: qty,
-      minFallbackQuantity: this.minFallbackQuantity() || undefined,
-      variantAttributes: this.variantAttributes() || undefined,
+      minFallbackQuantity: this.minFallbackQuantity || undefined,
+      variantAttributes: this.variantAttributes || undefined,
       expiresAt: new Date(expiry).toISOString()
     };
 

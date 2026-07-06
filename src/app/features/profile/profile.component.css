@@ -60,6 +60,16 @@
   gap: 1.5rem;
 }
 
+.main-content-layout.admin-layout {
+  display: flex;
+  justify-content: center;
+}
+
+.main-content-layout.admin-layout > .card {
+  width: 100%;
+  max-width: 600px;
+}
+
 @media (min-width: 1024px) {
   .main-content-layout {
     grid-template-columns: 1fr 340px;
@@ -104,8 +114,23 @@
   vertical-align: middle;
 }
 
+.ledger-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  z-index: 10;
+}
+
 .ledger-row:hover {
   background: rgba(13, 148, 136, 0.02);
+}
+
+.ledger-title {
+  transition: color var(--transition);
+}
+
+.ledger-row:hover .ledger-title {
+  color: var(--brand);
 }
 
 .form-container {

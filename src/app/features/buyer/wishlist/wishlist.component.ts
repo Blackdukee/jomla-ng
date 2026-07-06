@@ -46,6 +46,8 @@ export class WishlistComponent implements OnInit {
   protected qty = signal('');
   protected detecting = signal(false);
   protected detectedCat = signal<string | null>(null);
+  protected selectedCategoryId = signal<string | null>(null);
+  protected isSelectingCategory = signal(false);
 
   protected selectedFiles = signal<File[]>([]);
   protected images = signal<string[]>([]);
@@ -139,6 +141,8 @@ export class WishlistComponent implements OnInit {
     this.desc.set('');
     this.qty.set('');
     this.detectedCat.set(null);
+    this.selectedCategoryId.set(null);
+    this.isSelectingCategory.set(false);
     this.selectedFiles.set([]);
     this.images.set([]);
   }
@@ -150,10 +154,13 @@ export class WishlistComponent implements OnInit {
       next: (cat) => {
         this.detecting.set(false);
         this.detectedCat.set(cat.name);
+        this.selectedCategoryId.set(cat.id);
       },
       error: () => {
         this.detecting.set(false);
         this.detectedCat.set('Other');
+        const otherCat = this.categories().find(c => c.name.toLowerCase() === 'other');
+        this.selectedCategoryId.set(otherCat ? otherCat.id : null);
       }
     });
   }
@@ -216,7 +223,8 @@ export class WishlistComponent implements OnInit {
       title: this.title(),
       quantity: qtyNum,
       description: this.desc() || null,
-      images: this.selectedFiles().length > 0 ? this.selectedFiles() : null
+      images: this.selectedFiles().length > 0 ? this.selectedFiles() : null,
+      categoryId: this.selectedCategoryId() || null
     }).subscribe({
       next: () => {
         this.toast.success('Request posted!', 'Your group request is now live.');
@@ -239,5 +247,18 @@ export class WishlistComponent implements OnInit {
 
   protected onQtyChange(e: Event) {
     this.qty.set((e.target as HTMLInputElement).value);
+  }
+
+  protected onManualCategorySelect(e: Event) {
+    const select = e.target as HTMLSelectElement;
+    const catId = select.value;
+    if (catId) {
+      const cat = this.categories().find(c => c.id === catId);
+      if (cat) {
+        this.detectedCat.set(cat.name);
+        this.selectedCategoryId.set(cat.id);
+      }
+    }
+    this.isSelectingCategory.set(false);
   }
 }
