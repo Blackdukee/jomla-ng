@@ -92,7 +92,7 @@
         <button class="btn btn-primary" (click)="modalOpen.set(true)">Create request</button>
       </div>
       } @else {
-      <div class="scroll-list" style="max-height: calc(100vh - 320px)">
+      <div>
         <div style="display:flex;flex-direction:column;gap:1rem">
           @for (req of requests(); track req.id) {
           <a [routerLink]="['/hubs/request', req.id]" class="card card-hover req-row" [class.high-priority-req]="req.participantsCount > 1">
