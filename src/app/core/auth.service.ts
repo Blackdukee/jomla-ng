@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, finalize, shareReplay } from 'rxjs';
+import { Router } from '@angular/router';
 import { AuthResponse, User, RegisterRequest } from './models/auth.models';
 import { SignalRService } from './services/signalr.service';
 
@@ -10,6 +11,7 @@ import { environment } from '../../environments/environment';
 export class AuthService {
   private http = inject(HttpClient);
   private signalR = inject(SignalRService);
+  private router = inject(Router);
   private readonly baseUrl = `${environment.apiUrl}/auth`;
 
   private _user = signal<User | null>(null);
@@ -110,6 +112,43 @@ export class AuthService {
         }
       });
       window.addEventListener('focus', handleVisibilityOrFocus);
+    }
+
+    // Listen for storage events (logout/login synchronization across tabs)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'jomla_token') {
+          if (!event.newValue) {
+            // Token was removed (logout)
+            this.clearAuthState();
+            this.router.navigate(['/']);
+          } else {
+            // Token was updated or a new session was created in another tab
+            const storedUserStr = localStorage.getItem('jomla_user');
+            if (storedUserStr) {
+              try {
+                const newUser = JSON.parse(storedUserStr) as User;
+                const currentUser = this._user();
+                
+                // If there's no current user, or user ID or role is different,
+                // trigger a reload/redirect to ensure correct state/roles are loaded.
+                if (!currentUser || currentUser.id !== newUser.id || currentUser.role !== newUser.role) {
+                  window.location.href = '/';
+                } else {
+                  // Same user, just a token refresh from another tab
+                  this._token.set(event.newValue);
+                  this._user.set(newUser);
+                  this.scheduleTokenRefresh(event.newValue);
+                }
+              } catch {
+                window.location.href = '/';
+              }
+            } else {
+              window.location.href = '/';
+            }
+          }
+        }
+      });
     }
   }
 
