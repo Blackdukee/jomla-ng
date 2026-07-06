@@ -180,14 +180,14 @@
 }
 
 .price-discounted {
-  font-size: 1.75rem;
+  font-size: 1.375rem;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
 .price-original {
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: var(--text-secondary);
   text-decoration: line-through;
   margin-left: 0.25rem;
