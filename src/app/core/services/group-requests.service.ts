@@ -109,10 +109,17 @@ export class GroupRequestsService {
   }
 
   /** GET /api/GroupRequestOffers/my-offers — Get group request offers placed by the supplier */
-  getMyPlacedOffers(page = 1, pageSize = 10): Observable<{ items: SupplierGroupRequestOfferDto[]; totalCount: number; page: number; pageSize: number }> {
+  getMyPlacedOffers(page = 1, pageSize = 10, search?: string, status?: string): Observable<{ items: SupplierGroupRequestOfferDto[]; totalCount: number; page: number; pageSize: number }> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('pageSize', pageSize.toString());
+
+    if (search?.trim()) {
+      params = params.set('search', search.trim());
+    }
+    if (status && status !== 'All') {
+      params = params.set('status', status);
+    }
 
     return this.http.get<{ items: SupplierGroupRequestOfferDto[]; totalCount: number; page: number; pageSize: number }>(
       `${environment.apiUrl}/GroupRequestOffers/my-offers`,

@@ -40,8 +40,26 @@ export class OffersService {
     });
   }
 
-  getMyOffers(): Observable<MyOffersPagedResponse> {
+  getMyOffers(params?: {
+    search?: string;
+    categoryId?: string;
+    status?: string;
+    sortBy?: string;
+    descending?: boolean;
+    pageNumber?: number;
+    pageSize?: number;
+  }): Observable<MyOffersPagedResponse> {
+    let httpParams: any = {};
+    if (params) {
+      Object.keys(params).forEach(key => {
+        const val = (params as any)[key];
+        if (val !== undefined && val !== null) {
+          httpParams[key] = val.toString();
+        }
+      });
+    }
     return this.http.get<MyOffersPagedResponse>(`${this.baseUrl}/my-offers`, {
+      params: httpParams,
       withCredentials: true
     });
   }
