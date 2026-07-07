@@ -213,13 +213,15 @@ export class OfferDetailComponent implements OnInit, OnDestroy {
 protected fmtDate(d: string | undefined): string {
   if (!d) return '';
   try {
-    return format(new Date(this.normalizeUtc(d)), 'MMM d, yyyy');
+    const adjusted = new Date(new Date(this.normalizeUtc(d)).getTime() + 3 * 60 * 60 * 1000);
+    return format(adjusted, 'MMM d, yyyy');
   } catch { return ''; }
 }
 protected fmtExpiryLong(d: string | undefined): string {
   if (!d) return '';
   try {
-    return format(new Date(this.normalizeUtc(d)), 'MMM d, yyyy h:mm a');
+    const adjusted = new Date(new Date(this.normalizeUtc(d)).getTime() + 3 * 60 * 60 * 1000);
+    return format(adjusted, "MMM d, yyyy h:mm a 'UTC'");
   } catch { return ''; }
 }
 }

@@ -477,7 +477,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   protected getRelativeTime(dateStr: string): string {
     try {
-      return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
+      // Backend stores UTC; local clock is UTC+3.
+      // Add 3 hours so the relative distance is calculated correctly.
+      const utcMs = new Date(dateStr).getTime();
+      const adjusted = new Date(utcMs + 3 * 60 * 60 * 1000);
+      return formatDistanceToNow(adjusted, { addSuffix: true });
     } catch {
       return '';
     }

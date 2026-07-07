@@ -100,10 +100,12 @@ export class SupplierDealsComponent implements OnInit {
   protected fmtDate(d: string | null) {
     if (!d) return '';
     try {
-      return new Date(d).toLocaleDateString(undefined, {
+      const adjusted = new Date(new Date(d).getTime() + 3 * 60 * 60 * 1000);
+      return adjusted.toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: 'UTC'
       });
     } catch {
       return '';

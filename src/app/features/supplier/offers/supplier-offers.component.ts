@@ -149,7 +149,9 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
 
   protected fmtDate(d: string): string {
     if (!d) return '-';
-    return new Date(d).toLocaleDateString(undefined, {
+    const date = new Date(d);
+    const adjusted = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+    return adjusted.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

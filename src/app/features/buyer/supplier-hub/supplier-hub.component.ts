@@ -192,14 +192,16 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
   protected isExpiringSoon(): boolean {
     const b = this.batch();
     if (!b?.expiresAt) return false;
-    const h = differenceInHours(new Date(b.expiresAt), new Date());
+    const adjusted = new Date(new Date(b.expiresAt).getTime() + 3 * 60 * 60 * 1000);
+    const h = differenceInHours(adjusted, new Date());
     return h < 1 && h >= 0;
   }
 
   protected expiresFormatted(): string {
     const b = this.batch();
     if (!b?.expiresAt) return 'No expiry set';
-    return format(new Date(b.expiresAt), 'MMM d, h:mm a');
+    const adjusted = new Date(new Date(b.expiresAt).getTime() + 3 * 60 * 60 * 1000);
+    return format(adjusted, "MMM d, h:mm a 'UTC'");
   }
 
   protected isCurrentUser(buyerId: string): boolean {
@@ -255,7 +257,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     if (b.status === 'Completed') return 'Completed';
     if (b.status === 'Failed') return 'Expired';
     const now = new Date();
-    const expiry = new Date(b.expiresAt);
+    const expiry = new Date(new Date(b.expiresAt).getTime() + 3 * 60 * 60 * 1000);
     const diffMinutes = Math.floor((expiry.getTime() - now.getTime()) / 60000);
     if (diffMinutes <= 0) return 'Expired';
     const hours = Math.floor(diffMinutes / 60);
