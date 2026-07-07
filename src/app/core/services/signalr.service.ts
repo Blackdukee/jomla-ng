@@ -26,6 +26,7 @@ import { environment } from '../../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class SignalRService implements OnDestroy {
   private connection: signalR.HubConnection | null = null;
+  private connectionPromise: Promise<void> | null = null;
   private readonly hubUrl = environment.hubUrl;
 
   /** Observable signals for components to react to */
@@ -52,79 +53,88 @@ export class SignalRService implements OnDestroy {
    * Should be called after successful login/refresh.
    */
   async connect(): Promise<void> {
-    if (this.connection) {
-      if (this.connection.state === signalR.HubConnectionState.Disconnected) {
-        try {
-          await this.connection.start();
-          this.isConnected.set(true);
-        } catch (err) {
-          console.error('SignalR start failed:', err);
-          this.isConnected.set(false);
-        }
-      }
+    if (this.connectionPromise) {
+      return this.connectionPromise;
+    }
+
+    if (this.connection?.state === signalR.HubConnectionState.Connected) {
       return;
     }
 
-    this.connection = new signalR.HubConnectionBuilder()
-      .withUrl(this.hubUrl, {
-        accessTokenFactory: () => localStorage.getItem('jomla_token') ?? '',
-      })
-      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-      .configureLogging(signalR.LogLevel.Warning)
-      .build();
+    this.connectionPromise = (async () => {
+      if (this.connection) {
+        try {
+          await this.connection.stop();
+        } catch {}
+        this.connection = null;
+      }
 
-    // Register server-to-client handlers
-    this.connection.on('NotificationReceived', (notification: NotificationDto) => {
-      this.lastNotification.set(notification);
-      this.notificationCallbacks.forEach(cb => cb(notification));
-    });
+      this.connection = new signalR.HubConnectionBuilder()
+        .withUrl(this.hubUrl, {
+          accessTokenFactory: () => localStorage.getItem('jomla_token') ?? '',
+        })
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
 
-    this.connection.on('BatchUpdated', (update: BatchUpdatedDto) => {
-      this.lastBatchUpdate.set(update);
-      this.batchUpdateCallbacks.forEach(cb => cb(update));
-    });
+      // Register server-to-client handlers
+      this.connection.on('NotificationReceived', (notification: NotificationDto) => {
+        this.lastNotification.set(notification);
+        this.notificationCallbacks.forEach(cb => cb(notification));
+      });
 
-    this.connection.on('GroupRequestUpdated', (update: GroupRequestDetailDto) => {
-      this.lastGroupRequestUpdate.set(update);
-      this.groupRequestUpdateCallbacks.forEach(cb => cb(update));
-    });
+      this.connection.on('BatchUpdated', (update: BatchUpdatedDto) => {
+        this.lastBatchUpdate.set(update);
+        this.batchUpdateCallbacks.forEach(cb => cb(update));
+      });
 
-    this.connection.on('OfferStatusChanged', (offer: OfferDto) => {
-      this.lastOfferStatusChange.set(offer);
-      this.offerStatusChangeCallbacks.forEach(cb => cb(offer));
-    });
+      this.connection.on('GroupRequestUpdated', (update: GroupRequestDetailDto) => {
+        this.lastGroupRequestUpdate.set(update);
+        this.groupRequestUpdateCallbacks.forEach(cb => cb(update));
+      });
 
-    this.connection.on('UserBatchStatusChanged', (batchId: string, newStatus: string) => {
-      const update = { batchId, newStatus };
-      this.lastUserBatchStatusChange.set(update);
-      this.userBatchStatusChangeCallbacks.forEach(cb => cb(update));
-    });
+      this.connection.on('OfferStatusChanged', (offer: OfferDto) => {
+        this.lastOfferStatusChange.set(offer);
+        this.offerStatusChangeCallbacks.forEach(cb => cb(offer));
+      });
 
-    this.connection.on('FlaggedItemCreated', (entityType: string, entityId: string) => {
-      const item = { entityType, entityId };
-      this.lastFlaggedItemCreated.set(item);
-      this.flaggedItemCreatedCallbacks.forEach(cb => cb(item));
-    });
+      this.connection.on('UserBatchStatusChanged', (batchId: string, newStatus: string) => {
+        const update = { batchId, newStatus };
+        this.lastUserBatchStatusChange.set(update);
+        this.userBatchStatusChangeCallbacks.forEach(cb => cb(update));
+      });
 
-    this.connection.on('FlaggedItemResolved', (entityId: string) => {
-      this.lastFlaggedItemResolved.set(entityId);
-      this.flaggedItemResolvedCallbacks.forEach(cb => cb(entityId));
-    });
+      this.connection.on('FlaggedItemCreated', (entityType: string, entityId: string) => {
+        const item = { entityType, entityId };
+        this.lastFlaggedItemCreated.set(item);
+        this.flaggedItemCreatedCallbacks.forEach(cb => cb(item));
+      });
 
-    this.connection.onclose(() => this.isConnected.set(false));
-    this.connection.onreconnected(() => this.isConnected.set(true));
+      this.connection.on('FlaggedItemResolved', (entityId: string) => {
+        this.lastFlaggedItemResolved.set(entityId);
+        this.flaggedItemResolvedCallbacks.forEach(cb => cb(entityId));
+      });
 
-    try {
-      await this.connection.start();
-      this.isConnected.set(true);
-    } catch (err) {
-      console.error('SignalR connection failed:', err);
-      this.isConnected.set(false);
-    }
+      this.connection.onclose(() => this.isConnected.set(false));
+      this.connection.onreconnected(() => this.isConnected.set(true));
+
+      try {
+        await this.connection.start();
+        this.isConnected.set(true);
+      } catch (err) {
+        console.error('SignalR connection failed:', err);
+        this.isConnected.set(false);
+      } finally {
+        this.connectionPromise = null;
+      }
+    })();
+
+    return this.connectionPromise;
   }
 
   /** Disconnect from the hub. Called on logout. */
   async disconnect(): Promise<void> {
+    this.connectionPromise = null;
     if (this.connection) {
       await this.connection.stop();
       this.connection = null;

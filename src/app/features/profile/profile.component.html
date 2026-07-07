@@ -300,28 +300,30 @@
               }
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="v1_phone_number">Default Contact Phone</label>
-              <input
-                id="v1_phone_number"
-                type="text"
-                class="form-input"
-                formControlName="phone_number"
-                placeholder="E.g. +20 123 456 7890"
-              >
-            </div>
+            @if (auth.isBuyer()) {
+              <div class="form-group">
+                <label class="form-label" for="v1_phone_number">Default Contact Phone</label>
+                <input
+                  id="v1_phone_number"
+                  type="text"
+                  class="form-input"
+                  formControlName="phone_number"
+                  placeholder="E.g. +20 123 456 7890"
+                >
+              </div>
 
-            <div class="form-group">
-              <label class="form-label" for="v1_shipping_address">Default Shipping Address</label>
-              <textarea
-                id="v1_shipping_address"
-                class="form-input"
-                formControlName="shipping_address"
-                rows="3"
-                placeholder="E.g. 123 Main St, Apartment 4B, Cairo, Egypt"
-                style="resize:vertical;font-family:inherit"
-              ></textarea>
-            </div>
+              <div class="form-group">
+                <label class="form-label" for="v1_shipping_address">Default Shipping Address</label>
+                <textarea
+                  id="v1_shipping_address"
+                  class="form-input"
+                  formControlName="shipping_address"
+                  rows="3"
+                  placeholder="E.g. 123 Main St, Apartment 4B, Cairo, Egypt"
+                  style="resize:vertical;font-family:inherit"
+                ></textarea>
+              </div>
+            }
 
             <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.5rem" [disabled]="loading()">
               {{ loading() ? 'Saving changes…' : 'Save Profile' }}

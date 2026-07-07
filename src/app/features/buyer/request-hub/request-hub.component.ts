@@ -151,7 +151,8 @@ export class RequestHubComponent implements OnInit, OnDestroy {
 
   protected fmtExpiry(d: string) {
     try {
-      return format(new Date(d), 'MMM d, ha');
+      const adjusted = new Date(new Date(d).getTime() + 3 * 60 * 60 * 1000);
+      return format(adjusted, "MMM d, ha 'UTC'");
     } catch {
       return '';
     }

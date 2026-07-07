@@ -98,7 +98,8 @@ export class SupplierAlertsComponent implements OnInit, OnDestroy {
   protected relTime(d: string) {
     if (!d) return '';
     try {
-      return formatDistanceToNow(new Date(d), { addSuffix: true });
+      const adjusted = new Date(new Date(d).getTime() + 3 * 60 * 60 * 1000);
+      return formatDistanceToNow(adjusted, { addSuffix: true });
     } catch {
       return '';
     }

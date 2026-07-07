@@ -46,16 +46,19 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
   protected fmtExpiry(d: string | null | undefined) {
     if (!d) return '';
     try {
-      const utcDate = new Date(d);
-      const localRepresentedAsUtc = new Date(
-        utcDate.getUTCFullYear(),
-        utcDate.getUTCMonth(),
-        utcDate.getUTCDate(),
-        utcDate.getUTCHours(),
-        utcDate.getUTCMinutes(),
-        utcDate.getUTCSeconds()
+      const date = new Date(d);
+      // Add 3 hours (3 * 60 * 60 * 1000 ms) to match Egypt time (UTC+3)
+      const egyptDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+      
+      const localRepresentedAsEgypt = new Date(
+        egyptDate.getUTCFullYear(),
+        egyptDate.getUTCMonth(),
+        egyptDate.getUTCDate(),
+        egyptDate.getUTCHours(),
+        egyptDate.getUTCMinutes(),
+        egyptDate.getUTCSeconds()
       );
-      return format(localRepresentedAsUtc, "MMM d, ha 'UTC'");
+      return format(localRepresentedAsEgypt, "MMM d, ha 'UTC'");
     } catch {
       return '';
     }
