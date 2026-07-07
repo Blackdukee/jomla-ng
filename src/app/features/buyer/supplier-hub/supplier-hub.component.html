@@ -390,6 +390,47 @@
 
       <!-- Stripe Card Input -->
       <div class="form-group" style="margin-bottom:1.5rem;" [style.display]="clientSecret() ? 'block' : 'none'">
+        <!-- Contact Details Section -->
+        <div style="margin-bottom:1rem; padding:12px; background:#F9FAFB; border:1px solid var(--border); border-radius:8px">
+          <h4 style="font-weight:600; font-size:0.875rem; margin:0 0 0.5rem; color:var(--text-primary)">Delivery Information</h4>
+          
+          <!-- Phone Number Option -->
+          <div style="margin-bottom:0.75rem">
+            <span style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.25rem">Contact Phone</span>
+            @if (authService.user()?.phoneNumber) {
+              <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem; font-size:0.875rem; color:var(--text-primary)">
+                <input type="radio" id="join-phone-default" name="join-phone" [checked]="chosenPhoneOption() === 'default'" (change)="chosenPhoneOption.set('default')">
+                <label for="join-phone-default">Default: {{ authService.user()?.phoneNumber }}</label>
+              </div>
+            }
+            <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; color:var(--text-primary)">
+              <input type="radio" id="join-phone-custom" name="join-phone" [checked]="chosenPhoneOption() === 'custom' || !authService.user()?.phoneNumber" (change)="chosenPhoneOption.set('custom')">
+              <label for="join-phone-custom">Use different phone number</label>
+            </div>
+            @if (chosenPhoneOption() === 'custom' || !authService.user()?.phoneNumber) {
+              <input type="text" class="form-input" style="margin-top:0.375rem; font-size:0.875rem; padding:6px 10px; border-color:var(--border)" placeholder="Enter phone number" [value]="customPhoneNumber()" (input)="customPhoneNumber.set($any($event.target).value)">
+            }
+          </div>
+
+          <!-- Shipping Address Option -->
+          <div>
+            <span style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.25rem">Shipping Address</span>
+            @if (authService.user()?.shippingAddress) {
+              <div style="display:flex; align-items:flex-start; gap:0.5rem; margin-bottom:0.25rem; font-size:0.875rem; color:var(--text-primary)">
+                <input type="radio" id="join-address-default" name="join-address" [checked]="chosenAddressOption() === 'default'" (change)="chosenAddressOption.set('default')" style="margin-top:3px">
+                <label for="join-address-default" style="flex:1">Default: {{ authService.user()?.shippingAddress }}</label>
+              </div>
+            }
+            <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; color:var(--text-primary)">
+              <input type="radio" id="join-address-custom" name="join-address" [checked]="chosenAddressOption() === 'custom' || !authService.user()?.shippingAddress" (change)="chosenAddressOption.set('custom')">
+              <label for="join-address-custom">Use different address</label>
+            </div>
+            @if (chosenAddressOption() === 'custom' || !authService.user()?.shippingAddress) {
+              <textarea class="form-input" style="margin-top:0.375rem; font-size:0.875rem; padding:6px 10px; border-color:var(--border)" rows="2" placeholder="Enter shipping address" [value]="customShippingAddress()" (input)="customShippingAddress.set($any($event.target).value)"></textarea>
+            }
+          </div>
+        </div>
+
         <label class="form-label" for="card-element">Credit or Debit Card</label>
         <div id="card-element" class="stripe-container">
           <!-- Stripe Element placeholder -->
@@ -400,7 +441,7 @@
       @if (!clientSecret()) {
       <button class="btn btn-primary" style="width:100%;height:3rem;font-size:1rem" [disabled]="joining()"
         (click)="joinHub()">
-        {{ joining() ? 'Placing hold…' : 'Confirm & join hub' }}
+        {{ joining() ? 'Placing hold…' : 'Proceed to Payment' }}
       </button>
       } @else {
       <button class="btn btn-primary" style="width:100%;height:3rem;font-size:1rem" [disabled]="joining()"

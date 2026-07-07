@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy }
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
+import { GroupRequestOffersService } from '../../../core/services/group-request-offers.service';
 import { AuthService } from '../../../core/auth.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { GroupRequestDetailDto, GroupRequestOfferDto } from '../../../core/models';
@@ -21,6 +22,7 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
   private groupRequestsService = inject(GroupRequestsService);
+  private groupRequestOffersService = inject(GroupRequestOffersService);
   protected authService = inject(AuthService);
   private signalRService = inject(SignalRService);
 
@@ -37,12 +39,23 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
   protected quantityAvailable: number | null = null;
   protected minFallbackQuantity: number | null = null;
   protected variantAttributes: string = '';
-  protected expiresAt: string = '';
+  protected expiryDurationValue: number = 7;
+  protected expiryDurationUnit: string = 'day';
+
 
   protected fmtExpiry(d: string | null | undefined) {
     if (!d) return '';
     try {
-      return format(new Date(d), 'MMM d, ha');
+      const utcDate = new Date(d);
+      const localRepresentedAsUtc = new Date(
+        utcDate.getUTCFullYear(),
+        utcDate.getUTCMonth(),
+        utcDate.getUTCDate(),
+        utcDate.getUTCHours(),
+        utcDate.getUTCMinutes(),
+        utcDate.getUTCSeconds()
+      );
+      return format(localRepresentedAsUtc, "MMM d, ha 'UTC'");
     } catch {
       return '';
     }
@@ -63,10 +76,7 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Default expiry date to 7 days from now (YYYY-MM-DD)
-    const defaultDate = new Date();
-    defaultDate.setDate(defaultDate.getDate() + 7);
-    this.expiresAt = defaultDate.toISOString().substring(0, 10);
+
 
     this.loadRequest(this.requestId);
 
@@ -77,9 +87,9 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
         const currentUser = this.authService.user();
         if (currentUser && update.offers) {
           const supplierOffers = update.offers.filter(o => o.supplierId === currentUser.id);
-          const active = supplierOffers.find(o => o.status === 'Open');
+          const active = supplierOffers.find(o => o.status === 'Open' || o.status === 'PendingSupplierApproval');
           this.activeOffer.set(active || null);
-          const past = supplierOffers.filter(o => o.status !== 'Open')
+          const past = supplierOffers.filter(o => o.status !== 'Open' && o.status !== 'PendingSupplierApproval')
                                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           this.pastOffers.set(past);
         }
@@ -104,9 +114,9 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
         const currentUser = this.authService.user();
         if (currentUser && req.offers) {
           const supplierOffers = req.offers.filter(o => o.supplierId === currentUser.id);
-          const active = supplierOffers.find(o => o.status === 'Open');
+          const active = supplierOffers.find(o => o.status === 'Open' || o.status === 'PendingSupplierApproval');
           this.activeOffer.set(active || null);
-          const past = supplierOffers.filter(o => o.status !== 'Open')
+          const past = supplierOffers.filter(o => o.status !== 'Open' && o.status !== 'PendingSupplierApproval')
                                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           this.pastOffers.set(past);
         }
@@ -121,13 +131,42 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
     });
   }
 
+  protected getCalculatedExpiry(): Date {
+    const now = new Date();
+    const expiryDate = new Date(now);
+    const val = this.expiryDurationValue ?? 0;
+
+    switch (this.expiryDurationUnit) {
+      case 'sec':
+        expiryDate.setUTCSeconds(now.getUTCSeconds() + val);
+        break;
+      case 'min':
+        expiryDate.setUTCMinutes(now.getUTCMinutes() + val);
+        break;
+      case 'hour':
+        expiryDate.setUTCHours(now.getUTCHours() + val);
+        break;
+      case 'day':
+        expiryDate.setUTCDate(now.getUTCDate() + val);
+        break;
+      case 'week':
+        expiryDate.setUTCDate(now.getUTCDate() + val * 7);
+        break;
+      case 'month':
+        expiryDate.setUTCMonth(now.getUTCMonth() + val);
+        break;
+      default:
+        expiryDate.setUTCDate(now.getUTCDate() + 7);
+    }
+    return expiryDate;
+  }
+
   protected submitOffer() {
     const req = this.request();
     if (!req) return;
 
     const price = this.unitPrice;
     const qty = this.quantityAvailable;
-    const expiry = this.expiresAt;
 
     if (!price || price <= 0) {
       this.toast.error('Invalid Price', 'Please enter a valid unit price.');
@@ -137,10 +176,12 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
       this.toast.error('Invalid Quantity', 'Please enter a valid quantity available.');
       return;
     }
-    if (!expiry) {
-      this.toast.error('Invalid Expiry Date', 'Please select an expiry date.');
+    if (!this.expiryDurationValue || this.expiryDurationValue <= 0) {
+      this.toast.error('Invalid Expiry', 'Please enter a valid duration.');
       return;
     }
+
+    const expiry = this.getCalculatedExpiry().toISOString();
 
     const offerData = {
       unitPrice: price,
@@ -148,7 +189,7 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
       quantityAvailable: qty,
       minFallbackQuantity: this.minFallbackQuantity || undefined,
       variantAttributes: this.variantAttributes || undefined,
-      expiresAt: new Date(expiry).toISOString()
+      expiresAt: expiry
     };
 
     this.groupRequestsService.placeOffer(req.id, offerData).subscribe({
@@ -162,6 +203,55 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.toast.error('Error', err?.error?.detail || err?.error?.error || 'Failed to place offer.');
+      }
+    });
+  }
+
+
+  protected triggerDemoExpiry() {
+    const offer = this.activeOffer();
+    if (!offer) return;
+    this.loading.set(true);
+    this.groupRequestOffersService.triggerNegotiation(offer.id).subscribe({
+      next: () => {
+        this.toast.success('Expiry Triggered', 'Instant expiry and AI negotiation round has been executed.');
+        this.loadRequest(this.requestId);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.toast.error('Error', err?.error?.detail || 'Failed to trigger negotiation.');
+      }
+    });
+  }
+
+  protected approveAIProposal() {
+    const offer = this.activeOffer();
+    if (!offer) return;
+    this.loading.set(true);
+    this.groupRequestOffersService.approveNegotiation(offer.id).subscribe({
+      next: () => {
+        this.toast.success('AI Price Approved', 'The offer has been placed live at the AI-negotiated price.');
+        this.loadRequest(this.requestId);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.toast.error('Error', err?.error?.detail || 'Failed to approve AI proposal.');
+      }
+    });
+  }
+
+  protected rejectAIProposal() {
+    const offer = this.activeOffer();
+    if (!offer) return;
+    this.loading.set(true);
+    this.groupRequestOffersService.rejectNegotiation(offer.id).subscribe({
+      next: () => {
+        this.toast.success('AI Price Rejected', 'The negotiation proposal has been rejected and the offer has ended.');
+        this.loadRequest(this.requestId);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.toast.error('Error', err?.error?.detail || 'Failed to reject AI proposal.');
       }
     });
   }

@@ -26,7 +26,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
   private batchesService = inject(BatchesService);
   private offersService = inject(OffersService);
   private signalRService = inject(SignalRService);
-  private authService = inject(AuthService);
+  protected authService = inject(AuthService);
   private toast = inject(ToastService);
 
   protected batch = signal<BatchDetailDto | null>(null);
@@ -38,6 +38,11 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
   protected joinQty = signal(1);
   protected joining = signal(false);
   protected clientSecret = signal<string | null>(null);
+
+  protected chosenAddressOption = signal<'default' | 'custom'>('default');
+  protected customShippingAddress = signal<string>('');
+  protected chosenPhoneOption = signal<'default' | 'custom'>('default');
+  protected customPhoneNumber = signal<string>('');
 
   protected updateQtyModalOpen = signal(false);
   protected updateQty = signal(1);
@@ -312,25 +317,28 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
   }
 
   private async initStripe() {
-    if (this.stripe) return;
-    this.stripe = await loadStripe(environment.stripePublishableKey);
-    const elements = this.stripe.elements();
-    this.cardElement = elements.create('card', {
-      style: {
-        base: {
-          fontSize: '16px',
-          color: '#32325d',
-          fontFamily: '"Inter", sans-serif',
-          '::placeholder': {
-            color: '#aab7c4'
+    if (!this.stripe) {
+      this.stripe = await loadStripe(environment.stripePublishableKey);
+    }
+    if (this.stripe && !this.cardElement) {
+      const elements = this.stripe.elements();
+      this.cardElement = elements.create('card', {
+        style: {
+          base: {
+            fontSize: '16px',
+            color: '#32325d',
+            fontFamily: '"Inter", sans-serif',
+            '::placeholder': {
+              color: '#aab7c4'
+            }
+          },
+          invalid: {
+            color: '#fa755a',
+            iconColor: '#fa755a'
           }
-        },
-        invalid: {
-          color: '#fa755a',
-          iconColor: '#fa755a'
         }
-      }
-    });
+      });
+    }
   }
 
   protected confirmPayment(): void {
@@ -347,7 +355,20 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
         if (cardErrors) cardErrors.textContent = result.error.message;
       } else {
         if (result.paymentIntent.status === 'requires_capture') {
-          this.batchesService.confirmJoinBatch(this.batchId, result.paymentIntent.id, this.joinQty()).subscribe({
+          const finalAddress = this.chosenAddressOption() === 'default' 
+            ? (this.authService.user()?.shippingAddress || '') 
+            : this.customShippingAddress();
+          const finalPhone = this.chosenPhoneOption() === 'default' 
+            ? (this.authService.user()?.phoneNumber || '') 
+            : this.customPhoneNumber();
+
+          this.batchesService.confirmJoinBatch(
+            this.batchId, 
+            result.paymentIntent.id, 
+            this.joinQty(),
+            finalAddress,
+            finalPhone
+          ).subscribe({
             next: (confirmRes) => {
               this.joining.set(false);
               this.toast.success('Joined hub!', `You've committed ${this.joinQty()} units. Payment hold authorized and joined successfully.`);
@@ -375,6 +396,10 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     this.joinModalOpen.set(false);
     this.clientSecret.set(null);
     this.cardElement = null;
+    this.chosenAddressOption.set('default');
+    this.customShippingAddress.set('');
+    this.chosenPhoneOption.set('default');
+    this.customPhoneNumber.set('');
   }
 
   protected onJoinQtyChange(e: Event): void {

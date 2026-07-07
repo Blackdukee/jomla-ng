@@ -235,6 +235,8 @@ export class ProfileComponent implements OnInit {
   first_name: ['', Validators.required],
   last_name: ['', Validators.required],
   email: ['', [Validators.required, Validators.email]],
+  shipping_address: [''],
+  phone_number: ['']
 });
   // Buyer Counts (Unsupported by backend - set to 0/empty)
   protected activeHubsCount = signal(0);
@@ -269,6 +271,8 @@ constructor() {
       first_name: user.firstName || '',
       last_name: user.lastName || '',
       email: user.email,
+      shipping_address: user.shippingAddress || '',
+      phone_number: user.phoneNumber || ''
     });
   }
 }
@@ -362,12 +366,14 @@ constructor() {
   if (this.form.invalid) return;
 
   this.loading.set(true);
-  const val = this.form.value as { first_name: string; last_name: string; email: string };
+  const val = this.form.value as { first_name: string; last_name: string; email: string; shipping_address: string; phone_number: string };
 
   this.userService.updateProfile({
     firstName: val.first_name,
     lastName: val.last_name,
-    email: val.email
+    email: val.email,
+    shippingAddress: val.shipping_address,
+    phoneNumber: val.phone_number
   }).subscribe({
     next: (res) => {
       const currentUser = this.auth.user();
@@ -377,7 +383,9 @@ constructor() {
           firstName: res.firstName,
           lastName: res.lastName,
           email: res.email,
-          imageUrl: res.imageUrl ?? currentUser.imageUrl
+          imageUrl: res.imageUrl ?? currentUser.imageUrl,
+          shippingAddress: res.shippingAddress,
+          phoneNumber: res.phoneNumber
         };
         this.auth.updateUser(updated);
       }

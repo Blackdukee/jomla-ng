@@ -131,10 +131,34 @@
             <div class="v2-dashboard-header">
               <h3 class="v2-dashboard-title">Active Offer Dashboard</h3>
               <div class="v2-badge-container">
-                <span class="v2-pulse-dot"></span>
-                <span>{{ activeOffer()?.status }}</span>
+                <span class="v2-pulse-dot" [style.background]="activeOffer()?.status === 'PendingSupplierApproval' ? '#d97706' : 'var(--brand)'"></span>
+                <span [style.color]="activeOffer()?.status === 'PendingSupplierApproval' ? '#d97706' : 'var(--brand)'" style="font-weight:700">
+                  {{ activeOffer()?.status === 'PendingSupplierApproval' ? 'Pending Approval' : activeOffer()?.status }}
+                </span>
               </div>
             </div>
+
+            @if (activeOffer()?.status === 'PendingSupplierApproval') {
+              <div style="background:rgba(217,119,6,0.06); border:1px solid #d97706; border-radius:12px; padding:1.25rem; margin-bottom:1.5rem">
+                <div style="display:flex; gap:0.75rem; align-items:flex-start">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:2px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <div>
+                    <h4 style="font-weight:700; color:#d97706; margin:0 0 0.375rem; font-size:0.95rem">AI Negotiation Counter Proposed</h4>
+                    <p style="font-size:0.875rem; color:var(--text-secondary); margin:0 0 1rem; line-height:1.4">
+                      Your AI pricing agent has automatically proposed a price drop to <strong>EGP {{ activeOffer()?.currentUnitPrice }}</strong> to attract buyers. This offer is hidden from buyers until you approve it.
+                    </p>
+                    <div style="display:flex; gap:0.75rem">
+                      <button class="btn btn-primary" (click)="approveAIProposal()" style="height:2.25rem; font-size:0.875rem; padding:0 1rem; background:#d97706; border-color:#d97706">
+                        Approve & Set Live
+                      </button>
+                      <button class="btn btn-outline" (click)="rejectAIProposal()" style="height:2.25rem; font-size:0.875rem; padding:0 1rem; color:var(--danger); border-color:var(--danger)">
+                        Reject & End Offer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
 
             <div style="display:flex; flex-direction:column; gap:1.5rem">
               <!-- Metrics Grid -->
@@ -191,6 +215,15 @@
                   <span class="v2-ledger-value">{{ fmtExpiry(activeOffer()?.expiresAt) }}</span>
                 </div>
               </div>
+
+              @if (activeOffer()?.status === 'Open') {
+                <div style="border-top:1px dashed var(--border); padding-top:1.25rem; display:flex; justify-content:space-between; align-items:center">
+                  <span style="font-size:0.75rem; color:var(--text-muted)">💡 Want to simulate buyer feedback instantly?</span>
+                  <button class="btn btn-outline btn-sm" (click)="triggerDemoExpiry()" style="border-color:var(--brand); color:var(--brand); font-weight: 600;">
+                    Trigger AI Counter (Demo)
+                  </button>
+                </div>
+              }
             </div>
           </div>
 
@@ -230,9 +263,24 @@
             
             <div class="v2-form-grid">
               <div class="v2-form-group">
-                <label class="v2-input-label" for="offer-expiry">Expiry Date *</label>
-                <input id="offer-expiry" type="date" class="v2-input-field" 
-                  [(ngModel)]="expiresAt" name="expiresAt" required>
+                <label class="v2-input-label" for="offer-expiry-val">Offer Expiration *</label>
+                <div class="v2-duration-wrapper">
+                  <input id="offer-expiry-val" type="number" class="v2-input-field" placeholder="Duration" 
+                    [(ngModel)]="expiryDurationValue" name="expiryDurationValue" required min="1" style="flex: 2;">
+                  <select id="offer-expiry-unit" class="v2-input-field" 
+                    [(ngModel)]="expiryDurationUnit" name="expiryDurationUnit" required style="flex: 3; cursor: pointer;">
+                    <option value="sec">Seconds</option>
+                    <option value="min">Minutes</option>
+                    <option value="hour">Hours</option>
+                    <option value="day">Days</option>
+                    <option value="week">Weeks</option>
+                    <option value="month">Months</option>
+                  </select>
+                </div>
+                <!-- Expiry Date Preview -->
+                <span class="v2-expiry-preview" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                  Will expire on: <strong>{{ fmtExpiry(getCalculatedExpiry().toISOString()) }}</strong>
+                </span>
               </div>
               <div class="v2-form-group">
                 <label class="v2-input-label" for="offer-variants">Specifications</label>

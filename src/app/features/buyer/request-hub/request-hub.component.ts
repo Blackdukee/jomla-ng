@@ -39,6 +39,11 @@ export class RequestHubComponent implements OnInit, OnDestroy {
   protected authorizingPayment = signal<boolean>(false);
   protected submittingHold = signal<boolean>(false);
 
+  protected chosenAddressOption = signal<'default' | 'custom'>('default');
+  protected customShippingAddress = signal<string>('');
+  protected chosenPhoneOption = signal<'default' | 'custom'>('default');
+  protected customPhoneNumber = signal<string>('');
+
   private requestId = '';
   private unsubRequestUpdate: (() => void) | null = null;
   private stripe: any = null;
@@ -164,6 +169,10 @@ export class RequestHubComponent implements OnInit, OnDestroy {
     this.selectedOffer.set(null);
     this.clientSecret.set(null);
     this.cardElement = null;
+    this.chosenAddressOption.set('default');
+    this.customShippingAddress.set('');
+    this.chosenPhoneOption.set('default');
+    this.customPhoneNumber.set('');
   }
 
   protected onAcceptQtyChange(event: Event): void {
@@ -240,7 +249,20 @@ export class RequestHubComponent implements OnInit, OnDestroy {
         if (cardErrors) cardErrors.textContent = result.error.message;
       } else {
         if (result.paymentIntent.status === 'requires_capture') {
-          this.groupRequestOffersService.confirmAcceptOffer(offer.id, result.paymentIntent.id, this.acceptQuantity()).subscribe({
+          const finalAddress = this.chosenAddressOption() === 'default' 
+            ? (this.authService.user()?.shippingAddress || '') 
+            : this.customShippingAddress();
+          const finalPhone = this.chosenPhoneOption() === 'default' 
+            ? (this.authService.user()?.phoneNumber || '') 
+            : this.customPhoneNumber();
+
+          this.groupRequestOffersService.confirmAcceptOffer(
+            offer.id, 
+            result.paymentIntent.id, 
+            this.acceptQuantity(),
+            finalAddress,
+            finalPhone
+          ).subscribe({
             next: () => {
               this.authorizingPayment.set(false);
               this.toast.success('Offer accepted!', `Successfully authorized hold and accepted the offer.`);

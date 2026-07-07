@@ -13,7 +13,7 @@
   </div>
 
   <!-- Tabs Selector -->
-  <div class="tabs-wrapper" role="tablist" aria-label="Moderation tabs">
+  <div class="tabs-wrapper" role="tablist" aria-label="Moderation tabs" style="flex-wrap: wrap;">
     <button role="tab" 
             [class.active]="activeTab() === 'offers'" 
             [attr.aria-selected]="activeTab() === 'offers'"
@@ -32,7 +32,49 @@
         <span class="tab-count-badge">{{ totalRequests() }}</span>
       }
     </button>
+    <button role="tab" 
+            [class.active]="activeTab() === 'pending-offers'" 
+            [attr.aria-selected]="activeTab() === 'pending-offers'"
+            (click)="setTab('pending-offers')">
+      Pending Offers
+      @if (totalPendingOffers() > 0) {
+        <span class="tab-count-badge">{{ totalPendingOffers() }}</span>
+      }
+    </button>
+    <button role="tab" 
+            [class.active]="activeTab() === 'pending-requests'" 
+            [attr.aria-selected]="activeTab() === 'pending-requests'"
+            (click)="setTab('pending-requests')">
+      Pending Requests
+      @if (totalPendingRequests() > 0) {
+        <span class="tab-count-badge">{{ totalPendingRequests() }}</span>
+      }
+    </button>
+    <button role="tab" 
+            [class.active]="activeTab() === 'create-admin'" 
+            [attr.aria-selected]="activeTab() === 'create-admin'"
+            (click)="setTab('create-admin')">
+      Create Admin
+    </button>
   </div>
+
+  <!-- Search Filter -->
+  @if (activeTab() !== 'create-admin') {
+    <div class="search-filter-wrapper">
+      <div class="search-input-container">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" 
+               class="search-input" 
+               placeholder="Search by title, description, or reason..."
+               [ngModel]="searchQuery()"
+               (ngModelChange)="onSearchChange($event)"
+               aria-label="Search moderation items" />
+      </div>
+    </div>
+  }
 
   <!-- Loading State -->
   @if (loading()) {
@@ -146,10 +188,139 @@
           </div>
         }
       }
+
+      <!-- Pending Offers Tab Content -->
+      @if (activeTab() === 'pending-offers') {
+        @if (pendingOffers().length === 0) {
+          <div class="empty-state-card" style="grid-column: 1 / -1;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <h3>All Clear!</h3>
+            <p>There are no pending offers awaiting review right now.</p>
+          </div>
+        } @else {
+          <div class="queue-list" style="grid-column: 1 / -1; width: 100%;">
+            @for (offer of pendingOffers(); track offer.id) {
+              <div class="flagged-card">
+                <div class="card-body">
+                  <div class="card-meta">
+                    <span class="meta-label">Offer ID: {{ offer.id.slice(0, 8) }}</span>
+                    <span class="meta-date">Created {{ offer.createdAt | date:'mediumDate' }}</span>
+                  </div>
+                  <h3 class="card-title">{{ offer.title }}</h3>
+                  
+                  @if (offer.description) {
+                    <p class="card-description">{{ offer.description }}</p>
+                  } @else {
+                    <p class="card-description empty-desc">No description provided.</p>
+                  }
+                </div>
+
+                <div class="card-actions">
+                  <button class="btn btn-outline-danger" 
+                          [disabled]="actionInProgress()" 
+                          (click)="openRejectModal(offer.id, 'offer')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Reject
+                  </button>
+                  <button class="btn btn-success" 
+                          [disabled]="actionInProgress()" 
+                          (click)="approve(offer.id, 'offer')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Approve
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- Pending Requests Tab Content -->
+      @if (activeTab() === 'pending-requests') {
+        @if (pendingRequests().length === 0) {
+          <div class="empty-state-card" style="grid-column: 1 / -1;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <h3>All Clear!</h3>
+            <p>There are no pending group requests awaiting review right now.</p>
+          </div>
+        } @else {
+          <div class="queue-list" style="grid-column: 1 / -1; width: 100%;">
+            @for (req of pendingRequests(); track req.id) {
+              <div class="flagged-card">
+                <div class="card-body">
+                  <div class="card-meta">
+                    <span class="meta-label">Request ID: {{ req.id.slice(0, 8) }}</span>
+                    <span class="meta-date">Created {{ req.createdAt | date:'mediumDate' }}</span>
+                  </div>
+                  <h3 class="card-title">{{ req.title }}</h3>
+                </div>
+
+                <div class="card-actions">
+                  <button class="btn btn-outline-danger" 
+                          [disabled]="actionInProgress()" 
+                          (click)="openRejectModal(req.id, 'request')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Reject
+                  </button>
+                  <button class="btn btn-success" 
+                          [disabled]="actionInProgress()" 
+                          (click)="approve(req.id, 'request')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Approve
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- Create Admin Content -->
+      @if (activeTab() === 'create-admin') {
+        <div class="admin-form-card" style="grid-column: 1 / -1;">
+          <div class="card-header">
+            <h3>Create Admin User</h3>
+            <p>Register a new system administrator with full privileges.</p>
+          </div>
+          <form (ngSubmit)="submitCreateAdmin()" #createAdminForm="ngForm" class="admin-form">
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label class="form-label" for="admin-first-name">First Name *</label>
+                <input id="admin-first-name" type="text" class="form-input" 
+                  [(ngModel)]="adminFirstName" name="adminFirstName" required placeholder="John">
+              </div>
+              <div class="form-group flex-1">
+                <label class="form-label" for="admin-last-name">Last Name *</label>
+                <input id="admin-last-name" type="text" class="form-input" 
+                  [(ngModel)]="adminLastName" name="adminLastName" required placeholder="Doe">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="admin-email">Email Address *</label>
+              <input id="admin-email" type="email" class="form-input" 
+                [(ngModel)]="adminEmail" name="adminEmail" required placeholder="admin@jomla.com">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="admin-password">Password *</label>
+              <input id="admin-password" type="password" class="form-input" 
+                [(ngModel)]="adminPassword" name="adminPassword" required placeholder="••••••••" minlength="8">
+              <span class="help-text">Password must be at least 8 characters long and contain a digit.</span>
+            </div>
+
+            <div class="form-actions" style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+              <button type="submit" class="btn btn-primary" [disabled]="!createAdminForm.form.valid || actionInProgress()">
+                {{ actionInProgress() ? 'Creating...' : 'Create Admin Account' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      }
     </div>
 
     <!-- Pagination Footer -->
-    @if (totalPages > 1) {
+    @if (activeTab() !== 'create-admin' && totalPages > 1) {
       <div class="pagination-footer">
         <span>Page {{ currentPage }} of {{ totalPages }}</span>
         <div style="display:flex; gap:0.5rem">

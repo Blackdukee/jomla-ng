@@ -39,7 +39,9 @@ export class LoginComponent {
       next: () => {
         this.loading.set(false);
         this.toast.success('Welcome back!', 'You have been signed in.');
-        if (this.auth.isBuyer()) {
+        if (this.auth.isAdmin()) {
+          this.router.navigate(['/admin']);
+        } else if (this.auth.isBuyer()) {
           this.router.navigate(['/discover']);
         } else {
           this.router.navigate(['/supplier/requests']);

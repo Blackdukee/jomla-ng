@@ -152,7 +152,8 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
     return new Date(d).toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'UTC'
     });
   }
 

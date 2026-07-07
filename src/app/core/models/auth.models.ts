@@ -9,8 +9,10 @@ export interface AuthResponse {
   email: string;
   firstName: string;
   lastName: string;
-   imageUrl?: string;  
+  imageUrl?: string;  
   refreshTokenExpiresOn: string;  // ISO date string
+  shippingAddress?: string;
+  phoneNumber?: string;
 }
 
 /**
@@ -24,6 +26,8 @@ export interface User {
   email: string;
   role: 'Buyer' | 'Supplier' | 'Admin';
   imageUrl?: string;
+  shippingAddress?: string;
+  phoneNumber?: string;
 }
 
 /**

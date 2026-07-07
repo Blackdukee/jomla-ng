@@ -9,6 +9,8 @@ export interface UpdateProfileResponse {
   lastName: string;
   email: string;
   imageUrl?: string;
+  shippingAddress?: string;
+  phoneNumber?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -16,7 +18,7 @@ export class UserService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/users`;
 
-  updateProfile(payload: { firstName: string; lastName: string; email: string }): Observable<UpdateProfileResponse> {
+  updateProfile(payload: { firstName: string; lastName: string; email: string; shippingAddress?: string | null; phoneNumber?: string | null }): Observable<UpdateProfileResponse> {
     return this.http.put<UpdateProfileResponse>(`${this.baseUrl}/profile`, payload, {
       withCredentials: true
     });
