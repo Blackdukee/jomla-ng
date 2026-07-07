@@ -119,5 +119,8 @@ export interface CompletedDealDto {
 export interface DealBuyerDto {
   name: string;
   quantity: number;
+  email: string;
+  phoneNumber?: string | null;
+  shippingAddress?: string | null;
 }
 

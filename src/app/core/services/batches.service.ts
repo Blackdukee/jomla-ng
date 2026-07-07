@@ -51,8 +51,8 @@ export class BatchesService {
   }
 
   /** POST /api/batches/{batchId}/confirm-join — Confirm joining a batch after successful payment */
-  confirmJoinBatch(batchId: string, paymentIntentId: string, quantity: number): Observable<any> {
-    const body = { paymentIntentId, quantity };
+  confirmJoinBatch(batchId: string, paymentIntentId: string, quantity: number, shippingAddress?: string | null, phoneNumber?: string | null): Observable<any> {
+    const body = { paymentIntentId, quantity, shippingAddress, phoneNumber };
     return this.http.post<any>(
       `${this.baseUrl}/${batchId}/confirm-join`,
       body,

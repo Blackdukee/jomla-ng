@@ -15,8 +15,8 @@ export class GroupRequestOffersService {
     });
   }
 
-  confirmAcceptOffer(offerId: string, paymentIntentId: string, acceptedQuantity: number): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/confirm-accept`, { paymentIntentId, acceptedQuantity }, {
+  confirmAcceptOffer(offerId: string, paymentIntentId: string, acceptedQuantity: number, shippingAddress?: string | null, phoneNumber?: string | null): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${offerId}/confirm-accept`, { paymentIntentId, acceptedQuantity, shippingAddress, phoneNumber }, {
       withCredentials: true
     });
   }
@@ -29,6 +29,24 @@ export class GroupRequestOffersService {
 
   leaveOffer(offerId: string): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/${offerId}/cancel`, {}, {
+      withCredentials: true
+    });
+  }
+
+  triggerNegotiation(offerId: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${offerId}/trigger-negotiation`, {}, {
+      withCredentials: true
+    });
+  }
+
+  approveNegotiation(offerId: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${offerId}/approve-negotiation`, {}, {
+      withCredentials: true
+    });
+  }
+
+  rejectNegotiation(offerId: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${offerId}/reject-negotiation`, {}, {
       withCredentials: true
     });
   }

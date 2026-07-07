@@ -172,7 +172,9 @@ private handleAuthSuccess(res: AuthResponse) {
     lastName: res.lastName,
     email: res.email,
     role: role,
-    imageUrl: res.imageUrl   // ⬅️ جديد
+    imageUrl: res.imageUrl,
+    shippingAddress: res.shippingAddress,
+    phoneNumber: res.phoneNumber
   };
 
   this._user.set(u);

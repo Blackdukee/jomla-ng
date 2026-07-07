@@ -10,10 +10,13 @@ export class AdminService {
   private readonly baseUrl = `${environment.apiUrl}/admin`;
 
   /** GET /api/admin/flagged-offers */
-  getFlaggedOffers(page: number = 1, pageSize: number = 10): Observable<PagedResult<FlaggedOfferDto>> {
-    const params = new HttpParams()
+  getFlaggedOffers(page: number = 1, pageSize: number = 10, search: string = ''): Observable<PagedResult<FlaggedOfferDto>> {
+    let params = new HttpParams()
       .set('page', page.toString())
       .set('pageSize', pageSize.toString());
+    if (search) {
+      params = params.set('search', search);
+    }
     return this.http.get<PagedResult<FlaggedOfferDto>>(`${this.baseUrl}/flagged-offers`, {
       params,
       withCredentials: true
@@ -21,10 +24,13 @@ export class AdminService {
   }
 
   /** GET /api/admin/flagged-group-requests */
-  getFlaggedGroupRequests(page: number = 1, pageSize: number = 10): Observable<PagedResult<FlaggedGroupRequestDto>> {
-    const params = new HttpParams()
+  getFlaggedGroupRequests(page: number = 1, pageSize: number = 10, search: string = ''): Observable<PagedResult<FlaggedGroupRequestDto>> {
+    let params = new HttpParams()
       .set('page', page.toString())
       .set('pageSize', pageSize.toString());
+    if (search) {
+      params = params.set('search', search);
+    }
     return this.http.get<PagedResult<FlaggedGroupRequestDto>>(`${this.baseUrl}/flagged-group-requests`, {
       params,
       withCredentials: true
@@ -55,6 +61,41 @@ export class AdminService {
   /** PUT /api/admin/group-requests/{id}/reject */
   rejectGroupRequest(id: string, reason: string): Observable<void> {
     return this.http.put<void>(`${this.baseUrl}/group-requests/${id}/reject`, { reason }, {
+      withCredentials: true
+    });
+  }
+
+  /** GET /api/admin/pending-offers */
+  getPendingOffers(page: number = 1, pageSize: number = 10, search: string = ''): Observable<PagedResult<FlaggedOfferDto>> {
+    let params = new HttpParams()
+      .set('pageNumber', page.toString())
+      .set('pageSize', pageSize.toString());
+    if (search) {
+      params = params.set('search', search);
+    }
+    return this.http.get<PagedResult<FlaggedOfferDto>>(`${this.baseUrl}/pending-offers`, {
+      params,
+      withCredentials: true
+    });
+  }
+
+  /** GET /api/admin/pending-group-requests */
+  getPendingGroupRequests(page: number = 1, pageSize: number = 10, search: string = ''): Observable<PagedResult<FlaggedGroupRequestDto>> {
+    let params = new HttpParams()
+      .set('pageNumber', page.toString())
+      .set('pageSize', pageSize.toString());
+    if (search) {
+      params = params.set('search', search);
+    }
+    return this.http.get<PagedResult<FlaggedGroupRequestDto>>(`${this.baseUrl}/pending-group-requests`, {
+      params,
+      withCredentials: true
+    });
+  }
+
+  /** POST /api/admin/create-admin */
+  createAdmin(request: any): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/create-admin`, request, {
       withCredentials: true
     });
   }
