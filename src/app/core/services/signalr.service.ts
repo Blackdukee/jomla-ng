@@ -52,7 +52,16 @@ export class SignalRService implements OnDestroy {
    * Should be called after successful login/refresh.
    */
   async connect(): Promise<void> {
-    if (this.connection?.state === signalR.HubConnectionState.Connected) {
+    if (this.connection) {
+      if (this.connection.state === signalR.HubConnectionState.Disconnected) {
+        try {
+          await this.connection.start();
+          this.isConnected.set(true);
+        } catch (err) {
+          console.error('SignalR start failed:', err);
+          this.isConnected.set(false);
+        }
+      }
       return;
     }
 

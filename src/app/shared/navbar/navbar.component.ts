@@ -384,6 +384,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.notifUnsubscribe = this.signalRService.onNotification((notif) => {
+      const alreadyExists = this.notifications().some(n => n.id === notif.id);
+      if (alreadyExists) return;
+
       this.notifications.update(list => [notif, ...list]);
       this.unreadCount.update(count => count + 1);
       this.toast.success(notif.title, notif.body);
