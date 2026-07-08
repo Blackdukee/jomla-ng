@@ -110,9 +110,9 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
         const currentUser = this.authService.user();
         if (currentUser && update.offers) {
           const supplierOffers = update.offers.filter(o => o.supplierId === currentUser.id);
-          const active = supplierOffers.find(o => o.status === 'Open' || o.status === 'PendingSupplierApproval');
+          const active = supplierOffers.find(o => o.status === 'Open');
           this.activeOffer.set(active || null);
-          const past = supplierOffers.filter(o => o.status !== 'Open' && o.status !== 'PendingSupplierApproval')
+          const past = supplierOffers.filter(o => o.status !== 'Open')
                                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           this.pastOffers.set(past);
         }
@@ -137,9 +137,9 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
         const currentUser = this.authService.user();
         if (currentUser && req.offers) {
           const supplierOffers = req.offers.filter(o => o.supplierId === currentUser.id);
-          const active = supplierOffers.find(o => o.status === 'Open' || o.status === 'PendingSupplierApproval');
+          const active = supplierOffers.find(o => o.status === 'Open');
           this.activeOffer.set(active || null);
-          const past = supplierOffers.filter(o => o.status !== 'Open' && o.status !== 'PendingSupplierApproval')
+          const past = supplierOffers.filter(o => o.status !== 'Open')
                                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           this.pastOffers.set(past);
         }
