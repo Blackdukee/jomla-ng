@@ -143,6 +143,11 @@ export class SignalRService implements OnDestroy {
   }
 
   private async ensureConnected(): Promise<void> {
+    const token = localStorage.getItem('jomla_token');
+    if (!token) {
+      return;
+    }
+
     if (!this.connection) {
       await this.connect();
     }
@@ -158,6 +163,7 @@ export class SignalRService implements OnDestroy {
           break;
         } catch (err) {
           console.error('SignalR start failed:', err);
+          break; // Don't keep retrying on auth errors
         }
       }
       await new Promise(resolve => setTimeout(resolve, 100));

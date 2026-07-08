@@ -9,6 +9,14 @@ export interface GroupRequestListItemDto {
   participantsCount: number;
 }
 
+export interface NegotiationLogDto {
+  id: string;
+  previousPrice: number;
+  newPrice: number;
+  reasoningSummary?: string;
+  actedAt: string;
+}
+
 export interface GroupRequestOfferDto {
   id: string;
   supplierId: string;
@@ -27,6 +35,7 @@ export interface GroupRequestOfferDto {
   rejectedBuyerIds?: string[];
   isAnimatingOut?: boolean;
   variantAttributes?: string;
+  negotiationLogs?: NegotiationLogDto[];
 }
 
 export interface SupplierGroupRequestOfferDto {
