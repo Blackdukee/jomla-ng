@@ -60,6 +60,8 @@ export class WishlistComponent implements OnInit {
   protected page = signal(1);
   protected pageSize = 5;
   protected totalCount = signal(0);
+  protected totalWishlistCount = signal(0);
+  protected activeGroupsCount = signal(0);
   protected isLoading = signal(true);
 
   protected totalPages = computed(() => {
@@ -78,6 +80,22 @@ export class WishlistComponent implements OnInit {
   ngOnInit(): void {
     this.loadCategories();
     this.loadRequests();
+    this.loadStats();
+  }
+
+  protected loadStats() {
+    this.groupRequestsService.getGroupRequests({
+      page: 1,
+      pageSize: 1000,
+      myRequestsOnly: true
+    }).subscribe({
+      next: (res) => {
+        this.totalWishlistCount.set(res.totalCount);
+        const activeCount = res.items.filter((item: any) => item.status.toLowerCase() === 'active').length;
+        this.activeGroupsCount.set(activeCount);
+      },
+      error: (err) => console.error('Failed to load wishlist stats', err)
+    });
   }
 
   protected loadCategories() {
@@ -230,6 +248,7 @@ export class WishlistComponent implements OnInit {
         this.toast.success('Request posted!', 'Your group request is now live.');
         this.closeModal();
         this.loadRequests();
+        this.loadStats();
       },
       error: (err) => {
         this.toast.error('Error', err?.error?.detail || 'Failed to post request.');
