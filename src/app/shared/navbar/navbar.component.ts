@@ -475,13 +475,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
+  private normalizeUtc(d: string): string {
+    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
+      ? d
+      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
+  }
+
   protected getRelativeTime(dateStr: string): string {
     try {
-      // Backend stores UTC; local clock is UTC+3.
-      // Add 3 hours so the relative distance is calculated correctly.
-      const utcMs = new Date(dateStr).getTime();
-      const adjusted = new Date(utcMs + 3 * 60 * 60 * 1000);
-      return formatDistanceToNow(adjusted, { addSuffix: true });
+      const date = new Date(this.normalizeUtc(dateStr));
+      return formatDistanceToNow(date, { addSuffix: true });
     } catch {
       return '';
     }

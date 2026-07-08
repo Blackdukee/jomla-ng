@@ -144,23 +144,36 @@ export class ManageOfferComponent implements OnInit {
     }
   }
 
-  protected fmtDate(d: string | undefined): string {
+  private normalizeUtc(d: string): string {
+    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
+      ? d
+      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
+  }
+
+  private formatEgyptUtc(d: string | undefined | null, formatStr: string): string {
     if (!d) return '';
     try {
-      const adjusted = new Date(new Date(d).getTime() + 3 * 60 * 60 * 1000);
-      return format(adjusted, 'MMM d, yyyy');
+      const date = new Date(this.normalizeUtc(d));
+      const egyptDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+      const local = new Date(
+        egyptDate.getUTCFullYear(),
+        egyptDate.getUTCMonth(),
+        egyptDate.getUTCDate(),
+        egyptDate.getUTCHours(),
+        egyptDate.getUTCMinutes(),
+        egyptDate.getUTCSeconds()
+      );
+      return format(local, formatStr);
     } catch {
       return '';
     }
   }
 
+  protected fmtDate(d: string | undefined): string {
+    return this.formatEgyptUtc(d, 'MMM d, yyyy');
+  }
+
   protected fmtExpiryLong(d: string | undefined): string {
-    if (!d) return '';
-    try {
-      const adjusted = new Date(new Date(d).getTime() + 3 * 60 * 60 * 1000);
-      return format(adjusted, "MMM d, yyyy h:mm a 'UTC'");
-    } catch {
-      return '';
-    }
+    return this.formatEgyptUtc(d, "MMM d, yyyy h:mm a 'UTC'");
   }
 }

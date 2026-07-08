@@ -149,13 +149,33 @@ export class RequestHubComponent implements OnInit, OnDestroy {
     });
   }
 
-  protected fmtExpiry(d: string) {
+  private normalizeUtc(d: string): string {
+    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
+      ? d
+      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
+  }
+
+  private formatEgyptUtc(d: string | undefined | null, formatStr: string): string {
+    if (!d) return '';
     try {
-      const adjusted = new Date(new Date(d).getTime() + 3 * 60 * 60 * 1000);
-      return format(adjusted, "MMM d, ha 'UTC'");
+      const date = new Date(this.normalizeUtc(d));
+      const egyptDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+      const local = new Date(
+        egyptDate.getUTCFullYear(),
+        egyptDate.getUTCMonth(),
+        egyptDate.getUTCDate(),
+        egyptDate.getUTCHours(),
+        egyptDate.getUTCMinutes(),
+        egyptDate.getUTCSeconds()
+      );
+      return format(local, formatStr);
     } catch {
       return '';
     }
+  }
+
+  protected fmtExpiry(d: string) {
+    return this.formatEgyptUtc(d, "MMM d, ha 'UTC'");
   }
 
   protected accept(offer: GroupRequestOfferDto) {

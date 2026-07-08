@@ -297,7 +297,7 @@ constructor() {
       this.batchesService.getMyHubs().subscribe({
         next: (hubs) => {
           this.buyerHubs.set(hubs);
-          this.activeHubsCount.set(hubs.filter(h => h.status.toLowerCase() !== 'completed' && h.status.toLowerCase() !== 'closed' && h.status.toLowerCase() !== 'failed').length);
+          this.activeHubsCount.set(hubs.filter(h => h.status.toLowerCase() !== 'completed' && h.status.toLowerCase() !== 'fulfilled' && h.status.toLowerCase() !== 'closed' && h.status.toLowerCase() !== 'failed').length);
         },
         error: (err) => console.error('Failed to load buyer hubs', err)
       });

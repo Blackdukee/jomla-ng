@@ -147,9 +147,15 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
     return o.batchTargetQuantity > 0 ? Math.round((o.committedUnits / o.batchTargetQuantity) * 100) : 0;
   }
 
+  private normalizeUtc(d: string): string {
+    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
+      ? d
+      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
+  }
+
   protected fmtDate(d: string): string {
     if (!d) return '-';
-    const date = new Date(d);
+    const date = new Date(this.normalizeUtc(d));
     const adjusted = new Date(date.getTime() + 3 * 60 * 60 * 1000);
     return adjusted.toLocaleDateString(undefined, {
       year: 'numeric',

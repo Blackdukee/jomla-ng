@@ -100,7 +100,7 @@
               <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
                 <span class="badge badge-muted">{{ req.categoryName || 'Uncategorized' }}</span>
                 <span class="badge"
-                  [class.badge-success]="['active','open','completed'].includes(req.status.toLowerCase())"
+                  [class.badge-success]="['active','open','completed','fulfilled'].includes(req.status.toLowerCase())"
                   [class.badge-warning]="req.status.toLowerCase() === 'pendingreview'"
                   [class.badge-danger]="req.status.toLowerCase() === 'failed'"
                   [class.badge-muted]="['inactive','closed'].includes(req.status.toLowerCase())">
