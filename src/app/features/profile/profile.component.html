@@ -97,7 +97,7 @@
                             <td style="font-weight:600" class="ledger-title">{{ hub.title }}</td>
                             <td>
                               <span class="badge"
-                                [class.badge-success]="['active','open','completed'].includes(hub.status.toLowerCase())"
+                                [class.badge-success]="['active','open','completed','fulfilled'].includes(hub.status.toLowerCase())"
                                 [class.badge-warning]="hub.status.toLowerCase() === 'pendingreview'"
                                 [class.badge-danger]="hub.status.toLowerCase() === 'failed'"
                                 [class.badge-muted]="['inactive','closed'].includes(hub.status.toLowerCase())"

@@ -43,10 +43,16 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
   protected expiryDurationUnit: string = 'day';
 
 
+  private normalizeUtc(d: string): string {
+    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
+      ? d
+      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
+  }
+
   protected fmtExpiry(d: string | null | undefined) {
     if (!d) return '';
     try {
-      const date = new Date(d);
+      const date = new Date(this.normalizeUtc(d));
       // Add 3 hours (3 * 60 * 60 * 1000 ms) to match Egypt time (UTC+3)
       const egyptDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
       

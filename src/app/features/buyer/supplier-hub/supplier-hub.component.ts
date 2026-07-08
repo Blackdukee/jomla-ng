@@ -189,19 +189,43 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     return Math.round((b.currentQuantity / b.targetQuantity) * 100);
   }
 
+  private normalizeUtc(d: string): string {
+    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
+      ? d
+      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
+  }
+
+  private formatEgyptUtc(d: string | undefined | null, formatStr: string): string {
+    if (!d) return '';
+    try {
+      const date = new Date(this.normalizeUtc(d));
+      const egyptDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+      const local = new Date(
+        egyptDate.getUTCFullYear(),
+        egyptDate.getUTCMonth(),
+        egyptDate.getUTCDate(),
+        egyptDate.getUTCHours(),
+        egyptDate.getUTCMinutes(),
+        egyptDate.getUTCSeconds()
+      );
+      return format(local, formatStr);
+    } catch {
+      return '';
+    }
+  }
+
   protected isExpiringSoon(): boolean {
     const b = this.batch();
     if (!b?.expiresAt) return false;
-    const adjusted = new Date(new Date(b.expiresAt).getTime() + 3 * 60 * 60 * 1000);
-    const h = differenceInHours(adjusted, new Date());
+    const expiry = new Date(this.normalizeUtc(b.expiresAt));
+    const h = differenceInHours(expiry, new Date());
     return h < 1 && h >= 0;
   }
 
   protected expiresFormatted(): string {
     const b = this.batch();
     if (!b?.expiresAt) return 'No expiry set';
-    const adjusted = new Date(new Date(b.expiresAt).getTime() + 3 * 60 * 60 * 1000);
-    return format(adjusted, "MMM d, h:mm a 'UTC'");
+    return this.formatEgyptUtc(b.expiresAt, "MMM d, h:mm a 'UTC'");
   }
 
   protected isCurrentUser(buyerId: string): boolean {
@@ -257,7 +281,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     if (b.status === 'Completed') return 'Completed';
     if (b.status === 'Failed') return 'Expired';
     const now = new Date();
-    const expiry = new Date(new Date(b.expiresAt).getTime() + 3 * 60 * 60 * 1000);
+    const expiry = new Date(this.normalizeUtc(b.expiresAt));
     const diffMinutes = Math.floor((expiry.getTime() - now.getTime()) / 60000);
     if (diffMinutes <= 0) return 'Expired';
     const hours = Math.floor(diffMinutes / 60);

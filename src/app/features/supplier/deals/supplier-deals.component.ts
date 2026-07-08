@@ -97,10 +97,16 @@ export class SupplierDealsComponent implements OnInit {
     requestAnimationFrame(step);
   }
 
+  private normalizeUtc(d: string): string {
+    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
+      ? d
+      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
+  }
+
   protected fmtDate(d: string | null) {
     if (!d) return '';
     try {
-      const adjusted = new Date(new Date(d).getTime() + 3 * 60 * 60 * 1000);
+      const adjusted = new Date(new Date(this.normalizeUtc(d)).getTime() + 3 * 60 * 60 * 1000);
       return adjusted.toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'short',

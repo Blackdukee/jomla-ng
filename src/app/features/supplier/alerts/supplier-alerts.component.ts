@@ -95,11 +95,17 @@ export class SupplierAlertsComponent implements OnInit, OnDestroy {
     this.unsubNotification?.();
   }
 
+  private normalizeUtc(d: string): string {
+    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
+      ? d
+      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
+  }
+
   protected relTime(d: string) {
     if (!d) return '';
     try {
-      const adjusted = new Date(new Date(d).getTime() + 3 * 60 * 60 * 1000);
-      return formatDistanceToNow(adjusted, { addSuffix: true });
+      const date = new Date(this.normalizeUtc(d));
+      return formatDistanceToNow(date, { addSuffix: true });
     } catch {
       return '';
     }
