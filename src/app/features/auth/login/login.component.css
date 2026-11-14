@@ -142,6 +142,41 @@
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
 }
+.demo-shortcuts-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+.demo-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.demo-btn {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 0.875rem;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.3;
+  color: var(--brand-dark);
+  border-color: var(--brand);
+}
+.demo-btn:hover:not(:disabled) {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+  color: #fff;
+}
+.demo-btn-admin {
+  grid-column: 1 / -1;
+}
+@media (max-width: 439px) {
+  .demo-buttons {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Entrance and Hover animations for the promo panel */
 @keyframes fadeInUp {

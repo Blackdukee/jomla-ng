@@ -77,6 +77,20 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
     return Math.round((demand / offer.quantityAvailable) * 100);
   }
 
+  protected getNegotiationLogs() {
+    const allLogs: any[] = [];
+    const active = this.activeOffer();
+    if (active && active.negotiationLogs) {
+      allLogs.push(...active.negotiationLogs.map(l => ({ ...l, roundNumber: active.roundNumber })));
+    }
+    this.pastOffers().forEach(offer => {
+      if (offer.negotiationLogs) {
+        allLogs.push(...offer.negotiationLogs.map(l => ({ ...l, roundNumber: offer.roundNumber })));
+      }
+    });
+    return allLogs.sort((a, b) => new Date(b.actedAt).getTime() - new Date(a.actedAt).getTime());
+  }
+
   ngOnInit(): void {
     this.requestId = this.route.snapshot.paramMap.get('requestId') ?? '';
     if (!this.requestId) {
@@ -96,9 +110,9 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
         const currentUser = this.authService.user();
         if (currentUser && update.offers) {
           const supplierOffers = update.offers.filter(o => o.supplierId === currentUser.id);
-          const active = supplierOffers.find(o => o.status === 'Open' || o.status === 'PendingSupplierApproval');
+          const active = supplierOffers.find(o => o.status === 'Open');
           this.activeOffer.set(active || null);
-          const past = supplierOffers.filter(o => o.status !== 'Open' && o.status !== 'PendingSupplierApproval')
+          const past = supplierOffers.filter(o => o.status !== 'Open')
                                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           this.pastOffers.set(past);
         }
@@ -123,9 +137,9 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
         const currentUser = this.authService.user();
         if (currentUser && req.offers) {
           const supplierOffers = req.offers.filter(o => o.supplierId === currentUser.id);
-          const active = supplierOffers.find(o => o.status === 'Open' || o.status === 'PendingSupplierApproval');
+          const active = supplierOffers.find(o => o.status === 'Open');
           this.activeOffer.set(active || null);
-          const past = supplierOffers.filter(o => o.status !== 'Open' && o.status !== 'PendingSupplierApproval')
+          const past = supplierOffers.filter(o => o.status !== 'Open')
                                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           this.pastOffers.set(past);
         }
@@ -233,35 +247,4 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
     });
   }
 
-  protected approveAIProposal() {
-    const offer = this.activeOffer();
-    if (!offer) return;
-    this.loading.set(true);
-    this.groupRequestOffersService.approveNegotiation(offer.id).subscribe({
-      next: () => {
-        this.toast.success('AI Price Approved', 'The offer has been placed live at the AI-negotiated price.');
-        this.loadRequest(this.requestId);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.toast.error('Error', err?.error?.detail || 'Failed to approve AI proposal.');
-      }
-    });
-  }
-
-  protected rejectAIProposal() {
-    const offer = this.activeOffer();
-    if (!offer) return;
-    this.loading.set(true);
-    this.groupRequestOffersService.rejectNegotiation(offer.id).subscribe({
-      next: () => {
-        this.toast.success('AI Price Rejected', 'The negotiation proposal has been rejected and the offer has ended.');
-        this.loadRequest(this.requestId);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.toast.error('Error', err?.error?.detail || 'Failed to reject AI proposal.');
-      }
-    });
-  }
 }
