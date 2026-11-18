@@ -40,9 +40,6 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
             <a href="https://twitter.com" target="_blank" class="social-icon" aria-label="Twitter/X">
               <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </a>
-            <a href="https://wa.me/201034743315" target="_blank" class="social-icon" aria-label="WhatsApp">
-              <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.197 1.45 4.817 1.45 5.548 0 10.063-4.515 10.066-10.068.002-2.69-1.045-5.216-2.946-7.12C16.68 1.516 14.156.472 11.47.472 5.922.472 1.407 4.987 1.404 10.54c-.001 1.7.447 3.356 1.303 4.834l-.986 3.606 3.69-.974-.354.218z"/></svg>
-            </a>
           </div>
         </div>
 
@@ -67,10 +64,6 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
           <div class="contact-item">
             <span class="contact-label">Email</span>
             <a href="mailto:info@jomla.test" class="contact-value">info@jomla.test</a>
-          </div>
-          <div class="contact-item" style="margin-bottom:0.25rem">
-            <span class="contact-label">WhatsApp</span>
-            <a href="https://wa.me/201034743315" target="_blank" class="contact-value">+20 103 474 3315</a>
           </div>
           <a routerLink="/register/supplier" class="btn btn-outline footer-cta-btn">
             {{ t().joinSupplier }}

@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { ToastComponent } from './shared/toast/toast.component';
 import { LoadingBarComponent } from './shared/progress-bar/loading-bar.component';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -39,6 +40,13 @@ export class AppComponent {
   constructor() {
     afterNextRender(() => {
       this.isReady.set(true);
+
+      void fetch(`${environment.apiUrl}/visitor-visits`, {
+        method: 'POST',
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+        keepalive: true,
+      }).catch(() => undefined);
     });
   }
 }
