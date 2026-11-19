@@ -21,3 +21,10 @@ export interface PagedResult<T> {
   page: number;
   pageSize: number;
 }
+
+export interface CreateAdminRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}

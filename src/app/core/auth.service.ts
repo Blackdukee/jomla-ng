@@ -7,6 +7,12 @@ import { SignalRService } from './services/signalr.service';
 
 import { environment } from '../../environments/environment';
 
+interface JwtPayload {
+  exp?: number;
+  role?: string | string[];
+  'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'?: string | string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
@@ -22,36 +28,20 @@ export class AuthService {
 
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._user() !== null);
-  
-  readonly isBuyer = computed(() => {
+
+  private readonly decodedRole = computed<string | null>(() => {
     const token = this._token();
-    if (!token) return false;
+    if (!token) return null;
     const decoded = this.decodeToken(token);
-    if (!decoded) return false;
+    if (!decoded) return null;
     const claim = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded["role"];
     const roleStr = Array.isArray(claim) ? claim[0] : claim;
-    return roleStr?.toLowerCase() === 'buyer';
+    return typeof roleStr === 'string' ? roleStr.toLowerCase() : null;
   });
 
-  readonly isSupplier = computed(() => {
-    const token = this._token();
-    if (!token) return false;
-    const decoded = this.decodeToken(token);
-    if (!decoded) return false;
-    const claim = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded["role"];
-    const roleStr = Array.isArray(claim) ? claim[0] : claim;
-    return roleStr?.toLowerCase() === 'supplier';
-  });
-
-  readonly isAdmin = computed(() => {
-    const token = this._token();
-    if (!token) return false;
-    const decoded = this.decodeToken(token);
-    if (!decoded) return false;
-    const claim = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded["role"];
-    const roleStr = Array.isArray(claim) ? claim[0] : claim;
-    return roleStr?.toLowerCase() === 'admin';
-  });
+  readonly isBuyer = computed(() => this.decodedRole() === 'buyer');
+  readonly isSupplier = computed(() => this.decodedRole() === 'supplier');
+  readonly isAdmin = computed(() => this.decodedRole() === 'admin');
 
   constructor() {
     // Restore from localStorage
@@ -83,8 +73,8 @@ export class AuthService {
       } catch {
         this.clearAuthState();
       }
-    } else {
-      // If we don't have token/user in storage, try silent login via cookie
+    } else if (localStorage.getItem('jomla_has_session') === '1') {
+      // Only attempt silent refresh via HttpOnly cookie if a previous session was recorded
       this.refreshAccessToken().subscribe({
         next: () => {
           this.signalR.connect();
@@ -181,6 +171,7 @@ private handleAuthSuccess(res: AuthResponse) {
   this._token.set(res.token);
   localStorage.setItem('jomla_user', JSON.stringify(u));
   localStorage.setItem('jomla_token', res.token);
+  localStorage.setItem('jomla_has_session', '1');
 
   // Connect SignalR with fresh token
   this.signalR.connect();
@@ -194,6 +185,7 @@ private handleAuthSuccess(res: AuthResponse) {
     this._token.set(null);
     localStorage.removeItem('jomla_user');
     localStorage.removeItem('jomla_token');
+    localStorage.removeItem('jomla_has_session');
     this.signalR.disconnect();
     // Cancel any pending proactive refresh so it doesn't fire after logout
     if (this.refreshTimer !== null) {
@@ -204,6 +196,10 @@ private handleAuthSuccess(res: AuthResponse) {
 
   clearAuth() {
     this.clearAuthState();
+  }
+
+  getToken(): string | null {
+    return this._token() ?? localStorage.getItem('jomla_token');
   }
 
   updateUser(u: User) {
@@ -269,8 +265,8 @@ private handleAuthSuccess(res: AuthResponse) {
     }
   }
 
-  logout(): Observable<any> {
-    return this.http.post(`${this.baseUrl}/logout`, {}, { withCredentials: true }).pipe(
+  logout(): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/logout`, {}, { withCredentials: true }).pipe(
       finalize(() => {
         this.clearAuthState();
       })
@@ -284,7 +280,7 @@ private handleAuthSuccess(res: AuthResponse) {
     return `${u.firstName} ${u.lastName}`;
   }
 
-  private decodeToken(token: string): any {
+  private decodeToken(token: string): JwtPayload | null {
     try {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
@@ -295,7 +291,7 @@ private handleAuthSuccess(res: AuthResponse) {
           .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
           .join('')
       );
-      return JSON.parse(decoded);
+      return JSON.parse(decoded) as JwtPayload;
     } catch {
       return null;
     }
@@ -354,11 +350,11 @@ private handleAuthSuccess(res: AuthResponse) {
     return Date.now() >= (expirationDate - buffer);
   }
 
-  forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/forgot-password`, { email });
+  forgotPassword(email: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/forgot-password`, { email });
   }
 
-  resetPassword(data: { email: string; token: string; newPassword: string; confirmPassword: string }): Observable<any> {
-    return this.http.post(`${this.baseUrl}/reset-password`, data);
+  resetPassword(data: { email: string; token: string; newPassword: string; confirmPassword: string }): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/reset-password`, data);
   }
 }

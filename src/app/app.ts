@@ -1,4 +1,4 @@
-import { Component, signal, afterNextRender } from '@angular/core';
+import { Component, ChangeDetectionStrategy, afterNextRender } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { ToastComponent } from './shared/toast/toast.component';
@@ -9,8 +9,9 @@ import { environment } from '../environments/environment';
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, NavbarComponent, ToastComponent, LoadingBarComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="app-shell" [class.ready]="isReady()">
+    <div class="app-shell">
       <app-loading-bar />
       <app-navbar />
       <main class="main-content">
@@ -24,10 +25,6 @@ import { environment } from '../environments/environment';
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      opacity: 0;
-    }
-    .app-shell.ready {
-      opacity: 1;
     }
     .main-content {
       flex: 1;
@@ -35,12 +32,8 @@ import { environment } from '../environments/environment';
   `],
 })
 export class AppComponent {
-  isReady = signal(false);
-
   constructor() {
     afterNextRender(() => {
-      this.isReady.set(true);
-
       void fetch(`${environment.apiUrl}/visitor-visits`, {
         method: 'POST',
         credentials: 'omit',

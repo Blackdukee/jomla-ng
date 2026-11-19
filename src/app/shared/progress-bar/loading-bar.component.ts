@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { LoadingService } from '../../core/services/loading.service';
 
 @Component({
   selector: 'app-loading-bar',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (loadingService.isLoading()) {
       <div class="global-loading-bar" role="progressbar" aria-label="Loading page data">
@@ -18,7 +19,7 @@ import { LoadingService } from '../../core/services/loading.service';
       left: 0;
       width: 100%;
       height: 3px;
-      z-index: 99999;
+      z-index: var(--z-loading-bar, 700);
       background-color: rgba(13, 148, 136, 0.1);
       overflow: hidden;
     }

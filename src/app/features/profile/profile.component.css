@@ -27,6 +27,11 @@
   width: 4rem;
   height: 4rem;
   border-radius: 50%;
+  border: none;
+  padding: 0;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
   background: var(--brand-light);
   color: var(--brand);
   display: flex;
@@ -34,6 +39,11 @@
   justify-content: center;
   font-size: 1.75rem;
   font-weight: 800;
+}
+
+.avatar-circle:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .header-stats {
@@ -131,6 +141,18 @@
 
 .ledger-row:hover .ledger-title {
   color: var(--brand);
+}
+
+.ledger-link {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+
+.ledger-link:hover,
+.ledger-link:focus-visible {
+  color: var(--brand);
+  text-decoration: underline;
 }
 
 .form-container {

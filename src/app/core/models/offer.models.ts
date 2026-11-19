@@ -68,3 +68,19 @@ export interface MyOffersPagedResponse {
   pendingModerationCount: number;
 }
 
+export interface OfferQueryParams {
+  search?: string;
+  categoryId?: string;
+  status?: string;
+  sortBy?: string;
+  descending?: boolean;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface CreateOfferResponse {
+  offerId?: string;
+  id?: string;
+  message?: string;
+}
+

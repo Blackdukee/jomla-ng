@@ -28,6 +28,9 @@ export class SignalRService implements OnDestroy {
   private connection: signalR.HubConnection | null = null;
   private connectionPromise: Promise<void> | null = null;
   private readonly hubUrl = environment.hubUrl;
+  private activeOfferGroups = new Set<string>();
+  private activeGroupRequestGroups = new Set<string>();
+  private isInAdminGroup = false;
 
   /** Observable signals for components to react to */
   readonly lastNotification = signal<NotificationDto | null>(null);
@@ -116,11 +119,15 @@ export class SignalRService implements OnDestroy {
       });
 
       this.connection.onclose(() => this.isConnected.set(false));
-      this.connection.onreconnected(() => this.isConnected.set(true));
+      this.connection.onreconnected(() => {
+        this.isConnected.set(true);
+        void this.rejoinActiveGroups();
+      });
 
       try {
         await this.connection.start();
         this.isConnected.set(true);
+        await this.rejoinActiveGroups();
       } catch (err) {
         console.error('SignalR connection failed:', err);
         this.isConnected.set(false);
@@ -135,10 +142,43 @@ export class SignalRService implements OnDestroy {
   /** Disconnect from the hub. Called on logout. */
   async disconnect(): Promise<void> {
     this.connectionPromise = null;
+    this.activeOfferGroups.clear();
+    this.activeGroupRequestGroups.clear();
+    this.isInAdminGroup = false;
     if (this.connection) {
       await this.connection.stop();
       this.connection = null;
       this.isConnected.set(false);
+    }
+  }
+
+  private async rejoinActiveGroups(): Promise<void> {
+    if (this.connection?.state !== signalR.HubConnectionState.Connected) {
+      return;
+    }
+
+    for (const offerId of this.activeOfferGroups) {
+      try {
+        await this.connection.invoke('JoinOfferGroup', offerId);
+      } catch (err) {
+        console.error(`Failed to rejoin offer group: ${offerId}`, err);
+      }
+    }
+
+    for (const groupRequestId of this.activeGroupRequestGroups) {
+      try {
+        await this.connection.invoke('JoinGroupRequestGroup', groupRequestId);
+      } catch (err) {
+        console.error(`Failed to rejoin group request group: ${groupRequestId}`, err);
+      }
+    }
+
+    if (this.isInAdminGroup) {
+      try {
+        await this.connection.invoke('JoinAdminGroup');
+      } catch (err) {
+        console.error('Failed to rejoin admin group', err);
+      }
     }
   }
 
@@ -160,6 +200,7 @@ export class SignalRService implements OnDestroy {
         try {
           await this.connection.start();
           this.isConnected.set(true);
+          await this.rejoinActiveGroups();
           break;
         } catch (err) {
           console.error('SignalR start failed:', err);
@@ -172,7 +213,16 @@ export class SignalRService implements OnDestroy {
 
   /** Join a SignalR group for a specific offer to receive BatchUpdated events. */
   async joinOfferGroup(offerId: string): Promise<void> {
+    if (!offerId) return;
+    const alreadyTracked = this.activeOfferGroups.has(offerId);
+    this.activeOfferGroups.add(offerId);
+    if (alreadyTracked && this.connection?.state === signalR.HubConnectionState.Connected) {
+      return;
+    }
+
     await this.ensureConnected();
+    if (!this.activeOfferGroups.has(offerId)) return;
+
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
       try {
         await this.connection.invoke('JoinOfferGroup', offerId);
@@ -184,7 +234,8 @@ export class SignalRService implements OnDestroy {
 
   /** Leave a SignalR group for a specific offer. */
   async leaveOfferGroup(offerId: string): Promise<void> {
-    await this.ensureConnected();
+    if (!offerId) return;
+    this.activeOfferGroups.delete(offerId);
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
       try {
         await this.connection.invoke('LeaveOfferGroup', offerId);
@@ -196,7 +247,16 @@ export class SignalRService implements OnDestroy {
 
   /** Join a SignalR group for a specific group request to receive GroupRequestUpdated events. */
   async joinGroupRequestGroup(groupRequestId: string): Promise<void> {
+    if (!groupRequestId) return;
+    const alreadyTracked = this.activeGroupRequestGroups.has(groupRequestId);
+    this.activeGroupRequestGroups.add(groupRequestId);
+    if (alreadyTracked && this.connection?.state === signalR.HubConnectionState.Connected) {
+      return;
+    }
+
     await this.ensureConnected();
+    if (!this.activeGroupRequestGroups.has(groupRequestId)) return;
+
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
       try {
         await this.connection.invoke('JoinGroupRequestGroup', groupRequestId);
@@ -208,7 +268,8 @@ export class SignalRService implements OnDestroy {
 
   /** Leave a SignalR group for a specific group request. */
   async leaveGroupRequestGroup(groupRequestId: string): Promise<void> {
-    await this.ensureConnected();
+    if (!groupRequestId) return;
+    this.activeGroupRequestGroups.delete(groupRequestId);
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
       try {
         await this.connection.invoke('LeaveGroupRequestGroup', groupRequestId);
@@ -220,7 +281,15 @@ export class SignalRService implements OnDestroy {
 
   /** Join the Admin group to receive FlaggedItemCreated and FlaggedItemResolved events. */
   async joinAdminGroup(): Promise<void> {
+    const alreadyTracked = this.isInAdminGroup;
+    this.isInAdminGroup = true;
+    if (alreadyTracked && this.connection?.state === signalR.HubConnectionState.Connected) {
+      return;
+    }
+
     await this.ensureConnected();
+    if (!this.isInAdminGroup) return;
+
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
       try {
         await this.connection.invoke('JoinAdminGroup');
@@ -232,7 +301,7 @@ export class SignalRService implements OnDestroy {
 
   /** Leave the Admin group. */
   async leaveAdminGroup(): Promise<void> {
-    await this.ensureConnected();
+    this.isInAdminGroup = false;
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
       try {
         await this.connection.invoke('LeaveAdminGroup');

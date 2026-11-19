@@ -1,6 +1,9 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, OnInit, OnDestroy, signal, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DatePipe } from '@angular/common';
+import { Subject, EMPTY, debounceTime, switchMap, tap, catchError } from 'rxjs';
 import { AdminService } from '../../core/services/admin.service';
+import { SignalRService } from '../../core/services/signalr.service';
 import { ToastService } from '../../core/toast.service';
 import { FlaggedOfferDto, FlaggedGroupRequestDto } from '../../core/models';
 import { FormsModule } from '@angular/forms';
@@ -9,12 +12,20 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-admin-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule, DatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
-export class AdminComponent implements OnInit {
+export class AdminComponent implements OnInit, OnDestroy {
   private adminService = inject(AdminService);
+  private signalRService = inject(SignalRService);
   private toast = inject(ToastService);
+  private destroyRef = inject(DestroyRef);
+
+  private search$ = new Subject<string>();
+  private loadTrigger$ = new Subject<void>();
+  private unsubFlaggedCreated: (() => void) | null = null;
+  private unsubFlaggedResolved: (() => void) | null = null;
 
   // Tabs: 'offers' | 'requests' | 'pending-offers' | 'pending-requests' | 'create-admin'
   protected activeTab = signal<'offers' | 'requests' | 'pending-offers' | 'pending-requests' | 'create-admin'>('offers');
@@ -55,63 +66,115 @@ export class AdminComponent implements OnInit {
   private currentRejectId = '';
 
   ngOnInit() {
+    this.loadTrigger$.pipe(
+      switchMap(() => {
+        const tab = this.activeTab();
+        if (tab === 'create-admin') {
+          this.loading.set(false);
+          return EMPTY;
+        }
+        this.loading.set(true);
+        const search = this.searchQuery();
+        if (tab === 'offers') {
+          return this.adminService.getFlaggedOffers(this.offersPage(), this.pageSize, search).pipe(
+            tap((res) => {
+              this.flaggedOffers.set(res.items);
+              this.totalOffers.set(res.totalCount);
+              this.loading.set(false);
+            }),
+            catchError((err) => {
+              this.toast.errorApi('Failed to load flagged offers', err);
+              this.loading.set(false);
+              return EMPTY;
+            })
+          );
+        }
+        if (tab === 'requests') {
+          return this.adminService.getFlaggedGroupRequests(this.requestsPage(), this.pageSize, search).pipe(
+            tap((res) => {
+              this.flaggedRequests.set(res.items);
+              this.totalRequests.set(res.totalCount);
+              this.loading.set(false);
+            }),
+            catchError((err) => {
+              this.toast.errorApi('Failed to load flagged requests', err);
+              this.loading.set(false);
+              return EMPTY;
+            })
+          );
+        }
+        if (tab === 'pending-offers') {
+          return this.adminService.getPendingOffers(this.pendingOffersPage(), this.pageSize, search).pipe(
+            tap((res) => {
+              this.pendingOffers.set(res.items);
+              this.totalPendingOffers.set(res.totalCount);
+              this.loading.set(false);
+            }),
+            catchError((err) => {
+              this.toast.errorApi('Failed to load pending offers', err);
+              this.loading.set(false);
+              return EMPTY;
+            })
+          );
+        }
+        if (tab === 'pending-requests') {
+          return this.adminService.getPendingGroupRequests(this.pendingRequestsPage(), this.pageSize, search).pipe(
+            tap((res) => {
+              this.pendingRequests.set(res.items);
+              this.totalPendingRequests.set(res.totalCount);
+              this.loading.set(false);
+            }),
+            catchError((err) => {
+              this.toast.errorApi('Failed to load pending requests', err);
+              this.loading.set(false);
+              return EMPTY;
+            })
+          );
+        }
+        this.loading.set(false);
+        return EMPTY;
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
+
+    this.search$.pipe(
+      debounceTime(300),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.offersPage.set(1);
+      this.requestsPage.set(1);
+      this.pendingOffersPage.set(1);
+      this.pendingRequestsPage.set(1);
+      this.loadData();
+    });
+
+    this.signalRService.joinAdminGroup();
+    this.unsubFlaggedCreated = this.signalRService.onFlaggedItemCreated(() => {
+      if (this.activeTab() !== 'create-admin') {
+        this.loadData();
+      }
+    });
+    this.unsubFlaggedResolved = this.signalRService.onFlaggedItemResolved(() => {
+      if (this.activeTab() !== 'create-admin') {
+        this.loadData();
+      }
+    });
+
     this.loadData();
+  }
+
+  ngOnDestroy() {
+    this.unsubFlaggedCreated?.();
+    this.unsubFlaggedResolved?.();
+    this.signalRService.leaveAdminGroup();
   }
 
   protected loadData() {
     if (this.activeTab() === 'create-admin') {
+      this.loading.set(false);
       return;
     }
-    this.loading.set(true);
-    if (this.activeTab() === 'offers') {
-      this.adminService.getFlaggedOffers(this.offersPage(), this.pageSize, this.searchQuery()).subscribe({
-        next: (res) => {
-          this.flaggedOffers.set(res.items);
-          this.totalOffers.set(res.totalCount);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.toast.errorApi('Failed to load flagged offers', err);
-          this.loading.set(false);
-        }
-      });
-    } else if (this.activeTab() === 'requests') {
-      this.adminService.getFlaggedGroupRequests(this.requestsPage(), this.pageSize, this.searchQuery()).subscribe({
-        next: (res) => {
-          this.flaggedRequests.set(res.items);
-          this.totalRequests.set(res.totalCount);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.toast.errorApi('Failed to load flagged requests', err);
-          this.loading.set(false);
-        }
-      });
-    } else if (this.activeTab() === 'pending-offers') {
-      this.adminService.getPendingOffers(this.pendingOffersPage(), this.pageSize, this.searchQuery()).subscribe({
-        next: (res) => {
-          this.pendingOffers.set(res.items);
-          this.totalPendingOffers.set(res.totalCount);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.toast.errorApi('Failed to load pending offers', err);
-          this.loading.set(false);
-        }
-      });
-    } else if (this.activeTab() === 'pending-requests') {
-      this.adminService.getPendingGroupRequests(this.pendingRequestsPage(), this.pageSize, this.searchQuery()).subscribe({
-        next: (res) => {
-          this.pendingRequests.set(res.items);
-          this.totalPendingRequests.set(res.totalCount);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.toast.errorApi('Failed to load pending requests', err);
-          this.loading.set(false);
-        }
-      });
-    }
+    this.loadTrigger$.next();
   }
 
   protected setTab(tab: 'offers' | 'requests' | 'pending-offers' | 'pending-requests' | 'create-admin') {
@@ -126,11 +189,7 @@ export class AdminComponent implements OnInit {
 
   protected onSearchChange(term: string) {
     this.searchQuery.set(term);
-    this.offersPage.set(1);
-    this.requestsPage.set(1);
-    this.pendingOffersPage.set(1);
-    this.pendingRequestsPage.set(1);
-    this.loadData();
+    this.search$.next(term);
   }
 
   protected approve(id: string, type: 'offer' | 'request') {

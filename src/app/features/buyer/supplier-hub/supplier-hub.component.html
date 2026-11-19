@@ -1,4 +1,4 @@
-<div class="container" style="max-width:1040px;padding:2rem 1.5rem 4rem" role="main">
+<div class="container" style="max-width:1040px;padding:2rem 1.5rem 4rem">
   <!-- Loading state -->
   @if (loading()) {
   <div style="text-align:center;padding:6rem 0">
@@ -435,7 +435,7 @@
         <div id="card-element" class="stripe-container">
           <!-- Stripe Element placeholder -->
         </div>
-        <div id="card-errors" role="alert" style="color:var(--danger);font-size:0.75rem;margin-top:0.5rem"></div>
+        <div id="card-errors" role="alert" style="color:var(--danger);font-size:0.75rem;margin-top:0.5rem">{{ cardError() }}</div>
       </div>
 
       @if (!clientSecret()) {

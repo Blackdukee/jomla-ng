@@ -10,16 +10,28 @@ export type {
   BuyerHubDto,
   CompletedDealsResult,
   CompletedDealDto,
-  DealBuyerDto
+  DealBuyerDto,
+  BatchActionResponse
 } from './batch.models';
 export type { CategoryDto } from './category.models';
-export type { OfferDto, MyOfferDto, GetAllOffersPagedResponse, MyOffersPagedResponse } from './offer.models';
+export type {
+  OfferDto,
+  MyOfferDto,
+  GetAllOffersPagedResponse,
+  MyOffersPagedResponse,
+  OfferQueryParams,
+  CreateOfferResponse
+} from './offer.models';
 export type {
   GroupRequestListItemDto,
+  NegotiationLogDto,
   GroupRequestOfferDto,
   GroupRequestDetailDto,
   CreateGroupRequestRequest,
-  SupplierGroupRequestOfferDto
+  SupplierGroupRequestOfferDto,
+  GroupRequestFilterParams,
+  ActionResultResponse,
+  AcceptOfferResponse
 } from './group-request.models';
 export type {
   SupplierCategoryPreferenceDto,
@@ -33,6 +45,7 @@ export type {
 export type {
   FlaggedOfferDto,
   FlaggedGroupRequestDto,
-  PagedResult
+  PagedResult,
+  CreateAdminRequest
 } from './admin.models';
 

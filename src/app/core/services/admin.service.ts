@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { FlaggedOfferDto, FlaggedGroupRequestDto, PagedResult } from '../models';
+import { FlaggedOfferDto, FlaggedGroupRequestDto, PagedResult, CreateAdminRequest } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -94,7 +94,7 @@ export class AdminService {
   }
 
   /** POST /api/admin/create-admin */
-  createAdmin(request: any): Observable<void> {
+  createAdmin(request: CreateAdminRequest): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/create-admin`, request, {
       withCredentials: true
     });

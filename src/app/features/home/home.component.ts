@@ -1,24 +1,25 @@
-import { Component, ChangeDetectionStrategy, signal, inject, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { fadeInUp, staggerFadeIn, tabAnimation } from '../../shared/animations/animations';
 import { FooterComponent } from '../../shared/footer/footer.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [RouterLink, FooterComponent],
-  animations: [fadeInUp, staggerFadeIn, tabAnimation],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
-export class HomeComponent implements AfterViewInit {
+export class HomeComponent implements AfterViewInit, OnDestroy {
   private el = inject(ElementRef);
   protected howTab = signal<'buyers' | 'suppliers'>('buyers');
   protected tabChanged = signal(false);
   protected isVisible = signal(false);
   protected isValueVisible = signal(false);
   protected isCtaVisible = signal(false);
+
+  private observers: IntersectionObserver[] = [];
+  private observerTimer: ReturnType<typeof setTimeout> | null = null;
 
   protected setTab(tab: 'buyers' | 'suppliers') {
     this.howTab.set(tab);
@@ -27,59 +28,54 @@ export class HomeComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
-      // 1. Observer for How Jomla works
       const howObserver = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0]?.isIntersecting) {
           this.isVisible.set(true);
           howObserver.disconnect();
         }
-      }, {
-        threshold: 0,
-        rootMargin: '0px 0px -25% 0px'
-      });
+      }, { threshold: 0, rootMargin: '0px 0px -15% 0px' });
 
-      // 2. Observer for Value props
       const valueObserver = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0]?.isIntersecting) {
           this.isValueVisible.set(true);
           valueObserver.disconnect();
         }
-      }, {
-        threshold: 0,
-        rootMargin: '0px 0px -25% 0px'
-      });
+      }, { threshold: 0, rootMargin: '0px 0px -15% 0px' });
 
-      // 3. Observer for CTA
       const ctaObserver = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0]?.isIntersecting) {
           this.isCtaVisible.set(true);
           ctaObserver.disconnect();
         }
-      }, {
-        threshold: 0,
-        rootMargin: '0px 0px -25% 0px'
-      });
+      }, { threshold: 0, rootMargin: '0px 0px -15% 0px' });
 
-      // Delay observation slightly to allow client layout to settle (preventing immediate triggers on page load)
-      setTimeout(() => {
+      this.observers.push(howObserver, valueObserver, ctaObserver);
+
+      this.observerTimer = setTimeout(() => {
+        this.observerTimer = null;
         const howSection = this.el.nativeElement.querySelector('.how-section');
-        if (howSection) {
-          howObserver.observe(howSection);
-        }
+        if (howSection) howObserver.observe(howSection);
+
         const valueSection = this.el.nativeElement.querySelector('.value-section');
-        if (valueSection) {
-          valueObserver.observe(valueSection);
-        }
+        if (valueSection) valueObserver.observe(valueSection);
+
         const ctaSection = this.el.nativeElement.querySelector('.cta-section');
-        if (ctaSection) {
-          ctaObserver.observe(ctaSection);
-        }
+        if (ctaSection) ctaObserver.observe(ctaSection);
       }, 150);
     } else {
       this.isVisible.set(true);
       this.isValueVisible.set(true);
       this.isCtaVisible.set(true);
     }
+  }
+
+  ngOnDestroy() {
+    if (this.observerTimer !== null) {
+      clearTimeout(this.observerTimer);
+      this.observerTimer = null;
+    }
+    this.observers.forEach(observer => observer.disconnect());
+    this.observers = [];
   }
 
   protected buyerSteps = [

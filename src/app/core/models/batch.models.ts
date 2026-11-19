@@ -124,3 +124,9 @@ export interface DealBuyerDto {
   shippingAddress?: string | null;
 }
 
+export interface BatchActionResponse {
+  success?: boolean;
+  error?: string;
+  message?: string;
+}
+

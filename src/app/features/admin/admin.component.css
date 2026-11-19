@@ -202,7 +202,7 @@
 /* Flag Callout */
 .flag-callout {
   background-color: var(--warning-light);
-  border-left: 4px solid var(--warning);
+  border: 1px solid #FCD34D;
   padding: 1rem 1.25rem;
   border-radius: 8px;
   margin-top: 1rem;

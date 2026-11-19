@@ -7,6 +7,7 @@ import { finalize } from 'rxjs';
 const SILENT_URL_PATTERNS = [
   '/notifications',
   '/hubs/',
+  '/auth/refresh',
 ];
 
 export const loadingInterceptor: HttpInterceptorFn = (req, next) => {

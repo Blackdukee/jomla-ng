@@ -72,6 +72,7 @@ export interface GroupRequestDetailDto {
   participantsCount: number;
   offers: GroupRequestOfferDto[];
   participants: GroupRequestParticipantDto[];
+  participantIds?: string[];
 }
 
 export interface CreateGroupRequestRequest {
@@ -80,5 +81,29 @@ export interface CreateGroupRequestRequest {
   description: string | null;
   images: File[] | null;
   categoryId?: string | null;
+}
+
+export interface GroupRequestFilterParams {
+  categoryId?: string;
+  titleSearch?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  myRequestsOnly?: boolean;
+}
+
+export interface ActionResultResponse {
+  success: boolean;
+  id?: string;
+  error?: string;
+  message?: string;
+}
+
+export interface AcceptOfferResponse {
+  success?: boolean;
+  clientSecret?: string;
+  paymentIntentId?: string;
+  error?: string;
 }
 

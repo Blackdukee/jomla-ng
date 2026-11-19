@@ -249,7 +249,7 @@
 
               <p style="font-size:0.875rem; font-weight:600; margin-bottom:0.75rem; color:var(--text-primary)">Enter Card Details to Authorize EGP {{ acceptQuantity() * offer.currentUnitPrice }} Hold</p>
               <div id="accept-card-element" style="padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: #fff; min-height: 40px;"></div>
-              <div id="accept-card-errors" role="alert" style="color:var(--danger); font-size:0.75rem; margin-top:8px"></div>
+              <div id="accept-card-errors" role="alert" style="color:var(--danger); font-size:0.75rem; margin-top:8px">{{ cardError() }}</div>
             </div>
 
             <div style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:0.75rem">

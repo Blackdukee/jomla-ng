@@ -1,4 +1,4 @@
-<div class="home" @staggerFadeIn>
+<div class="home">
   <!-- Hero -->
   <section class="hero-section">
     <div class="container hero-inner">
@@ -34,15 +34,15 @@
         <div class="stats-table line-wrapper">
           <div class="stats-table-row line-content animate-stats" style="display: flex; width: 100%;">
             <div class="stats-table-cell">
-              <span class="cell-num"><span class="num-buyers"></span>,000+</span>
+              <span class="cell-num">12,000+</span>
               <span class="cell-label">Active Buyers</span>
             </div>
             <div class="stats-table-cell">
-              <span class="cell-num"><span class="num-savings"></span>%</span>
+              <span class="cell-num">35%</span>
               <span class="cell-label">Average Savings</span>
             </div>
             <div class="stats-table-cell">
-              <span class="cell-num"><span class="num-deals"></span>k</span>
+              <span class="cell-num">2.4k</span>
               <span class="cell-label">Deals Closed</span>
             </div>
           </div>
@@ -55,7 +55,7 @@
           <div class="card-inner-content">
             <div class="deal-profile">
               <span class="deal-category">ELECTRONICS</span>
-              <h3 class="hero-card-title">Premium Wireless Headphones</h3>
+              <h2 class="hero-card-title">Premium Wireless Headphones</h2>
             </div>
 
             <div class="deal-price-matrix">
@@ -102,22 +102,24 @@
   <section class="how-section" [class.visible]="isVisible()" [class.tab-changed]="tabChanged()" aria-labelledby="how-heading">
     <div class="container">
       <div class="section-header">
-        <h2 id="how-heading" class="section-title">
-          <span class="letter" style="--li: 1">H</span>
-          <span class="letter" style="--li: 2">o</span>
-          <span class="letter" style="--li: 3">w</span>
-          <span class="letter-space"> </span>
-          <span class="letter" style="--li: 4">J</span>
-          <span class="letter" style="--li: 5">o</span>
-          <span class="letter" style="--li: 6">m</span>
-          <span class="letter" style="--li: 7">l</span>
-          <span class="letter" style="--li: 8">a</span>
-          <span class="letter-space"> </span>
-          <span class="letter" style="--li: 9">w</span>
-          <span class="letter" style="--li: 10">o</span>
-          <span class="letter" style="--li: 11">r</span>
-          <span class="letter" style="--li: 12">k</span>
-          <span class="letter" style="--li: 13">s</span>
+        <h2 id="how-heading" class="section-title" aria-label="How Jomla works">
+          <span aria-hidden="true">
+            <span class="letter" style="--li: 1">H</span>
+            <span class="letter" style="--li: 2">o</span>
+            <span class="letter" style="--li: 3">w</span>
+            <span class="letter-space"> </span>
+            <span class="letter" style="--li: 4">J</span>
+            <span class="letter" style="--li: 5">o</span>
+            <span class="letter" style="--li: 6">m</span>
+            <span class="letter" style="--li: 7">l</span>
+            <span class="letter" style="--li: 8">a</span>
+            <span class="letter-space"> </span>
+            <span class="letter" style="--li: 9">w</span>
+            <span class="letter" style="--li: 10">o</span>
+            <span class="letter" style="--li: 11">r</span>
+            <span class="letter" style="--li: 12">k</span>
+            <span class="letter" style="--li: 13">s</span>
+          </span>
         </h2>
         <p class="section-sub">Two sides, one marketplace. Pick your role to see the flow.</p>
       </div>
@@ -132,10 +134,10 @@
       </div>
 
       @if (howTab() === 'buyers') {
-      <div class="steps-grid-sheet" id="panel-buyers" role="tabpanel" aria-labelledby="tab-buyers" @tabAnimation>
+      <div class="steps-grid-sheet" id="panel-buyers" role="tabpanel" aria-labelledby="tab-buyers">
         @for (step of buyerSteps; track step.num) {
         <div class="sheet-card">
-          <span class="sheet-num">Step <span class="step-num-val" [attr.data-final-num]="step.num"></span></span>
+          <span class="sheet-num">Step <span class="step-num-val">0{{ step.num }}</span></span>
           <h3 class="sheet-title">{{ step.title }}</h3>
           <p class="sheet-desc">{{ step.desc }}</p>
         </div>
@@ -143,10 +145,10 @@
       </div>
       }
       @if (howTab() === 'suppliers') {
-      <div id="panel-suppliers" role="tabpanel" aria-labelledby="tab-suppliers" class="steps-grid-sheet" @tabAnimation>
+      <div id="panel-suppliers" role="tabpanel" aria-labelledby="tab-suppliers" class="steps-grid-sheet">
         @for (step of supplierSteps; track step.num) {
         <div class="sheet-card">
-          <span class="sheet-num">Step <span class="step-num-val" [attr.data-final-num]="step.num"></span></span>
+          <span class="sheet-num">Step <span class="step-num-val">0{{ step.num }}</span></span>
           <h3 class="sheet-title">{{ step.title }}</h3>
           <p class="sheet-desc">{{ step.desc }}</p>
         </div>

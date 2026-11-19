@@ -1,9 +1,23 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { Subject, EMPTY, debounceTime, distinctUntilChanged, switchMap, tap, catchError } from 'rxjs';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { CategoriesService } from '../../../core/services/categories.service';
+import { CategoryDto } from '../../../core/models';
 import { formatDistanceToNow } from 'date-fns';
+import { parseUtcDate } from '../../../shared/utils/date-time.util';
+
+interface SupplierAlertItem {
+  id: string;
+  request_id: string;
+  status: 'pending' | 'responded';
+  category_name: string;
+  item_title: string;
+  units_demanded: number;
+  notified_at: string;
+}
 
 @Component({
   selector: 'app-supplier-alerts',
@@ -17,10 +31,14 @@ export class SupplierAlertsComponent implements OnInit, OnDestroy {
   private groupRequestsService = inject(GroupRequestsService);
   private signalRService = inject(SignalRService);
   private categoriesService = inject(CategoriesService);
+  private destroyRef = inject(DestroyRef);
 
-  protected alerts = signal<any[]>([]);
+  private search$ = new Subject<string>();
+  private loadTrigger$ = new Subject<void>();
+
+  protected alerts = signal<SupplierAlertItem[]>([]);
   protected isLoading = signal(true);
-  protected categories = signal<any[]>([]);
+  protected categories = signal<CategoryDto[]>([]);
 
   // Filtering & Pagination
   protected searchQuery = signal('');
@@ -46,6 +64,49 @@ export class SupplierAlertsComponent implements OnInit, OnDestroy {
   private unsubNotification: (() => void) | null = null;
 
   ngOnInit(): void {
+    this.loadTrigger$.pipe(
+      switchMap(() => {
+        this.isLoading.set(true);
+        return this.groupRequestsService.getMatchedGroupRequests(
+          this.page(),
+          this.pageSize,
+          this.searchQuery().trim() || undefined,
+          this.selectedCategoryId() || undefined,
+          this.selectedStatus() || undefined
+        ).pipe(
+          tap((res) => {
+            const mapped: SupplierAlertItem[] = (res.items || []).map(req => ({
+              id: req.id,
+              request_id: req.id,
+              status: req.status === 'Active' || req.status === 'active' ? 'pending' : 'responded',
+              category_name: req.categoryName || 'Uncategorized',
+              item_title: req.title || req.description || 'Group Request',
+              units_demanded: req.currentQuantity,
+              notified_at: req.createdAt
+            }));
+            this.alerts.set(mapped);
+            this.totalCount.set(res.totalCount || 0);
+            this.isLoading.set(false);
+          }),
+          catchError((err) => {
+            console.error('Failed to load matched requests', err);
+            this.isLoading.set(false);
+            return EMPTY;
+          })
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
+
+    this.search$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.page.set(1);
+      this.loadAlerts();
+    });
+
     this.loadCategories();
     this.loadAlerts();
 
@@ -62,49 +123,17 @@ export class SupplierAlertsComponent implements OnInit, OnDestroy {
   }
 
   private loadAlerts(): void {
-    this.isLoading.set(true);
-    this.groupRequestsService.getMatchedGroupRequests(
-      this.page(),
-      this.pageSize,
-      this.searchQuery() || undefined,
-      this.selectedCategoryId() || undefined,
-      this.selectedStatus() || undefined
-    ).subscribe({
-      next: (res) => {
-        const mapped = (res.items || []).map(req => ({
-          id: req.id,
-          request_id: req.id,
-          status: req.status === 'Active' || req.status === 'active' ? 'pending' : 'responded',
-          category_name: req.categoryName || 'Uncategorized',
-          item_title: req.title || req.description || 'Group Request',
-          units_demanded: req.currentQuantity,
-          notified_at: req.createdAt
-        }));
-        this.alerts.set(mapped);
-        this.totalCount.set(res.totalCount || 0);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error('Failed to load matched requests', err);
-        this.isLoading.set(false);
-      }
-    });
+    this.loadTrigger$.next();
   }
 
   ngOnDestroy(): void {
     this.unsubNotification?.();
   }
 
-  private normalizeUtc(d: string): string {
-    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
-      ? d
-      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
-  }
-
   protected relTime(d: string) {
-    if (!d) return '';
+    const date = parseUtcDate(d);
+    if (!date) return '';
     try {
-      const date = new Date(this.normalizeUtc(d));
       return formatDistanceToNow(date, { addSuffix: true });
     } catch {
       return '';
@@ -112,9 +141,9 @@ export class SupplierAlertsComponent implements OnInit, OnDestroy {
   }
 
   protected onSearchChange(e: Event) {
-    this.searchQuery.set((e.target as HTMLInputElement).value);
-    this.page.set(1);
-    this.loadAlerts();
+    const val = (e.target as HTMLInputElement).value;
+    this.searchQuery.set(val);
+    this.search$.next(val);
   }
 
   protected onCategoryChange(e: Event) {

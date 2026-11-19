@@ -1,92 +1,88 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse, HttpContextToken } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, catchError, filter, switchMap, take, throwError } from 'rxjs';
+import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
-// Global state variables for interceptor instance
-let isRefreshing = false;
-let refreshTokenSubject: BehaviorSubject<string | null> | null = null;
+const IS_AUTH_RETRY = new HttpContextToken<boolean>(() => false);
+
+const apiBase = environment.apiUrl.replace(/\/+$/, '');
+const isApiUrl = (url: string): boolean =>
+  url === apiBase || url.startsWith(`${apiBase}/`) || url.startsWith(`${apiBase}?`);
+
+const AUTH_EXCLUDED_PATHS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+];
 
 /**
  * HTTP interceptor that:
- * 1. Attaches the Bearer JWT token to all outgoing requests
- * 2. On 401 responses, locks and attempts a silent token refresh, queuing other concurrent requests
- * 3. On refresh success, retries all queued requests with the new token
+ * 1. Attaches the Bearer JWT token strictly to outgoing Jomla API requests
+ * 2. On 401 responses, delegates token refresh deduplication to AuthService
+ * 3. Retries the failed request once with the refreshed token (guarded by IS_AUTH_RETRY)
  * 4. On refresh failure, clears auth state and redirects to login
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  if (!isApiUrl(req.url)) {
+    return next(req);
+  }
+
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Attach token (exclude auth endpoints)
-  const token = localStorage.getItem('jomla_token');
+  const isAuthEndpoint = AUTH_EXCLUDED_PATHS.some(path => req.url.includes(path));
+  const requestToken = authService.getToken();
   let authReq = req;
-  const isAuthEndpoint = req.url.includes('/auth/login') ||
-                         req.url.includes('/auth/register') ||
-                         req.url.includes('/auth/refresh');
 
-  if (token && !isAuthEndpoint) {
+  if (requestToken && !isAuthEndpoint) {
     authReq = req.clone({
       setHeaders: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${requestToken}`
       }
     });
   }
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Only attempt refresh on 401 and not on auth endpoints (to avoid infinite loop)
       if (
         error.status === 401 &&
-        !req.url.includes('/auth/login') &&
-        !req.url.includes('/auth/register') &&
-        !req.url.includes('/auth/refresh')
+        !isAuthEndpoint &&
+        !req.context.get(IS_AUTH_RETRY)
       ) {
-        if (!isRefreshing) {
-          isRefreshing = true;
-          refreshTokenSubject = new BehaviorSubject<string | null>(null);
+        const latestToken = authService.getToken();
+        if (latestToken && latestToken !== requestToken) {
+          return next(req.clone({
+            setHeaders: {
+              Authorization: `Bearer ${latestToken}`
+            },
+            context: req.context.set(IS_AUTH_RETRY, true)
+          }));
+        }
 
-          return authService.refreshAccessToken().pipe(
-            switchMap((res) => {
-              isRefreshing = false;
-              refreshTokenSubject?.next(res.token);
-              refreshTokenSubject?.complete();
-              
-              const retryReq = req.clone({
-                setHeaders: {
-                  Authorization: `Bearer ${res.token}`
-                }
-              });
-              return next(retryReq);
-            }),
-            catchError((refreshError) => {
-              isRefreshing = false;
-              // Propagate the refresh error to all queued requests waiting on the BehaviorSubject
-              refreshTokenSubject?.error(refreshError);
-              
-              if (refreshError.status === 401 || refreshError.status === 400) {
-                authService.clearAuth();
+        return authService.refreshAccessToken().pipe(
+          switchMap((res) => {
+            const retryReq = req.clone({
+              setHeaders: {
+                Authorization: `Bearer ${res.token}`
+              },
+              context: req.context.set(IS_AUTH_RETRY, true)
+            });
+            return next(retryReq);
+          }),
+          catchError((refreshError) => {
+            if (refreshError.status === 401 || refreshError.status === 400) {
+              authService.clearAuth();
+              if (!router.url.startsWith('/login')) {
                 router.navigate(['/login']);
               }
-              return throwError(() => refreshError);
-            })
-          );
-        } else {
-          // Queue request until token is refreshed
-          return refreshTokenSubject!.pipe(
-            filter(token => token !== null),
-            take(1),
-            switchMap((newToken) => {
-              const retryReq = req.clone({
-                setHeaders: {
-                  Authorization: `Bearer ${newToken}`
-                }
-              });
-              return next(retryReq);
-            })
-          );
-        }
+            }
+            return throwError(() => refreshError);
+          })
+        );
       }
       return throwError(() => error);
     })

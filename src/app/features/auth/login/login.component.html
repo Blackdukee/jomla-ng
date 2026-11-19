@@ -1,4 +1,4 @@
-<div class="auth-page" role="main">
+<div class="auth-page">
 
   <div class="auth-container">
     <div class="promo-side">
@@ -98,23 +98,25 @@
         </button>
       </form>
 
-      <div class="demo-shortcuts">
-        <p class="demo-shortcuts-label">Quick demo access</p>
-        <div class="demo-buttons">
-          <button type="button" class="btn btn-outline btn-sm demo-btn" (click)="loginAsDemo('buyer')"
-            [disabled]="loading()" [attr.aria-busy]="activeSubmit() === 'buyer'">
-            {{ activeSubmit() === 'buyer' ? 'Signing in…' : 'Login as Demo Buyer' }}
-          </button>
-          <button type="button" class="btn btn-outline btn-sm demo-btn" (click)="loginAsDemo('seller')"
-            [disabled]="loading()" [attr.aria-busy]="activeSubmit() === 'seller'">
-            {{ activeSubmit() === 'seller' ? 'Signing in…' : 'Login as Demo Seller' }}
-          </button>
-          <button type="button" class="btn btn-outline btn-sm demo-btn demo-btn-admin" (click)="loginAsDemo('admin')"
-            [disabled]="loading()" [attr.aria-busy]="activeSubmit() === 'admin'">
-            {{ activeSubmit() === 'admin' ? 'Signing in…' : 'Login as Demo Admin' }}
-          </button>
+      @if (enableDemoAccounts) {
+        <div class="demo-shortcuts">
+          <p class="demo-shortcuts-label">Quick demo access</p>
+          <div class="demo-buttons">
+            <button type="button" class="btn btn-outline btn-sm demo-btn" (click)="loginAsDemo('buyer')"
+              [disabled]="loading()" [attr.aria-busy]="activeSubmit() === 'buyer'">
+              {{ activeSubmit() === 'buyer' ? 'Signing in…' : 'Login as Demo Buyer' }}
+            </button>
+            <button type="button" class="btn btn-outline btn-sm demo-btn" (click)="loginAsDemo('seller')"
+              [disabled]="loading()" [attr.aria-busy]="activeSubmit() === 'seller'">
+              {{ activeSubmit() === 'seller' ? 'Signing in…' : 'Login as Demo Seller' }}
+            </button>
+            <button type="button" class="btn btn-outline btn-sm demo-btn demo-btn-admin" (click)="loginAsDemo('admin')"
+              [disabled]="loading()" [attr.aria-busy]="activeSubmit() === 'admin'">
+              {{ activeSubmit() === 'admin' ? 'Signing in…' : 'Login as Demo Admin' }}
+            </button>
+          </div>
         </div>
-      </div>
+      }
     </div>
   </div>
 

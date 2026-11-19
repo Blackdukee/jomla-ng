@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { AcceptOfferResponse, ActionResultResponse } from '../models';
 
 import { environment } from '../../../environments/environment';
 
@@ -9,44 +10,52 @@ export class GroupRequestOffersService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/GroupRequestOffers`;
 
-  acceptOffer(offerId: string, acceptedQuantity: number): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/accept`, { acceptedQuantity }, {
+  acceptOffer(offerId: string, acceptedQuantity: number): Observable<AcceptOfferResponse> {
+    return this.http.post<AcceptOfferResponse>(`${this.baseUrl}/${offerId}/accept`, { acceptedQuantity }, {
       withCredentials: true
     });
   }
 
-  confirmAcceptOffer(offerId: string, paymentIntentId: string, acceptedQuantity: number, shippingAddress?: string | null, phoneNumber?: string | null): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/confirm-accept`, { paymentIntentId, acceptedQuantity, shippingAddress, phoneNumber }, {
+  confirmAcceptOffer(
+    offerId: string,
+    paymentIntentId: string,
+    acceptedQuantity: number,
+    shippingAddress?: string | null,
+    phoneNumber?: string | null
+  ): Observable<ActionResultResponse> {
+    return this.http.post<ActionResultResponse>(
+      `${this.baseUrl}/${offerId}/confirm-accept`,
+      { paymentIntentId, acceptedQuantity, shippingAddress, phoneNumber },
+      { withCredentials: true }
+    );
+  }
+
+  rejectOffer(offerId: string): Observable<ActionResultResponse> {
+    return this.http.post<ActionResultResponse>(`${this.baseUrl}/${offerId}/reject`, {}, {
       withCredentials: true
     });
   }
 
-  rejectOffer(offerId: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/reject`, {}, {
+  leaveOffer(offerId: string): Observable<ActionResultResponse> {
+    return this.http.post<ActionResultResponse>(`${this.baseUrl}/${offerId}/cancel`, {}, {
       withCredentials: true
     });
   }
 
-  leaveOffer(offerId: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/cancel`, {}, {
+  triggerNegotiation(offerId: string): Observable<ActionResultResponse> {
+    return this.http.post<ActionResultResponse>(`${this.baseUrl}/${offerId}/trigger-negotiation`, {}, {
       withCredentials: true
     });
   }
 
-  triggerNegotiation(offerId: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/trigger-negotiation`, {}, {
+  approveNegotiation(offerId: string): Observable<ActionResultResponse> {
+    return this.http.post<ActionResultResponse>(`${this.baseUrl}/${offerId}/approve-negotiation`, {}, {
       withCredentials: true
     });
   }
 
-  approveNegotiation(offerId: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/approve-negotiation`, {}, {
-      withCredentials: true
-    });
-  }
-
-  rejectNegotiation(offerId: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${offerId}/reject-negotiation`, {}, {
+  rejectNegotiation(offerId: string): Observable<ActionResultResponse> {
+    return this.http.post<ActionResultResponse>(`${this.baseUrl}/${offerId}/reject-negotiation`, {}, {
       withCredentials: true
     });
   }

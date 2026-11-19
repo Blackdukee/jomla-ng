@@ -4,31 +4,11 @@ import { BatchesService } from '../../../core/services/batches.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { BuyerHubDto } from '../../../core/models';
 
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
-
 @Component({
   selector: 'app-my-hubs',
   standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('hubsEntrance', [
-      transition(':enter', [
-        query('.header-block, .tabs-block', [
-          style({ opacity: 0, transform: 'translateY(12px)' }),
-          stagger('120ms', [
-            animate('2000ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
-          ])
-        ], { optional: true }),
-        query('.hub-row', [
-          style({ opacity: 0, transform: 'translateY(16px)' }),
-          stagger('150ms', [
-            animate('2200ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
-          ])
-        ], { optional: true })
-      ])
-    ])
-  ],
   templateUrl: './my-hubs.component.html',
   styleUrl: './my-hubs.component.css'
 })
@@ -85,7 +65,10 @@ export class MyHubsComponent implements OnInit, OnDestroy {
   }
 
   protected onTypeChange(e: Event) {
-    this.typeFilter.set((e.target as HTMLSelectElement).value as any);
+    const val = (e.target as HTMLSelectElement).value;
+    if (val === 'all' || val === 'supplier_offer' || val === 'group_request') {
+      this.typeFilter.set(val);
+    }
     this.page.set(1);
   }
 

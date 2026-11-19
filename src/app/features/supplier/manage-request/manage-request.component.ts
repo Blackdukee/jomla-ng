@@ -5,9 +5,9 @@ import { GroupRequestsService } from '../../../core/services/group-requests.serv
 import { GroupRequestOffersService } from '../../../core/services/group-request-offers.service';
 import { AuthService } from '../../../core/auth.service';
 import { SignalRService } from '../../../core/services/signalr.service';
-import { GroupRequestDetailDto, GroupRequestOfferDto } from '../../../core/models';
+import { GroupRequestDetailDto, GroupRequestOfferDto, NegotiationLogDto } from '../../../core/models';
 import { ToastService } from '../../../core/toast.service';
-import { format } from 'date-fns';
+import { formatCairoDateTime } from '../../../shared/utils/date-time.util';
 
 @Component({
   selector: 'app-manage-request',
@@ -43,31 +43,8 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
   protected expiryDurationUnit: string = 'day';
 
 
-  private normalizeUtc(d: string): string {
-    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
-      ? d
-      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
-  }
-
   protected fmtExpiry(d: string | null | undefined) {
-    if (!d) return '';
-    try {
-      const date = new Date(this.normalizeUtc(d));
-      // Add 3 hours (3 * 60 * 60 * 1000 ms) to match Egypt time (UTC+3)
-      const egyptDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
-      
-      const localRepresentedAsEgypt = new Date(
-        egyptDate.getUTCFullYear(),
-        egyptDate.getUTCMonth(),
-        egyptDate.getUTCDate(),
-        egyptDate.getUTCHours(),
-        egyptDate.getUTCMinutes(),
-        egyptDate.getUTCSeconds()
-      );
-      return format(localRepresentedAsEgypt, "MMM d, ha 'UTC'");
-    } catch {
-      return '';
-    }
+    return formatCairoDateTime(d, false);
   }
 
   protected getCapacityFillRate(demand: number | null | undefined): number {
@@ -78,7 +55,7 @@ export class ManageRequestComponent implements OnInit, OnDestroy {
   }
 
   protected getNegotiationLogs() {
-    const allLogs: any[] = [];
+    const allLogs: Array<NegotiationLogDto & { roundNumber: number }> = [];
     const active = this.activeOffer();
     if (active && active.negotiationLogs) {
       allLogs.push(...active.negotiationLogs.map(l => ({ ...l, roundNumber: active.roundNumber })));

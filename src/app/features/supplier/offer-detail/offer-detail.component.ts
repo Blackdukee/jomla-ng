@@ -4,7 +4,7 @@ import { CloudinaryPipe } from '../../../shared/pipes/cloudinary.pipe';
 import { OffersService } from '../../../core/services/offers.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { OfferDto } from '../../../core/models';
-import { format } from 'date-fns';
+import { formatCairoDate, formatCairoDateTime } from '../../../shared/utils/date-time.util';
 import { ToastService } from '../../../core/toast.service';
 
 @Component({
@@ -205,35 +205,11 @@ export class OfferDetailComponent implements OnInit, OnDestroy {
     }
   }
 
- private normalizeUtc(d: string): string {
-  return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
-    ? d
-    : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
-}
-  private formatEgyptUtc(d: string | undefined | null, formatStr: string): string {
-    if (!d) return '';
-    try {
-      const date = new Date(this.normalizeUtc(d));
-      const egyptDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
-      const local = new Date(
-        egyptDate.getUTCFullYear(),
-        egyptDate.getUTCMonth(),
-        egyptDate.getUTCDate(),
-        egyptDate.getUTCHours(),
-        egyptDate.getUTCMinutes(),
-        egyptDate.getUTCSeconds()
-      );
-      return format(local, formatStr);
-    } catch {
-      return '';
-    }
-  }
-
   protected fmtDate(d: string | undefined): string {
-    return this.formatEgyptUtc(d, 'MMM d, yyyy');
+    return formatCairoDate(d);
   }
 
   protected fmtExpiryLong(d: string | undefined): string {
-    return this.formatEgyptUtc(d, "MMM d, yyyy h:mm a 'UTC'");
+    return formatCairoDateTime(d, true);
   }
 }

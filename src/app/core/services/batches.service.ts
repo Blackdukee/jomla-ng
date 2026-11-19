@@ -7,7 +7,8 @@ import {
   LeaveBatchResponse,
   JoinBatchRequest,
   BuyerHubDto,
-  CompletedDealsResult
+  CompletedDealsResult,
+  BatchActionResponse
 } from '../models';
 
 /**
@@ -51,9 +52,15 @@ export class BatchesService {
   }
 
   /** POST /api/batches/{batchId}/confirm-join — Confirm joining a batch after successful payment */
-  confirmJoinBatch(batchId: string, paymentIntentId: string, quantity: number, shippingAddress?: string | null, phoneNumber?: string | null): Observable<any> {
+  confirmJoinBatch(
+    batchId: string,
+    paymentIntentId: string,
+    quantity: number,
+    shippingAddress?: string | null,
+    phoneNumber?: string | null
+  ): Observable<BatchActionResponse> {
     const body = { paymentIntentId, quantity, shippingAddress, phoneNumber };
-    return this.http.post<any>(
+    return this.http.post<BatchActionResponse>(
       `${this.baseUrl}/${batchId}/confirm-join`,
       body,
       { withCredentials: true }
@@ -61,9 +68,9 @@ export class BatchesService {
   }
 
   /** PUT /api/batches/{batchId}/quantity — Update participant quantity in batch, cycling Stripe hold */
-  updateBatchParticipantQuantity(batchId: string, newQuantity: number): Observable<any> {
+  updateBatchParticipantQuantity(batchId: string, newQuantity: number): Observable<BatchActionResponse> {
     const body = { newQuantity };
-    return this.http.put<any>(
+    return this.http.put<BatchActionResponse>(
       `${this.baseUrl}/${batchId}/quantity`,
       body,
       { withCredentials: true }

@@ -1,35 +1,16 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { ToastService } from '../../../core/toast.service';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
 import { CategoriesService } from '../../../core/services/categories.service';
-import { GroupRequestListItemDto } from '../../../core/models';
-
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
+import { CategoryDto, GroupRequestFilterParams, GroupRequestListItemDto } from '../../../core/models';
 
 @Component({
   selector: 'app-wishlist',
   standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('wishlistEntrance', [
-      transition(':enter', [
-        query('.header-block', [
-          style({ opacity: 0, transform: 'translateY(12px)' }),
-          stagger('120ms', [
-            animate('2000ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
-          ])
-        ], { optional: true }),
-        query('.req-row', [
-          style({ opacity: 0, transform: 'translateY(16px)' }),
-          stagger('150ms', [
-            animate('2200ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
-          ])
-        ], { optional: true })
-      ])
-    ])
-  ],
   templateUrl: './wishlist.component.html',
   styleUrl: './wishlist.component.css'
 })
@@ -39,7 +20,7 @@ export class WishlistComponent implements OnInit {
   private categoriesService = inject(CategoriesService);
 
   protected requests = signal<GroupRequestListItemDto[]>([]);
-  protected categories = signal<any[]>([]);
+  protected categories = signal<CategoryDto[]>([]);
   protected modalOpen = signal(false);
   protected title = signal('');
   protected desc = signal('');
@@ -84,15 +65,22 @@ export class WishlistComponent implements OnInit {
   }
 
   protected loadStats() {
-    this.groupRequestsService.getGroupRequests({
-      page: 1,
-      pageSize: 1000,
-      myRequestsOnly: true
+    forkJoin({
+      total: this.groupRequestsService.getGroupRequests({
+        page: 1,
+        pageSize: 1,
+        myRequestsOnly: true
+      }),
+      active: this.groupRequestsService.getGroupRequests({
+        page: 1,
+        pageSize: 1,
+        myRequestsOnly: true,
+        status: 'Active'
+      })
     }).subscribe({
-      next: (res) => {
-        this.totalWishlistCount.set(res.totalCount);
-        const activeCount = res.items.filter((item: any) => item.status.toLowerCase() === 'active').length;
-        this.activeGroupsCount.set(activeCount);
+      next: ({ total, active }) => {
+        this.totalWishlistCount.set(total.totalCount ?? 0);
+        this.activeGroupsCount.set(active.totalCount ?? 0);
       },
       error: (err) => console.error('Failed to load wishlist stats', err)
     });
@@ -107,7 +95,7 @@ export class WishlistComponent implements OnInit {
 
   protected loadRequests() {
     this.isLoading.set(true);
-    const filters: any = {
+    const filters: GroupRequestFilterParams = {
       pageSize: this.pageSize,
       page: this.page(),
       myRequestsOnly: true

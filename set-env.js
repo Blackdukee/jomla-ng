@@ -30,13 +30,15 @@ const devPath = path.join(__dirname, 'src', 'environments', 'environment.develop
 const apiUrl = process.env.NG_APP_API_URL || "http://localhost:5174/api";
 const hubUrl = process.env.NG_APP_HUB_URL || "http://localhost:5174/hubs/jomla";
 const stripePublishableKey = process.env.NG_APP_STRIPE_PUBLISHABLE_KEY || "pk_test_51Tk8ptBjYscPhZ5LBYxqyxlHzLHiL1bhZ7OUGNhdFHJbhUkPC6vA8bxbpp5Gf0HCasOkkqVvCF7KOxP1gBY7mKY100JaqmlKa4";
+const enableDemoAccounts = process.env.NG_APP_ENABLE_DEMO_ACCOUNTS !== 'false';
 
 // 3. Generate file contents
 const prodConfigFile = `export const environment = {
   production: true,
   apiUrl: '${apiUrl}',
   hubUrl: '${hubUrl}',
-  stripePublishableKey: '${stripePublishableKey}'
+  stripePublishableKey: '${stripePublishableKey}',
+  enableDemoAccounts: ${enableDemoAccounts}
 };
 `;
 
@@ -44,7 +46,8 @@ const devConfigFile = `export const environment = {
   production: false,
   apiUrl: '${apiUrl}',
   hubUrl: '${hubUrl}',
-  stripePublishableKey: '${stripePublishableKey}'
+  stripePublishableKey: '${stripePublishableKey}',
+  enableDemoAccounts: ${enableDemoAccounts}
 };
 `;
 

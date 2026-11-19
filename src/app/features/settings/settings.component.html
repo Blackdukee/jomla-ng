@@ -1,4 +1,4 @@
-<div class="container" style="padding-top:2rem;padding-bottom:3rem" role="main">
+<div class="container" style="padding-top:2rem;padding-bottom:3rem">
   <!-- Page Header -->
   <div style="margin-bottom:2rem">
     <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.25rem">Settings</h1>
@@ -7,14 +7,14 @@
 
   <!-- Segmented Control for tabs -->
   <div class="seg-control" role="tablist" aria-label="Settings Categories" style="margin-bottom:2rem">
-    <button role="tab" [class.active]="activeTab() === 'security'" (click)="activeTab.set('security')">
+    <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'security'" [class.active]="activeTab() === 'security'" (click)="activeTab.set('security')">
       Security
     </button>
-    <button role="tab" [class.active]="activeTab() === 'notifications'" (click)="activeTab.set('notifications')">
+    <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'notifications'" [class.active]="activeTab() === 'notifications'" (click)="activeTab.set('notifications')">
       Notifications
     </button>
     @if (auth.isSupplier()) {
-      <button role="tab" [class.active]="activeTab() === 'preferences'" (click)="activeTab.set('preferences')">
+      <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'preferences'" [class.active]="activeTab() === 'preferences'" (click)="activeTab.set('preferences')">
         Category Alerts
       </button>
     }
@@ -91,7 +91,7 @@
             <span style="font-size:0.8125rem;color:var(--text-secondary)">Receive weekly summaries and critical account alerts.</span>
           </div>
           <label class="switch">
-            <input type="checkbox" checked>
+            <input type="checkbox" [checked]="emailNotifications()" (change)="emailNotifications.set($any($event.target).checked)" aria-label="Email notifications">
             <span class="slider round"></span>
           </label>
         </div>
@@ -102,7 +102,7 @@
             <span style="font-size:0.8125rem;color:var(--text-secondary)">Get notified instantly when a hub completes or a payment hold is captured.</span>
           </div>
           <label class="switch">
-            <input type="checkbox" checked>
+            <input type="checkbox" [checked]="dealCompletions()" (change)="dealCompletions.set($any($event.target).checked)" aria-label="Deal completion alerts">
             <span class="slider round"></span>
           </label>
         </div>
@@ -113,12 +113,16 @@
             <span style="font-size:0.8125rem;color:var(--text-secondary)">Real-time notifications push via toast when new offers are placed.</span>
           </div>
           <label class="switch">
-            <input type="checkbox" checked>
+            <input type="checkbox" [checked]="inAppAlerts()" (change)="inAppAlerts.set($any($event.target).checked)" aria-label="In-app real-time alerts">
             <span class="slider round"></span>
           </label>
         </div>
 
-        <button class="btn btn-primary" style="align-self:flex-start;margin-top:1rem" (click)="saveNotifications()">
+        <p style="font-size:0.8125rem;color:var(--text-secondary);margin:0">
+          Preferences are saved in this browser. In-app alerts take effect immediately.
+        </p>
+
+        <button type="button" class="btn btn-primary" style="align-self:flex-start;margin-top:0.5rem" (click)="saveNotifications()">
           Save Notification Preferences
         </button>
       </div>

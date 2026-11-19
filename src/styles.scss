@@ -8,10 +8,12 @@ $font-sans: 'Inter', system-ui, sans-serif;
 /* ── CSS Custom Properties (Design Tokens) ── */
 :root {
   /* Brand */
-  --brand: #0D9488;
-  /* teal-600 */
-  --brand-dark: #0f766e;
-  /* teal-700 for hover */
+  --brand: #0F766E;
+  /* teal-700 for WCAG AA text contrast */
+  --brand-dark: #115E59;
+  /* teal-800 for hover */
+  --brand-on-dark: #2DD4BF;
+  /* teal-400 for dark navbar/footer accents */
   --brand-light: #CCFBF1;
   /* teal-50 */
   --brand-light-hover: #99f6e4;
@@ -26,17 +28,18 @@ $font-sans: 'Inter', system-ui, sans-serif;
 
   /* Text */
   --text-primary: #111827;
-  --text-secondary: #6B7280;
-  /* gray-500 */
-  --text-muted: #9CA3AF;
-  /* gray-400 */
+  --text-secondary: #4B5563;
+  /* gray-600 (>=4.5:1 on both #FFFFFF and #F5F4EE) */
+  --text-muted: #5B6472;
+  /* >=4.5:1 on both #FFFFFF and #F5F4EE */
 
   /* Borders */
   --border: #E5E7EB;
   /* gray-200 */
 
   /* Semantic */
-  --danger: #EF4444;
+  --danger: #B91C1C;
+  --danger-dark: #991B1B;
   --danger-light: #FEF2F2;
   --success: #10B981;
   --success-light: #D1FAE5;
@@ -58,6 +61,14 @@ $font-sans: 'Inter', system-ui, sans-serif;
 
   /* Transitions */
   --transition: 0.2s ease;
+
+  /* Z-index scale */
+  --z-sticky: 100;
+  --z-dropdown: 200;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-toast: 600;
+  --z-loading-bar: 700;
 
   /* Max content width */
   --max-w: 1280px;
@@ -125,6 +136,16 @@ h6 {
   color: var(--text-primary);
 }
 
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
 /* ── Buttons ── */
 .btn {
   display: inline-flex;
@@ -135,7 +156,7 @@ h6 {
   padding: 0.75rem 1.5rem;
   font-size: 0.9375rem;
   font-weight: 600;
-  transition: all var(--transition);
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition), transform var(--transition);
   border: 1.5px solid transparent;
   cursor: pointer;
   font-family: $font-sans;
@@ -201,6 +222,18 @@ h6 {
   }
 }
 
+.btn-muted {
+  @extend .btn;
+  background: #F3F4F6;
+  color: #374151;
+  border-color: var(--border);
+
+  &:hover:not(:disabled) {
+    background: #E5E7EB;
+    color: var(--text-primary);
+  }
+}
+
 .btn-danger {
   @extend .btn;
   background: var(--danger);
@@ -208,7 +241,8 @@ h6 {
   border-color: var(--danger);
 
   &:hover:not(:disabled) {
-    background: #dc2626; /* impeccable-disable-line design-system-color */
+    background: var(--danger-dark);
+    border-color: var(--danger-dark);
   }
 }
 
@@ -340,7 +374,7 @@ h6 {
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--card-radius);
-  box-shadow: var(--card-shadow);
+  box-shadow: none;
   transition: box-shadow var(--transition), transform var(--transition);
 
   &.card-hover:hover {
@@ -452,7 +486,7 @@ h6 {
   position: fixed;
   top: 5.5rem;
   right: 1.25rem;
-  z-index: 9999;
+  z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -469,6 +503,7 @@ h6 {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
   &.toast-success {
     background: var(--success-light);
@@ -503,7 +538,7 @@ h6 {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4); /* impeccable-disable-line design-system-color */
-  z-index: 1000;
+  z-index: var(--z-modal-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -631,7 +666,7 @@ h6 {
     font-weight: 500;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all var(--transition);
+    transition: background-color var(--transition), color var(--transition), box-shadow var(--transition);
 
     &.active {
       background: var(--brand);
@@ -657,7 +692,7 @@ h6 {
   justify-content: center;
   gap: 0.75rem;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: border-color var(--transition), background-color var(--transition), color var(--transition);
   background: rgba(249, 250, 251, 0.5);
   color: var(--text-secondary);
   text-align: center;
@@ -763,31 +798,6 @@ h6 {
   }
 }
 
-.progress-track {
-  position: relative;
-  overflow: hidden;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 30%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    animation: progress-sweep 2s infinite linear;
-  }
-}
-
-@keyframes progress-sweep {
-  0% {
-    transform: translateX(-150%);
-  }
-  100% {
-    transform: translateX(350%);
-  }
-}
-
 .checkmark-circle {
   stroke-dasharray: 166;
   stroke-dashoffset: 166;
@@ -880,6 +890,21 @@ select {
   white-space: nowrap;
 
   &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .progress-track::after {
     display: none;
   }
 }

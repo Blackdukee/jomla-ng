@@ -1,4 +1,4 @@
-<div class="container" style="padding-top:2rem;padding-bottom:3rem" role="main" @profileEntrance>
+<div class="container" style="padding-top:2rem;padding-bottom:3rem">
   <!-- Page Header -->
   <div style="margin-bottom:2rem">
     <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.25rem">My Profile</h1>
@@ -9,10 +9,15 @@
       <!-- Top Horizontal Header -->
       <div class="profile-header-banner">
         <div class="user-profile-meta">
-          <!-- ⬇️ Avatar: clickable now, shows uploaded photo if present -->
-          <div class="avatar-circle" style="position:relative;cursor:pointer;overflow:hidden" (click)="fileInput.click()" title="Click to change photo">
+          <button
+            type="button"
+            class="avatar-circle"
+            (click)="fileInput.click()"
+            aria-label="Change profile photo"
+            title="Click to change photo"
+            [disabled]="imageUploading()">
             @if (auth.user()?.imageUrl) {
-              <img [src]="auth.user()!.imageUrl" alt="Profile" width="40" height="40" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
+              <img [src]="auth.user()!.imageUrl | cloudinary:'avatar'" alt="Profile" width="64" height="64" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
             } @else {
               {{ initials() }}
             }
@@ -21,9 +26,8 @@
                 Uploading...
               </div>
             }
-          </div>
-          <input #fileInput type="file" accept="image/png,image/jpeg,image/webp" style="display:none" (change)="onImageSelected($event)">
-          <!-- ⬆️ End avatar block -->
+          </button>
+          <input #fileInput type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none" (change)="onImageSelected($event)">
 
           <div>
             <h2 style="font-size:1.5rem;font-weight:700;margin:0">{{ auth.displayName }}</h2>
@@ -93,8 +97,10 @@
                       </thead>
                       <tbody>
                         @for (hub of buyerHubs(); track hub.id) {
-                          <tr class="ledger-row" [routerLink]="hubLink(hub)" style="cursor:pointer">
-                            <td style="font-weight:600" class="ledger-title">{{ hub.title }}</td>
+                          <tr class="ledger-row">
+                            <td style="font-weight:600" class="ledger-title">
+                              <a [routerLink]="hubLink(hub)" class="ledger-link">{{ hub.title }}</a>
+                            </td>
                             <td>
                               <span class="badge"
                                 [class.badge-success]="['active','open','completed','fulfilled'].includes(hub.status.toLowerCase())"
@@ -140,8 +146,10 @@
                       </thead>
                       <tbody>
                         @for (offer of supplierOffers(); track offer.id) {
-                          <tr class="ledger-row" [routerLink]="['/supplier/offers', offer.id]" style="cursor:pointer">
-                            <td style="font-weight:600" class="ledger-title">{{ offer.title }}</td>
+                          <tr class="ledger-row">
+                            <td style="font-weight:600" class="ledger-title">
+                              <a [routerLink]="['/supplier/offers', offer.id]" class="ledger-link">{{ offer.title }}</a>
+                            </td>
                             <td>
                               <span class="badge"
                                 [class.badge-brand]="offer.status === 'Active'"
@@ -241,7 +249,7 @@
                       </div>
                     </div>
 
-                    <button type="submit" class="btn btn-brand" style="align-self:flex-start;padding:0.5rem 1.25rem;font-size:0.875rem;cursor:pointer">
+                    <button type="submit" class="btn btn-primary" style="align-self:flex-start;padding:0.5rem 1.25rem;font-size:0.875rem;cursor:pointer">
                       Save Preference
                     </button>
                   </form>
@@ -261,6 +269,7 @@
               id="v1_first_name"
               type="text"
               class="form-input"
+              autocomplete="given-name"
               [class.error]="submitted() && form.controls['first_name'].invalid"
               formControlName="first_name"
               placeholder="Ahmed"
@@ -276,6 +285,7 @@
               id="v1_last_name"
               type="text"
               class="form-input"
+              autocomplete="family-name"
               [class.error]="submitted() && form.controls['last_name'].invalid"
               formControlName="last_name"
               placeholder="Mohamed"
@@ -291,6 +301,7 @@
                 id="v1_email"
                 type="email"
                 class="form-input"
+                autocomplete="email"
                 [class.error]="submitted() && form.controls['email'].invalid"
                 formControlName="email"
                 placeholder="email@example.com"
@@ -305,8 +316,9 @@
                 <label class="form-label" for="v1_phone_number">Default Contact Phone</label>
                 <input
                   id="v1_phone_number"
-                  type="text"
+                  type="tel"
                   class="form-input"
+                  autocomplete="tel"
                   formControlName="phone_number"
                 >
               </div>
@@ -315,7 +327,8 @@
                 <label class="form-label" for="v1_shipping_address">Default Shipping Address</label>
                 <textarea
                   id="v1_shipping_address"
-                  class="form-input"
+                  class="form-textarea"
+                  autocomplete="street-address"
                   formControlName="shipping_address"
                   rows="3"
                   placeholder="E.g. 123 Main St, Apartment 4B, Cairo, Egypt"

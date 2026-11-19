@@ -26,7 +26,9 @@ export class DiscoverComponent implements OnInit {
   protected searchTerm = signal('');
 
   protected isLoadingOffers = signal(true);
-  protected isLoadingRequests = signal(true);
+  protected isLoadingRequests = signal(false);
+  private offersDirty = true;
+  private requestsDirty = true;
 
   protected categories = signal<CategoryDto[]>([]);
   protected offers = signal<OfferDto[]>([]);
@@ -66,10 +68,19 @@ export class DiscoverComponent implements OnInit {
     });
 
     this.loadOffers();
-    this.loadRequests();
+  }
+
+  protected setTab(nextTab: 'offers' | 'requests'): void {
+    this.tab.set(nextTab);
+    if (nextTab === 'offers' && this.offersDirty) {
+      this.loadOffers();
+    } else if (nextTab === 'requests' && this.requestsDirty) {
+      this.loadRequests();
+    }
   }
 
   protected loadOffers(): void {
+    this.offersDirty = false;
     this.isLoadingOffers.set(true);
     const categoryId = this.catFilter() === 'all' ? undefined : this.catFilter();
     const search = this.searchTerm().trim() || undefined;
@@ -95,6 +106,7 @@ export class DiscoverComponent implements OnInit {
   }
 
   protected loadRequests(): void {
+    this.requestsDirty = false;
     this.isLoadingRequests.set(true);
     const categoryId = this.catFilter() === 'all' ? undefined : this.catFilter();
     const search = this.searchTerm().trim() || undefined;
@@ -139,26 +151,29 @@ export class DiscoverComponent implements OnInit {
   }
 
   protected triggerSearch(): void {
-    this.pageNumber.set(1);
-    this.pageNumberRequests.set(1);
-    this.loadOffers();
-    this.loadRequests();
+    this.reloadActiveTabFromPageOne();
   }
 
   protected onCatChange(e: Event) {
     this.catFilter.set((e.target as HTMLSelectElement).value);
-    this.pageNumber.set(1);
-    this.pageNumberRequests.set(1);
-    this.loadOffers();
-    this.loadRequests();
+    this.reloadActiveTabFromPageOne();
   }
 
   protected onSortChange(e: Event) {
     this.sort.set((e.target as HTMLSelectElement).value);
+    this.reloadActiveTabFromPageOne();
+  }
+
+  private reloadActiveTabFromPageOne(): void {
     this.pageNumber.set(1);
     this.pageNumberRequests.set(1);
-    this.loadOffers();
-    this.loadRequests();
+    this.offersDirty = true;
+    this.requestsDirty = true;
+    if (this.tab() === 'offers') {
+      this.loadOffers();
+    } else {
+      this.loadRequests();
+    }
   }
 
   protected goToPage(page: number) {

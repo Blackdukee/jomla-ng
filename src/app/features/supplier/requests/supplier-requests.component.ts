@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, signal, computed, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
+import { Subject, EMPTY, debounceTime, distinctUntilChanged, switchMap, tap, catchError } from 'rxjs';
 import { CategoriesService } from '../../../core/services/categories.service';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
 import { CategoryDto, GroupRequestListItemDto } from '../../../core/models';
@@ -10,30 +11,16 @@ import { CategoryDto, GroupRequestListItemDto } from '../../../core/models';
   standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('requestsEntrance', [
-      transition(':enter', [
-        query('.header-block, .filters-block', [
-          style({ opacity: 0, transform: 'translateY(12px)' }),
-          stagger('120ms', [
-            animate('1000ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
-          ])
-        ], { optional: true }),
-        query('.req-row', [
-          style({ opacity: 0, transform: 'translateY(16px)' }),
-          stagger('150ms', [
-            animate('1200ms cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
-          ])
-        ], { optional: true })
-      ])
-    ])
-  ],
   templateUrl: './supplier-requests.component.html',
   styleUrl: './supplier-requests.component.css'
 })
 export class SupplierRequestsComponent implements OnInit {
   private categoriesService = inject(CategoriesService);
   private groupRequestsService = inject(GroupRequestsService);
+  private destroyRef = inject(DestroyRef);
+
+  private search$ = new Subject<string>();
+  private loadTrigger$ = new Subject<void>();
 
   protected catFilter = signal('all');
   protected sort = signal('newest');
@@ -49,6 +36,42 @@ export class SupplierRequestsComponent implements OnInit {
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize));
 
   ngOnInit(): void {
+    this.loadTrigger$.pipe(
+      switchMap(() => {
+        this.isLoading.set(true);
+        const categoryId = this.catFilter() === 'all' ? undefined : this.catFilter();
+        return this.groupRequestsService.getGroupRequests({
+          categoryId,
+          titleSearch: this.searchQuery().trim() || undefined,
+          sortBy: this.sort(),
+          page: this.pageNumber(),
+          pageSize: this.pageSize,
+          status: 'Active'
+        }).pipe(
+          tap((res) => {
+            this.requests.set(res.items);
+            this.totalItems.set(res.totalCount);
+            this.isLoading.set(false);
+          }),
+          catchError((err) => {
+            console.error('Failed to load group requests', err);
+            this.isLoading.set(false);
+            return EMPTY;
+          })
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
+
+    this.search$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.pageNumber.set(1);
+      this.loadRequests();
+    });
+
     this.categoriesService.getCategories().subscribe({
       next: (cats) => this.categories.set(cats),
       error: (err) => console.error('Failed to load categories', err)
@@ -58,26 +81,7 @@ export class SupplierRequestsComponent implements OnInit {
   }
 
   protected loadRequests(): void {
-    this.isLoading.set(true);
-    const categoryId = this.catFilter() === 'all' ? undefined : this.catFilter();
-    this.groupRequestsService.getGroupRequests({
-      categoryId,
-      titleSearch: this.searchQuery() || undefined,
-      sortBy: this.sort(),
-      page: this.pageNumber(),
-      pageSize: this.pageSize,
-      status: 'Active'
-    }).subscribe({
-      next: (res) => {
-        this.requests.set(res.items);
-        this.totalItems.set(res.totalCount);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error('Failed to load group requests', err);
-        this.isLoading.set(false);
-      }
-    });
+    this.loadTrigger$.next();
   }
 
   protected onCatChange(e: Event) {
@@ -93,9 +97,9 @@ export class SupplierRequestsComponent implements OnInit {
   }
 
   protected onSearchInput(e: Event) {
-    this.searchQuery.set((e.target as HTMLInputElement).value);
-    this.pageNumber.set(1);
-    this.loadRequests();
+    const val = (e.target as HTMLInputElement).value;
+    this.searchQuery.set(val);
+    this.search$.next(val);
   }
 
   protected prevPage(): void {

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, shareReplay, catchError, throwError, tap } from 'rxjs';
 import { CategoryDto } from '../models';
 
 import { environment } from '../../../environments/environment';
@@ -9,13 +9,26 @@ import { environment } from '../../../environments/environment';
 export class CategoriesService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/categories`;
+  private categoriesCache$: Observable<CategoryDto[]> | null = null;
 
   getCategories(): Observable<CategoryDto[]> {
-    return this.http.get<CategoryDto[]>(this.baseUrl, {
-      withCredentials: true
-    }).pipe(
-      map(cats => this.sortCategoriesHierarchically(cats))
-    );
+    if (!this.categoriesCache$) {
+      this.categoriesCache$ = this.http.get<CategoryDto[]>(this.baseUrl, {
+        withCredentials: true
+      }).pipe(
+        map(cats => this.sortCategoriesHierarchically(cats)),
+        shareReplay({ bufferSize: 1, refCount: false }),
+        catchError((err) => {
+          this.categoriesCache$ = null;
+          return throwError(() => err);
+        })
+      );
+    }
+    return this.categoriesCache$;
+  }
+
+  clearCache(): void {
+    this.categoriesCache$ = null;
   }
 
   sortCategoriesHierarchically(cats: CategoryDto[]): CategoryDto[] {
@@ -63,19 +76,25 @@ export class CategoriesService {
     });
   }
 
-  createCategory(name: string, description?: string): Observable<any> {
-    return this.http.post<any>(this.baseUrl, { name, description }, { withCredentials: true });
+  createCategory(name: string, description?: string): Observable<CategoryDto> {
+    return this.http.post<CategoryDto>(this.baseUrl, { name, description }, { withCredentials: true }).pipe(
+      tap(() => this.clearCache())
+    );
   }
 
   getCategoryById(id: string): Observable<CategoryDto> {
     return this.http.get<CategoryDto>(`${this.baseUrl}/${id}`, { withCredentials: true });
   }
 
-  updateCategory(id: string, name: string, description?: string): Observable<any> {
-    return this.http.put<any>(`${this.baseUrl}/${id}`, { id, name, description }, { withCredentials: true });
+  updateCategory(id: string, name: string, description?: string): Observable<CategoryDto> {
+    return this.http.put<CategoryDto>(`${this.baseUrl}/${id}`, { id, name, description }, { withCredentials: true }).pipe(
+      tap(() => this.clearCache())
+    );
   }
 
-  deleteCategory(id: string): Observable<any> {
-    return this.http.delete<any>(`${this.baseUrl}/${id}`, { withCredentials: true });
+  deleteCategory(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`, { withCredentials: true }).pipe(
+      tap(() => this.clearCache())
+    );
   }
 }

@@ -3,15 +3,18 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
 import { NotificationsService } from '../../core/services/notifications.service';
+import { NotificationPreferencesService } from '../../core/services/notification-preferences.service';
 import { SignalRService } from '../../core/services/signalr.service';
 import { BatchesService } from '../../core/services/batches.service';
-import { NotificationDto } from '../../core/models';
-import { formatDistanceToNow } from 'date-fns';
+import { NotificationDto, User } from '../../core/models';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+import { parseUtcDate } from '../utils/date-time.util';
+import { CloudinaryPipe } from '../pipes/cloudinary.pipe';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, CloudinaryPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="navbar" [class.scrolled]="isScrolled()">
@@ -45,7 +48,7 @@ import { formatDistanceToNow } from 'date-fns';
               <a routerLink="/register/supplier" class="btn btn-primary btn-sm">Join as supplier</a>
             </div>
             <!-- Mobile hamburger -->
-            <button class="btn-icon btn hide-desktop" (click)="mobileOpen.set(!mobileOpen())" aria-label="Open menu">
+            <button class="btn-icon btn hide-desktop" (click)="mobileOpen.set(!mobileOpen())" [attr.aria-expanded]="mobileOpen()" aria-label="Open menu">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
               </svg>
@@ -53,7 +56,7 @@ import { formatDistanceToNow } from 'date-fns';
           } @else {
             <!-- Bell -->
             <div class="relative" style="position:relative">
-              <button class="btn-icon btn" aria-label="Notifications" (click)="notifOpen.set(!notifOpen())">
+              <button class="btn-icon btn" aria-label="Notifications" [attr.aria-expanded]="notifOpen()" (click)="notifOpen.set(!notifOpen())">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -77,7 +80,7 @@ import { formatDistanceToNow } from 'date-fns';
                       </div>
                     } @else {
                       @for (notif of notifications(); track notif.id) {
-                        <div class="notif-item" [class.unread]="!notif.isRead" (click)="onNotificationClick(notif)">
+                        <button type="button" class="notif-item" [class.unread]="!notif.isRead" (click)="onNotificationClick(notif)">
                           @if (!notif.isRead) {
                             <div class="notif-dot" aria-hidden="true"></div>
                           }
@@ -86,7 +89,7 @@ import { formatDistanceToNow } from 'date-fns';
                             <div style="font-size:0.8rem;color:var(--text-secondary)">{{ notif.body }}</div>
                             <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">{{ getRelativeTime(notif.createdAt) }}</div>
                           </div>
-                        </div>
+                        </button>
                       }
                     }
                   </div>
@@ -96,9 +99,9 @@ import { formatDistanceToNow } from 'date-fns';
 
             <!-- Avatar dropdown -->
             <div style="position:relative">
-            <button class="avatar" (click)="avatarOpen.set(!avatarOpen())" [attr.aria-label]="'User menu for ' + userDisplayName()">
+            <button class="avatar" (click)="avatarOpen.set(!avatarOpen())" [attr.aria-expanded]="avatarOpen()" [attr.aria-label]="(auth.user()?.imageUrl ? '' : initials() + ', ') + 'User menu for ' + userDisplayName()">
             @if (auth.user()?.imageUrl) {
-              <img [src]="auth.user()!.imageUrl" alt="Profile" width="40" height="40" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
+              <img [src]="auth.user()!.imageUrl | cloudinary:'avatar'" alt="Profile" width="40" height="40" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
             } @else {
               {{ initials() }}
             }
@@ -121,7 +124,7 @@ import { formatDistanceToNow } from 'date-fns';
             </div>
 
             <!-- Mobile hamburger (authenticated) -->
-            <button class="btn-icon btn hide-desktop" (click)="mobileOpen.set(!mobileOpen())" aria-label="Open menu">
+            <button class="btn-icon btn hide-desktop" (click)="mobileOpen.set(!mobileOpen())" [attr.aria-expanded]="mobileOpen()" aria-label="Open menu">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
               </svg>
@@ -152,13 +155,13 @@ import { formatDistanceToNow } from 'date-fns';
       display: block;
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: var(--z-sticky, 100);
     }
     .navbar {
       background: #0F172A;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       height: 64px;
-      transition: background 0.3s var(--transition), backdrop-filter 0.3s var(--transition), border-color 0.3s var(--transition);
+      transition: background 0.3s ease, backdrop-filter 0.3s ease, border-color 0.3s ease;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
     .navbar.scrolled {
@@ -221,8 +224,8 @@ import { formatDistanceToNow } from 'date-fns';
     }
     .nav-link:hover { color: #ffffff; }
     .nav-link.active {
-      color: var(--brand);
-      border-bottom-color: var(--brand);
+      color: var(--brand-on-dark);
+      border-bottom-color: var(--brand-on-dark);
     }
     .navbar-actions {
       display: flex;
@@ -236,7 +239,7 @@ import { formatDistanceToNow } from 'date-fns';
       right: 0.625rem;
       width: 8px;
       height: 8px;
-      background: var(--brand);
+      background: var(--brand-on-dark);
       border-radius: 50%;
     }
     .dropdown {
@@ -247,7 +250,7 @@ import { formatDistanceToNow } from 'date-fns';
       border: 1px solid var(--border);
       border-radius: var(--card-radius);
       box-shadow: var(--card-shadow-hover);
-      z-index: 200;
+      z-index: var(--z-dropdown, 200);
       overflow: hidden;
       animation: dropIn 0.15s ease;
     }
@@ -255,7 +258,7 @@ import { formatDistanceToNow } from 'date-fns';
       from { opacity: 0; transform: translateY(-6px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .notif-panel { width: 360px; }
+    .notif-panel { width: min(360px, calc(100vw - 1.5rem)); }
     .avatar-menu { width: 220px; }
     .dropdown-header {
       display: flex;
@@ -267,6 +270,12 @@ import { formatDistanceToNow } from 'date-fns';
     }
     .notif-item {
       display: flex;
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: left;
+      font-family: inherit;
+      color: var(--text-primary);
       gap: 0.75rem;
       padding: 0.875rem 1rem;
       font-size: 0.875rem;
@@ -332,6 +341,8 @@ import { formatDistanceToNow } from 'date-fns';
       transition: background 0.15s;
     }
     .mobile-link:hover { background: rgba(0,0,0,0.05); }
+    .mobile-link.btn-primary { color: #ffffff; }
+    .mobile-link.btn-primary:hover { background: var(--brand-dark); }
   `],
 })
 export class NavbarComponent implements OnInit, OnDestroy {
@@ -339,6 +350,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private toast = inject(ToastService);
   private notificationsService = inject(NotificationsService);
+  private notifPrefs = inject(NotificationPreferencesService);
   private signalRService = inject(SignalRService);
   private batchesService = inject(BatchesService);
   private elementRef = inject(ElementRef);
@@ -371,6 +383,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    this.notifOpen.set(false);
+    this.avatarOpen.set(false);
+    this.mobileOpen.set(false);
+  }
+
   constructor() {
     effect(() => {
       if (this.auth.isAuthenticated()) {
@@ -389,7 +408,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
       this.notifications.update(list => [notif, ...list]);
       this.unreadCount.update(count => count + 1);
-      this.toast.success(notif.title, notif.body);
+      if (this.notifPrefs.preferences().inAppAlerts) {
+        this.toast.success(notif.title, notif.body);
+      }
     });
   }
 
@@ -475,15 +496,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
-  private normalizeUtc(d: string): string {
-    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
-      ? d
-      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
-  }
-
   protected getRelativeTime(dateStr: string): string {
+    const date = parseUtcDate(dateStr);
+    if (!date) return '';
     try {
-      const date = new Date(this.normalizeUtc(dateStr));
       return formatDistanceToNow(date, { addSuffix: true });
     } catch {
       return '';
@@ -528,9 +544,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
   protected userDisplayName(): string {
     const u = this.auth.user();
     if (!u) return '';
-    // Support both old (full_name) and new (firstName/lastName) user models
-    if ((u as any).full_name) return (u as any).full_name;
-    return `${(u as any).firstName ?? ''} ${(u as any).lastName ?? ''}`.trim();
+    const legacyName = (u as User & { full_name?: string }).full_name;
+    if (legacyName) return legacyName;
+    return `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim();
   }
 
   protected initials() {

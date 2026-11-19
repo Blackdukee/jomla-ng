@@ -1,15 +1,17 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { BatchesService } from '../../../core/services/batches.service';
 import { OffersService } from '../../../core/services/offers.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { AuthService } from '../../../core/auth.service';
 import { ToastService } from '../../../core/toast.service';
-import { BatchDetailDto, BatchUpdatedDto, OfferDto } from '../../../core/models';
-import { differenceInHours, format } from 'date-fns';
+import { BatchDetailDto, BatchParticipantDto, BatchUpdatedDto, OfferDto } from '../../../core/models';
+import { differenceInHours } from 'date-fns';
+import { formatCairoDateTime, parseUtcDate } from '../../../shared/utils/date-time.util';
 import { environment } from '../../../../environments/environment';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe, StripeCardElement } from '@stripe/stripe-js';
 import { CloudinaryPipe } from '../../../shared/pipes/cloudinary.pipe';
 
 @Component({
@@ -50,9 +52,10 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
 
   private batchId = '';
   private unsubBatchUpdate: (() => void) | null = null;
-  private routeSub: any = null;
-  private stripe: any = null;
-  private cardElement: any = null;
+  private routeSub: Subscription | null = null;
+  private stripe: Stripe | null = null;
+  private cardElement: StripeCardElement | null = null;
+  protected cardError = signal<string>('');
 
   protected participantQuantity = computed(() => {
     const userId = this.authService.user()?.id;
@@ -149,6 +152,19 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     if (b) {
       this.signalRService.leaveOfferGroup(b.offerId);
     }
+    this.destroyCardElement();
+  }
+
+  private destroyCardElement(): void {
+    if (this.cardElement) {
+      try {
+        this.cardElement.unmount();
+        this.cardElement.destroy();
+      } catch {
+        // Element may already be detached when modal @if closes
+      }
+      this.cardElement = null;
+    }
   }
 
   protected navigateToActiveBatch(): void {
@@ -189,35 +205,10 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     return Math.round((b.currentQuantity / b.targetQuantity) * 100);
   }
 
-  private normalizeUtc(d: string): string {
-    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
-      ? d
-      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
-  }
-
-  private formatEgyptUtc(d: string | undefined | null, formatStr: string): string {
-    if (!d) return '';
-    try {
-      const date = new Date(this.normalizeUtc(d));
-      const egyptDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
-      const local = new Date(
-        egyptDate.getUTCFullYear(),
-        egyptDate.getUTCMonth(),
-        egyptDate.getUTCDate(),
-        egyptDate.getUTCHours(),
-        egyptDate.getUTCMinutes(),
-        egyptDate.getUTCSeconds()
-      );
-      return format(local, formatStr);
-    } catch {
-      return '';
-    }
-  }
-
   protected isExpiringSoon(): boolean {
     const b = this.batch();
-    if (!b?.expiresAt) return false;
-    const expiry = new Date(this.normalizeUtc(b.expiresAt));
+    const expiry = parseUtcDate(b?.expiresAt);
+    if (!expiry) return false;
     const h = differenceInHours(expiry, new Date());
     return h < 1 && h >= 0;
   }
@@ -225,7 +216,7 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
   protected expiresFormatted(): string {
     const b = this.batch();
     if (!b?.expiresAt) return 'No expiry set';
-    return this.formatEgyptUtc(b.expiresAt, "MMM d, h:mm a 'UTC'");
+    return formatCairoDateTime(b.expiresAt, false);
   }
 
   protected isCurrentUser(buyerId: string): boolean {
@@ -261,14 +252,14 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   }
 
-  protected getParticipantName(p: any): string {
+  protected getParticipantName(p: BatchParticipantDto): string {
     if (this.isCurrentUser(p.buyerId)) {
       return 'You (you)';
     }
     return p.buyerName;
   }
 
-  protected getParticipantInitials(p: any): string {
+  protected getParticipantInitials(p: BatchParticipantDto): string {
     if (this.isCurrentUser(p.buyerId)) {
       return 'Y';
     }
@@ -281,7 +272,8 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     if (b.status === 'Completed') return 'Completed';
     if (b.status === 'Failed') return 'Expired';
     const now = new Date();
-    const expiry = new Date(this.normalizeUtc(b.expiresAt));
+    const expiry = parseUtcDate(b.expiresAt);
+    if (!expiry) return 'No expiry set';
     const diffMinutes = Math.floor((expiry.getTime() - now.getTime()) / 60000);
     if (diffMinutes <= 0) return 'Expired';
     const hours = Math.floor(diffMinutes / 60);
@@ -319,10 +311,13 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
         if (res.success) {
           if (res.clientSecret) {
             this.clientSecret.set(res.clientSecret);
+            this.cardError.set('');
             this.joining.set(false);
             setTimeout(async () => {
-              await this.initStripe();
-              this.cardElement.mount('#card-element');
+              if (!this.joinModalOpen() || !this.clientSecret()) return;
+              const card = await this.initStripe();
+              if (!card || !this.joinModalOpen() || !document.getElementById('card-element')) return;
+              card.mount('#card-element');
             }, 0);
           } else {
             this.joining.set(false);
@@ -342,86 +337,95 @@ export class SupplierHubComponent implements OnInit, OnDestroy {
     });
   }
 
-  private async initStripe() {
+  private async initStripe(): Promise<StripeCardElement | null> {
     if (!this.stripe) {
       this.stripe = await loadStripe(environment.stripePublishableKey);
     }
-    if (this.stripe && !this.cardElement) {
-      const elements = this.stripe.elements();
-      this.cardElement = elements.create('card', {
-        style: {
-          base: {
-            fontSize: '16px',
-            color: '#32325d',
-            fontFamily: '"Inter", sans-serif',
-            '::placeholder': {
-              color: '#aab7c4'
-            }
-          },
-          invalid: {
-            color: '#fa755a',
-            iconColor: '#fa755a'
-          }
-        }
-      });
+    if (!this.stripe) {
+      this.toast.error('Payment Error', 'Payment provider failed to load. Please refresh and try again.');
+      return null;
     }
+
+    this.destroyCardElement();
+    const elements = this.stripe.elements();
+    this.cardElement = elements.create('card', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#32325d',
+          fontFamily: '"Inter", sans-serif',
+          '::placeholder': {
+            color: '#aab7c4'
+          }
+        },
+        invalid: {
+          color: '#fa755a',
+          iconColor: '#fa755a'
+        }
+      }
+    });
+    this.cardElement.on('change', (event) => {
+      this.cardError.set(event.error?.message ?? '');
+    });
+    return this.cardElement;
   }
 
   protected confirmPayment(): void {
-    if (!this.stripe || !this.cardElement || !this.clientSecret() || this.joining()) return;
+    const clientSecret = this.clientSecret();
+    if (!this.stripe || !this.cardElement || !clientSecret || this.joining()) return;
     this.joining.set(true);
+    this.cardError.set('');
 
-    this.stripe.confirmCardPayment(this.clientSecret(), {
+    this.stripe.confirmCardPayment(clientSecret, {
       payment_method: { card: this.cardElement }
-    }).then((result: any) => {
+    }).then((result) => {
       if (result.error) {
         this.joining.set(false);
-        this.toast.error('Card verification failed', result.error.message);
-        const cardErrors = document.getElementById('card-errors');
-        if (cardErrors) cardErrors.textContent = result.error.message;
-      } else {
-        if (result.paymentIntent.status === 'requires_capture') {
-          const finalAddress = this.chosenAddressOption() === 'default' 
-            ? (this.authService.user()?.shippingAddress || '') 
-            : this.customShippingAddress();
-          const finalPhone = this.chosenPhoneOption() === 'default' 
-            ? (this.authService.user()?.phoneNumber || '') 
-            : this.customPhoneNumber();
+        const msg = result.error.message ?? 'Card verification failed';
+        this.cardError.set(msg);
+        this.toast.error('Card verification failed', msg);
+      } else if (result.paymentIntent?.status === 'requires_capture') {
+        const finalAddress = this.chosenAddressOption() === 'default' 
+          ? (this.authService.user()?.shippingAddress || '') 
+          : this.customShippingAddress();
+        const finalPhone = this.chosenPhoneOption() === 'default' 
+          ? (this.authService.user()?.phoneNumber || '') 
+          : this.customPhoneNumber();
 
-          this.batchesService.confirmJoinBatch(
-            this.batchId, 
-            result.paymentIntent.id, 
-            this.joinQty(),
-            finalAddress,
-            finalPhone
-          ).subscribe({
-            next: (confirmRes) => {
-              this.joining.set(false);
-              this.toast.success('Joined hub!', `You've committed ${this.joinQty()} units. Payment hold authorized and joined successfully.`);
-              this.joinModalOpen.set(false);
-              this.clientSecret.set(null);
-              this.loadBatch();
-            },
-            error: (err) => {
-              this.joining.set(false);
-              this.toast.errorApi('Verification Error', err);
-            }
-          });
-        } else {
-          this.joining.set(false);
-          this.toast.error('Payment Error', 'Payment status is unexpected: ' + result.paymentIntent.status);
-        }
+        this.batchesService.confirmJoinBatch(
+          this.batchId, 
+          result.paymentIntent.id, 
+          this.joinQty(),
+          finalAddress,
+          finalPhone
+        ).subscribe({
+          next: () => {
+            this.joining.set(false);
+            this.toast.success('Joined hub!', `You've committed ${this.joinQty()} units. Payment hold authorized and joined successfully.`);
+            this.closeJoinModal();
+            this.loadBatch();
+          },
+          error: (err) => {
+            this.joining.set(false);
+            this.toast.errorApi('Verification Error', err);
+          }
+        });
+      } else {
+        this.joining.set(false);
+        this.toast.error('Payment Error', 'Payment status is unexpected: ' + (result.paymentIntent?.status ?? 'unknown'));
       }
-    }).catch((err: any) => {
+    }).catch((err: unknown) => {
       this.joining.set(false);
-      this.toast.error('Error', err?.message || 'Payment confirmation failed');
+      const message = err instanceof Error ? err.message : 'Payment confirmation failed';
+      this.toast.error('Error', message);
     });
   }
 
   protected closeJoinModal(): void {
     this.joinModalOpen.set(false);
     this.clientSecret.set(null);
-    this.cardElement = null;
+    this.destroyCardElement();
+    this.cardError.set('');
     this.chosenAddressOption.set('default');
     this.customShippingAddress.set('');
     this.chosenPhoneOption.set('default');

@@ -25,14 +25,14 @@ export class NotificationsService {
     });
   }
 
-  markAsRead(notificationId: string): Observable<any> {
-    return this.http.patch<any>(`${this.baseUrl}/${notificationId}/read`, {}, {
+  markAsRead(notificationId: string): Observable<void> {
+    return this.http.patch<void>(`${this.baseUrl}/${notificationId}/read`, {}, {
       withCredentials: true
     });
   }
 
-  markAllAsRead(): Observable<any> {
-    return this.http.patch<any>(`${this.baseUrl}/read-all`, {}, {
+  markAllAsRead(): Observable<void> {
+    return this.http.patch<void>(`${this.baseUrl}/read-all`, {}, {
       withCredentials: true
     });
   }

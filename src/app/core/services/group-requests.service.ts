@@ -5,7 +5,9 @@ import {
   GroupRequestListItemDto,
   GroupRequestDetailDto,
   CreateGroupRequestRequest,
-  SupplierGroupRequestOfferDto
+  SupplierGroupRequestOfferDto,
+  GroupRequestFilterParams,
+  ActionResultResponse
 } from '../models';
 
 import { environment } from '../../../environments/environment';
@@ -16,15 +18,7 @@ export class GroupRequestsService {
   private readonly baseUrl = `${environment.apiUrl}/group-requests`;
 
   /** GET /api/group-requests — Get active, approved group requests */
-  getGroupRequests(filters?: {
-    categoryId?: string;
-    titleSearch?: string;
-    status?: string;
-    page?: number;
-    pageSize?: number;
-    sortBy?: string;
-    myRequestsOnly?: boolean;
-  }): Observable<{ items: GroupRequestListItemDto[]; totalCount: number; page: number; pageSize: number }> {
+  getGroupRequests(filters?: GroupRequestFilterParams): Observable<{ items: GroupRequestListItemDto[]; totalCount: number; page: number; pageSize: number }> {
     let params = new HttpParams();
     if (filters?.categoryId) params = params.set('categoryId', filters.categoryId);
     if (filters?.titleSearch) params = params.set('titleSearch', filters.titleSearch);
@@ -48,7 +42,7 @@ export class GroupRequestsService {
   }
 
   /** POST /api/group-requests — Create a new group request */
-  createGroupRequest(request: CreateGroupRequestRequest): Observable<any> {
+  createGroupRequest(request: CreateGroupRequestRequest): Observable<ActionResultResponse> {
     const formData = new FormData();
     formData.append('title', request.title);
     formData.append('quantity', request.quantity.toString());
@@ -63,27 +57,33 @@ export class GroupRequestsService {
         formData.append('images', file, file.name);
       });
     }
-    return this.http.post<any>(this.baseUrl, formData, {
+    return this.http.post<ActionResultResponse>(this.baseUrl, formData, {
       withCredentials: true
     });
   }
 
   /** POST /api/group-requests/{id}/join — Join a group request */
-  joinGroupRequest(id: string, quantity: number): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${id}/join`, { quantity }, {
+  joinGroupRequest(id: string, quantity: number): Observable<ActionResultResponse> {
+    return this.http.post<ActionResultResponse>(`${this.baseUrl}/${id}/join`, { quantity }, {
       withCredentials: true
     });
   }
 
   /** POST /api/group-requests/{id}/leave — Leave a group request */
-  leaveGroupRequest(id: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${id}/leave`, {}, {
+  leaveGroupRequest(id: string): Observable<ActionResultResponse> {
+    return this.http.post<ActionResultResponse>(`${this.baseUrl}/${id}/leave`, {}, {
       withCredentials: true
     });
   }
 
   /** GET /api/group-requests/matched — Get supplier's matched group requests */
-  getMatchedGroupRequests(page = 1, pageSize = 10, search?: string, categoryId?: string, status?: string): Observable<{ items: any[]; totalCount: number; page: number; pageSize: number }> {
+  getMatchedGroupRequests(
+    page = 1,
+    pageSize = 10,
+    search?: string,
+    categoryId?: string,
+    status?: string
+  ): Observable<{ items: GroupRequestListItemDto[]; totalCount: number; page: number; pageSize: number }> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('pageSize', pageSize.toString());
@@ -98,7 +98,7 @@ export class GroupRequestsService {
       params = params.set('status', status);
     }
 
-    return this.http.get<{ items: any[]; totalCount: number; page: number; pageSize: number }>(
+    return this.http.get<{ items: GroupRequestListItemDto[]; totalCount: number; page: number; pageSize: number }>(
       `${this.baseUrl}/matched`,
       { params, withCredentials: true }
     );
@@ -112,8 +112,8 @@ export class GroupRequestsService {
     minFallbackQuantity?: number;
     variantAttributes?: string;
     expiresAt: string;
-  }): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${requestId}/offers`, offer, {
+  }): Observable<ActionResultResponse> {
+    return this.http.post<ActionResultResponse>(`${this.baseUrl}/${requestId}/offers`, offer, {
       withCredentials: true
     });
   }

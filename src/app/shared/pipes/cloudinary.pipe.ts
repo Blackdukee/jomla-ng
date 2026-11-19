@@ -1,12 +1,13 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-export type CloudinaryPreset = 'thumb' | 'gallery' | 'lightbox' | 'lightbox-thumb';
+export type CloudinaryPreset = 'thumb' | 'gallery' | 'lightbox' | 'lightbox-thumb' | 'avatar';
 
 const TRANSFORMS: Record<CloudinaryPreset, string> = {
   'thumb':          'f_auto,q_auto,w_400,c_fill,g_auto',
   'gallery':        'f_auto,q_auto,w_800',
   'lightbox':       'f_auto,q_auto,w_1200',
   'lightbox-thumb': 'f_auto,q_auto,w_120,c_fill,g_auto',
+  'avatar':         'f_auto,q_auto,w_128,h_128,c_fill,g_face',
 };
 
 /**
@@ -18,12 +19,14 @@ const TRANSFORMS: Record<CloudinaryPreset, string> = {
  *   [src]="url | cloudinary"              -> gallery preset (800px)
  *   [src]="url | cloudinary:'thumb'"      -> 400px fill
  *   [src]="url | cloudinary:'lightbox'"   -> 1200px
+ *   [src]="url | cloudinary:'avatar'"     -> 128px face-centered circle source
  */
 @Pipe({ name: 'cloudinary', standalone: true, pure: true })
 export class CloudinaryPipe implements PipeTransform {
   transform(url: string | null | undefined, preset: CloudinaryPreset = 'gallery'): string {
     if (!url) return '';
     if (!url.includes('res.cloudinary.com')) return url;
+    if (url.includes('/image/upload/f_auto')) return url;
 
     const transform = TRANSFORMS[preset];
     // Cloudinary URL: .../image/upload/[existing-transforms/]<public_id>

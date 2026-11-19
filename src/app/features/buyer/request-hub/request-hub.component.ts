@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToastService } from '../../../core/toast.service';
 import { AuthService } from '../../../core/auth.service';
@@ -6,9 +7,9 @@ import { GroupRequestsService } from '../../../core/services/group-requests.serv
 import { GroupRequestOffersService } from '../../../core/services/group-request-offers.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { GroupRequestDetailDto, GroupRequestOfferDto } from '../../../core/models';
-import { format } from 'date-fns';
+import { formatCairoDateTime } from '../../../shared/utils/date-time.util';
 import { environment } from '../../../../environments/environment';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe, StripeCardElement } from '@stripe/stripe-js';
 
 @Component({
   selector: 'app-request-hub',
@@ -20,6 +21,7 @@ import { loadStripe } from '@stripe/stripe-js';
 export class RequestHubComponent implements OnInit, OnDestroy {
   protected router = inject(Router);
   private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
   private toast = inject(ToastService);
   protected authService = inject(AuthService);
   private groupRequestsService = inject(GroupRequestsService);
@@ -46,8 +48,9 @@ export class RequestHubComponent implements OnInit, OnDestroy {
 
   private requestId = '';
   private unsubRequestUpdate: (() => void) | null = null;
-  private stripe: any = null;
-  private cardElement: any = null;
+  private stripe: Stripe | null = null;
+  private cardElement: StripeCardElement | null = null;
+  protected cardError = signal<string>('');
 
   protected isJoined = computed(() => {
     const req = this.request();
@@ -56,9 +59,9 @@ export class RequestHubComponent implements OnInit, OnDestroy {
     
     // Fallback to participantIds if participants array is missing
     if (req.participants) {
-      return req.participants.some((p: any) => p.id === user.id);
+      return req.participants.some(p => p.id === user.id);
     }
-    return (req as any).participantIds?.includes(user.id) || false;
+    return req.participantIds?.includes(user.id) || false;
   });
 
   protected visibleOffers = computed(() => {
@@ -93,37 +96,53 @@ export class RequestHubComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.requestId = this.route.snapshot.paramMap.get('requestId') ?? '';
-    if (!this.requestId) {
-      this.toast.error('Error', 'No request ID provided.');
-      this.router.navigate(['/my-hubs']);
-      return;
-    }
-    this.loadRequest();
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const newRequestId = params.get('requestId') ?? '';
+      if (!newRequestId) {
+        this.toast.error('Error', 'No request ID provided.');
+        this.router.navigate(['/my-hubs']);
+        return;
+      }
 
-    this.signalRService.joinGroupRequestGroup(this.requestId);
-    this.unsubRequestUpdate = this.signalRService.onGroupRequestUpdate((update) => {
-      if (update.id === this.requestId) {
-        this.request.set(update);
-        const currentOffers = this.offers();
-        const newOffers = update.offers || [];
-        
-        // Find offers that just transitioned from Open to Accepted
-        newOffers.forEach(no => {
-          const old = currentOffers.find(o => o.id === no.id);
-          if (old && old.status === 'Open' && no.status === 'Accepted') {
-            no.isAnimatingOut = true;
-            setTimeout(() => {
-              this.offers.update(offers => {
-                const off = offers.find(o => o.id === no.id);
-                if (off) off.isAnimatingOut = false;
-                return [...offers];
-              });
-            }, 400);
+      if (this.requestId && this.requestId !== newRequestId) {
+        this.signalRService.leaveGroupRequestGroup(this.requestId);
+        this.unsubRequestUpdate?.();
+        this.unsubRequestUpdate = null;
+        this.closeAcceptModal();
+        this.showJoinModal.set(false);
+        this.request.set(null);
+        this.offers.set([]);
+      }
+
+      this.requestId = newRequestId;
+      this.loadRequest();
+
+      this.signalRService.joinGroupRequestGroup(this.requestId);
+      if (!this.unsubRequestUpdate) {
+        this.unsubRequestUpdate = this.signalRService.onGroupRequestUpdate((update) => {
+          if (update.id === this.requestId) {
+            this.request.set(update);
+            const currentOffers = this.offers();
+            const newOffers = update.offers || [];
+
+            // Find offers that just transitioned from Open to Accepted
+            newOffers.forEach(no => {
+              const old = currentOffers.find(o => o.id === no.id);
+              if (old && old.status === 'Open' && no.status === 'Accepted') {
+                no.isAnimatingOut = true;
+                setTimeout(() => {
+                  this.offers.update(offers => {
+                    const off = offers.find(o => o.id === no.id);
+                    if (off) off.isAnimatingOut = false;
+                    return [...offers];
+                  });
+                }, 400);
+              }
+            });
+
+            this.offers.set(newOffers);
           }
         });
-        
-        this.offers.set(newOffers);
       }
     });
   }
@@ -133,7 +152,19 @@ export class RequestHubComponent implements OnInit, OnDestroy {
       this.signalRService.leaveGroupRequestGroup(this.requestId);
     }
     this.unsubRequestUpdate?.();
-    this.cardElement = null;
+    this.destroyCardElement();
+  }
+
+  private destroyCardElement(): void {
+    if (this.cardElement) {
+      try {
+        this.cardElement.unmount();
+        this.cardElement.destroy();
+      } catch {
+        // Element may already be detached when modal @if closes
+      }
+      this.cardElement = null;
+    }
   }
 
   private loadRequest() {
@@ -149,33 +180,8 @@ export class RequestHubComponent implements OnInit, OnDestroy {
     });
   }
 
-  private normalizeUtc(d: string): string {
-    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
-      ? d
-      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
-  }
-
-  private formatEgyptUtc(d: string | undefined | null, formatStr: string): string {
-    if (!d) return '';
-    try {
-      const date = new Date(this.normalizeUtc(d));
-      const egyptDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
-      const local = new Date(
-        egyptDate.getUTCFullYear(),
-        egyptDate.getUTCMonth(),
-        egyptDate.getUTCDate(),
-        egyptDate.getUTCHours(),
-        egyptDate.getUTCMinutes(),
-        egyptDate.getUTCSeconds()
-      );
-      return format(local, formatStr);
-    } catch {
-      return '';
-    }
-  }
-
   protected fmtExpiry(d: string) {
-    return this.formatEgyptUtc(d, "MMM d, ha 'UTC'");
+    return formatCairoDateTime(d, false);
   }
 
   protected accept(offer: GroupRequestOfferDto) {
@@ -189,7 +195,8 @@ export class RequestHubComponent implements OnInit, OnDestroy {
     this.showAcceptModal.set(false);
     this.selectedOffer.set(null);
     this.clientSecret.set(null);
-    this.cardElement = null;
+    this.destroyCardElement();
+    this.cardError.set('');
     this.chosenAddressOption.set('default');
     this.customShippingAddress.set('');
     this.chosenPhoneOption.set('default');
@@ -218,9 +225,12 @@ export class RequestHubComponent implements OnInit, OnDestroy {
         this.submittingHold.set(false);
         if (res.clientSecret) {
           this.clientSecret.set(res.clientSecret);
+          this.cardError.set('');
           setTimeout(async () => {
-            await this.initStripe();
-            this.cardElement.mount('#accept-card-element');
+            if (!this.showAcceptModal() || !this.clientSecret()) return;
+            const card = await this.initStripe();
+            if (!card || !this.showAcceptModal() || !document.getElementById('accept-card-element')) return;
+            card.mount('#accept-card-element');
           }, 0);
         } else {
           this.toast.error('Error', 'No payment token received.');
@@ -233,9 +243,16 @@ export class RequestHubComponent implements OnInit, OnDestroy {
     });
   }
 
-  private async initStripe() {
-    if (this.stripe) return;
-    this.stripe = await loadStripe(environment.stripePublishableKey);
+  private async initStripe(): Promise<StripeCardElement | null> {
+    if (!this.stripe) {
+      this.stripe = await loadStripe(environment.stripePublishableKey);
+    }
+    if (!this.stripe) {
+      this.toast.error('Payment Error', 'Payment provider failed to load. Please refresh and try again.');
+      return null;
+    }
+
+    this.destroyCardElement();
     const elements = this.stripe.elements();
     this.cardElement = elements.create('card', {
       style: {
@@ -253,56 +270,61 @@ export class RequestHubComponent implements OnInit, OnDestroy {
         }
       }
     });
+    this.cardElement.on('change', (event) => {
+      this.cardError.set(event.error?.message ?? '');
+    });
+    return this.cardElement;
   }
 
   protected confirmHoldPayment(): void {
     const offer = this.selectedOffer();
-    if (!this.stripe || !this.cardElement || !this.clientSecret() || !offer || this.authorizingPayment()) return;
+    const clientSecret = this.clientSecret();
+    if (!this.stripe || !this.cardElement || !clientSecret || !offer || this.authorizingPayment()) return;
     this.authorizingPayment.set(true);
+    this.cardError.set('');
 
-    this.stripe.confirmCardPayment(this.clientSecret(), {
+    this.stripe.confirmCardPayment(clientSecret, {
       payment_method: { card: this.cardElement }
-    }).then((result: any) => {
+    }).then((result) => {
       if (result.error) {
         this.authorizingPayment.set(false);
-        this.toast.error('Card authorization failed', result.error.message);
-        const cardErrors = document.getElementById('accept-card-errors');
-        if (cardErrors) cardErrors.textContent = result.error.message;
-      } else {
-        if (result.paymentIntent.status === 'requires_capture') {
-          const finalAddress = this.chosenAddressOption() === 'default' 
-            ? (this.authService.user()?.shippingAddress || '') 
-            : this.customShippingAddress();
-          const finalPhone = this.chosenPhoneOption() === 'default' 
-            ? (this.authService.user()?.phoneNumber || '') 
-            : this.customPhoneNumber();
+        const msg = result.error.message ?? 'Card authorization failed';
+        this.cardError.set(msg);
+        this.toast.error('Card authorization failed', msg);
+      } else if (result.paymentIntent?.status === 'requires_capture') {
+        const finalAddress = this.chosenAddressOption() === 'default' 
+          ? (this.authService.user()?.shippingAddress || '') 
+          : this.customShippingAddress();
+        const finalPhone = this.chosenPhoneOption() === 'default' 
+          ? (this.authService.user()?.phoneNumber || '') 
+          : this.customPhoneNumber();
 
-          this.groupRequestOffersService.confirmAcceptOffer(
-            offer.id, 
-            result.paymentIntent.id, 
-            this.acceptQuantity(),
-            finalAddress,
-            finalPhone
-          ).subscribe({
-            next: () => {
-              this.authorizingPayment.set(false);
-              this.toast.success('Offer accepted!', `Successfully authorized hold and accepted the offer.`);
-              this.closeAcceptModal();
-              this.loadRequest();
-            },
-            error: (err) => {
-              this.authorizingPayment.set(false);
-              this.toast.errorApi('Confirmation Error', err);
-            }
-          });
-        } else {
-          this.authorizingPayment.set(false);
-          this.toast.error('Payment Error', 'Payment status is unexpected: ' + result.paymentIntent.status);
-        }
+        this.groupRequestOffersService.confirmAcceptOffer(
+          offer.id, 
+          result.paymentIntent.id, 
+          this.acceptQuantity(),
+          finalAddress,
+          finalPhone
+        ).subscribe({
+          next: () => {
+            this.authorizingPayment.set(false);
+            this.toast.success('Offer accepted!', `Successfully authorized hold and accepted the offer.`);
+            this.closeAcceptModal();
+            this.loadRequest();
+          },
+          error: (err) => {
+            this.authorizingPayment.set(false);
+            this.toast.errorApi('Confirmation Error', err);
+          }
+        });
+      } else {
+        this.authorizingPayment.set(false);
+        this.toast.error('Payment Error', 'Payment status is unexpected: ' + (result.paymentIntent?.status ?? 'unknown'));
       }
-    }).catch((err: any) => {
+    }).catch((err: unknown) => {
       this.authorizingPayment.set(false);
-      this.toast.error('Error', err?.message || 'Payment confirmation failed');
+      const message = err instanceof Error ? err.message : 'Payment confirmation failed';
+      this.toast.error('Error', message);
     });
   }
 

@@ -5,7 +5,8 @@ import { OffersService } from '../../../core/services/offers.service';
 import { GroupRequestsService } from '../../../core/services/group-requests.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { CategoriesService } from '../../../core/services/categories.service';
-import { MyOfferDto, SupplierGroupRequestOfferDto } from '../../../core/models';
+import { CategoryDto, MyOfferDto, SupplierGroupRequestOfferDto } from '../../../core/models';
+import { formatCairoDate } from '../../../shared/utils/date-time.util';
 
 @Component({
   selector: 'app-supplier-offers',
@@ -28,7 +29,7 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
   protected isLoading = signal(true);
 
   // Categories list
-  protected categories = signal<any[]>([]);
+  protected categories = signal<CategoryDto[]>([]);
 
   // Filtering & Pagination for Deals
   protected offersSearch = signal('');
@@ -147,22 +148,8 @@ export class SupplierOffersComponent implements OnInit, OnDestroy {
     return o.batchTargetQuantity > 0 ? Math.round((o.committedUnits / o.batchTargetQuantity) * 100) : 0;
   }
 
-  private normalizeUtc(d: string): string {
-    return d.includes('Z') || /[+-]\d{2}:\d{2}$/.test(d)
-      ? d
-      : d.replace(' ', 'T').replace(/(\.\d+)?$/, '') + 'Z';
-  }
-
   protected fmtDate(d: string): string {
-    if (!d) return '-';
-    const date = new Date(this.normalizeUtc(d));
-    const adjusted = new Date(date.getTime() + 3 * 60 * 60 * 1000);
-    return adjusted.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC'
-    });
+    return formatCairoDate(d) || '-';
   }
 
   protected changeBidsPage(p: number) {

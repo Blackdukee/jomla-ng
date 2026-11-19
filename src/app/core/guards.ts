@@ -1,51 +1,46 @@
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 
-export const authGuard = () => {
+export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  if (!auth.isAuthenticated()) {
-    router.navigate(['/login']);
-    return false;
-  }
+  return auth.isAuthenticated() ? true : router.createUrlTree(['/login']);
+};
+
+export const buyerGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (!auth.isAuthenticated()) return router.createUrlTree(['/login']);
+  if (auth.isAdmin()) return router.createUrlTree(['/admin']);
+  if (!auth.isBuyer()) return router.createUrlTree(['/supplier/requests']);
   return true;
 };
 
-export const buyerGuard = () => {
+export const supplierGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  if (!auth.isAuthenticated()) { router.navigate(['/login']); return false; }
-  if (auth.isAdmin()) { router.navigate(['/admin']); return false; }
-  if (!auth.isBuyer()) { router.navigate(['/supplier/requests']); return false; }
+  if (!auth.isAuthenticated()) return router.createUrlTree(['/login']);
+  if (auth.isAdmin()) return router.createUrlTree(['/admin']);
+  if (!auth.isSupplier()) return router.createUrlTree(['/discover']);
   return true;
 };
 
-export const supplierGuard = () => {
+export const adminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  if (!auth.isAuthenticated()) { router.navigate(['/login']); return false; }
-  if (auth.isAdmin()) { router.navigate(['/admin']); return false; }
-  if (!auth.isSupplier()) { router.navigate(['/discover']); return false; }
+  if (!auth.isAuthenticated()) return router.createUrlTree(['/login']);
+  if (!auth.isAdmin()) return router.createUrlTree(['/']);
   return true;
 };
 
-export const adminGuard = () => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-  if (!auth.isAuthenticated()) { router.navigate(['/login']); return false; }
-  if (!auth.isAdmin()) { router.navigate(['/']); return false; }
-  return true;
-};
-
-export const guestGuard = () => {
+export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   if (auth.isAuthenticated()) {
-    if (auth.isAdmin()) router.navigate(['/admin']);
-    else if (auth.isBuyer()) router.navigate(['/discover']);
-    else router.navigate(['/supplier/requests']);
-    return false;
+    if (auth.isAdmin()) return router.createUrlTree(['/admin']);
+    if (auth.isBuyer()) return router.createUrlTree(['/discover']);
+    return router.createUrlTree(['/supplier/requests']);
   }
   return true;
 };

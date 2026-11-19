@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { ToastService } from '../../../core/toast.service';
+import { environment } from '../../../../environments/environment';
 
 type DemoRole = 'buyer' | 'seller' | 'admin';
 type LoginSource = 'form' | DemoRole;
@@ -20,6 +21,8 @@ export class LoginComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
   private toast = inject(ToastService);
+
+  protected readonly enableDemoAccounts = environment.enableDemoAccounts;
 
   private readonly demoAccounts: Record<DemoRole, { email: string; password: string }> = {
     buyer: { email: 'buyer1@jomla.test', password: 'Password123!' },
@@ -45,7 +48,7 @@ export class LoginComponent {
   }
 
   protected loginAsDemo(role: DemoRole) {
-    if (this.loading()) return;
+    if (!this.enableDemoAccounts || this.loading()) return;
     this.submitted.set(false);
     this.errorMsg.set('');
     this.form.setValue(this.demoAccounts[role]);
